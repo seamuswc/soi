@@ -86,7 +86,8 @@ class ListingController extends Controller
 
     protected function checkSolanaPayment($reference, $amount)
     {
-        $url = 'https://api.mainnet.helius.xyz/v0/addresses/' . env('SOLANA_WALLET') . '/transactions?api-key=' . env('HELIUS_API_KEY');
+        $url = 'https://api.helius.xyz/v0/addresses/' . env('SOLANA_WALLET') . '/transactions?api-key=' . env('HELIUS_API_KEY');
+
 
         $response = Http::get($url);
 

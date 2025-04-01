@@ -34,6 +34,12 @@
                 gestureHandling: "greedy"
             });
 
+            function getColorByPrice(price) {
+                if (price < 10000) return "#4CAF50";       // green: cheap
+                if (price < 30000) return "#FF9800";       // orange: mid
+                return "#F44336";                          // red: expensive
+            }
+
             const data = @json($listings);
 
             Object.keys(data).forEach(building => {
@@ -44,7 +50,7 @@
                     icon: {
                         path: google.maps.SymbolPath.CIRCLE,
                         scale: 6,
-                        fillColor: "#f33",
+                        fillColor: getColorByPrice(first.cost),
                         fillOpacity: 1,
                         strokeWeight: 0
                     }
@@ -68,6 +74,6 @@
         }
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM&callback=initMap" async defer></script>
 </body>
 </html>

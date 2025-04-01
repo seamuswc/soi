@@ -14,33 +14,35 @@
     @endif
 
     <form method="POST" action="/post">
-        @csrf
-        <input type="hidden" name="reference" value="{{ $reference }}">
-        <label>Google Maps Coordinates:</label><br>
-        <input name="coordinates" placeholder="13.736717,100.523186"><br>
+    @csrf
+    <input type="hidden" name="reference" value="{{ $reference }}">
 
-        <label>Building Name:</label><br>
-        <input name="building_name"><br>
+    <label>Google Maps Coordinates:</label><br>
+    <input name="coordinates" placeholder="13.736717,100.523186" value="{{ old('coordinates') }}"><br>
 
-        <label>Floor:</label><br>
-        <input name="floor"><br>
+    <label>Building Name:</label><br>
+    <input name="building_name" value="{{ old('building_name') }}"><br>
 
-        <label>SQM:</label><br>
-        <input name="sqm" type="number"><br>
+    <label>Floor:</label><br>
+    <input name="floor" value="{{ old('floor') }}"><br>
 
-        <label>Cost (¥):</label><br>
-        <input name="cost" type="number"><br>
+    <label>SQM:</label><br>
+    <input name="sqm" type="number" value="{{ old('sqm') }}"><br>
 
-        <label>Description:</label><br>
-        <textarea name="description"></textarea><br>
+    <label>Cost (Baht):</label><br>
+    <input name="cost" type="number" value="{{ old('cost') }}"><br>
 
-        <label>YouTube Link:</label><br>
-        <input name="youtube_link"><br>
+    <label>Description:</label><br>
+    <textarea name="description">{{ old('description') }}</textarea><br>
 
-        <p>Scan this to pay 1 USDC:</p>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?data=solana:{{ $wallet }}?amount={{ $amount }}&reference={{ $reference }}&spl-token=Es9vMFrzaCERi95c6rWCgM9jA76wARt8PZ8f1zx6AbzP" width="200">
+    <label>YouTube Link:</label><br>
+    <input name="youtube_link" value="{{ old('youtube_link') }}"><br>
 
-        <br><button type="submit">Submit</button>
+    <p>Scan this to pay 1 USDC:</p>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?data=solana:{{ $wallet }}?amount={{ $amount }}&reference={{ $reference }}&spl-token=Es9vMFrzaCERi95c6rWCgM9jA76wARt8PZ8f1zx6AbzP" width="200">
+
+    <br><button type="submit">Submit</button>
     </form>
+
 </body>
 </html>
