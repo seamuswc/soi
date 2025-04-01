@@ -1,6 +1,7 @@
 ✅ STEP 1: Update Server & Install Dependencies
 
 sudo apt update && sudo apt upgrade -y
+
 sudo apt install nginx mysql-server php php-fpm php-mysql php-mbstring php-xml php-bcmath php-curl php-zip unzip curl git -y
 
 ✅ STEP 2: Secure MySQL & Create Database
@@ -22,19 +23,25 @@ EXIT;
 ✅ STEP 3: Install Composer
 
 cd ~
+
 curl -sS https://getcomposer.org/installer | php
+
 sudo mv composer.phar /usr/local/bin/composer
 
 ✅ STEP 4: Clone Your Laravel Project
 
 cd /var/www
+
 sudo git clone https://github.com/yourusername/soipattaya.git
+
 cd soipattaya
+
 sudo chown -R www-data:www-data .
 
 ✅ STEP 5: Set Up Laravel
 
 cp .env.example .env
+
 nano .env
 
 Edit DB & app settings:
@@ -89,16 +96,20 @@ server {
 Enable and reload:
 
 sudo ln -s /etc/nginx/sites-available/soipattaya /etc/nginx/sites-enabled/
+
 sudo nginx -t
+
 sudo systemctl reload nginx
 
 ✅ STEP 7: Set Correct Permissions
 
 sudo chown -R www-data:www-data /var/www/soipattaya
+
 sudo chmod -R 755 /var/www/soipattaya
 
 ✅ STEP 8: (Optional) Enable HTTPS with Certbot
 
 sudo apt install certbot python3-certbot-nginx -y
+
 sudo certbot --nginx -d yourdomain.com
 
