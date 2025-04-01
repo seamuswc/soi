@@ -29,9 +29,10 @@
     <script>
         function initMap() {
             const map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 13.7563, lng: 100.5018 }, // Bangkok default
+                center: { lat: 12.9276, lng: 100.8771 }, 
                 zoom: 12,
-                gestureHandling: "greedy"
+                gestureHandling: "greedy",
+                disableDefaultUI: true  
             });
 
             function getColorByPrice(price) {
