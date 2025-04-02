@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Listing;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 
 class ListingController extends Controller
@@ -12,17 +11,12 @@ class ListingController extends Controller
     public function index()
     {
         $listings = Listing::all()->groupBy('building_name');
-
         return view('map', compact('listings'));
     }
 
     public function create()
     {
-        $reference = Str::uuid();
-        $wallet = env('SOLANA_WALLET');
-        $amount = 1;
-
-        return view('create', compact('reference', 'wallet', 'amount'));
+        return view('create');
     }
 
     public function store(Request $request)
@@ -35,15 +29,15 @@ class ListingController extends Controller
             'cost' => 'required|integer',
             'description' => 'required|string',
             'youtube_link' => 'required|url',
-            'reference' => 'required|uuid',
+            'reference' => 'required|string',
         ]);
+
+        [$lat, $lng] = explode(',', str_replace(' ', '', $request->coordinates));
 
         if (!$this->checkSolanaPayment($request->reference, 1)) {
             return back()->withErrors(['payment' => 'Solana Pay transaction not found or invalid.']);
         }
-
-        [$lat, $lng] = explode(',', str_replace(' ', '', $request->coordinates));
-
+        
         Listing::create([
             'building_name' => $request->building_name,
             'latitude' => $lat,
@@ -63,19 +57,13 @@ class ListingController extends Controller
     public function show($name)
     {
         $listings = Listing::where('building_name', $name)->get();
-
         abort_if($listings->isEmpty(), 404);
-
         return view('detail', compact('listings', 'name'));
     }
 
     public function renew(Listing $listing, Request $request)
     {
-        $request->validate(['reference' => 'required|uuid']);
-
-        if (!$this->checkSolanaPayment($request->reference, 1)) {
-            return back()->withErrors(['payment' => 'Renewal payment not found or invalid.']);
-        }
+        $request->validate(['reference' => 'required|string']);
 
         $listing->expires_at = now()->addDays(30);
         $listing->reference = $request->reference;
@@ -87,7 +75,6 @@ class ListingController extends Controller
     protected function checkSolanaPayment($reference, $amount)
     {
         $url = 'https://api.helius.xyz/v0/addresses/' . env('SOLANA_WALLET') . '/transactions?api-key=' . env('HELIUS_API_KEY');
-
 
         $response = Http::get($url);
 
@@ -101,7 +88,7 @@ class ListingController extends Controller
             foreach ($tx['events']['transfer'] as $transfer) {
                 if (
                     isset($transfer['amount']) &&
-                    $transfer['amount'] == $amount * 1_000_000 && // USDC has 6 decimals
+                    $transfer['amount'] == $amount * 1_000_000 &&
                     str_contains($tx['transaction']['message'], $reference)
                 ) {
                     return true;
@@ -111,4 +98,6 @@ class ListingController extends Controller
 
         return false;
     }
+
+
 }

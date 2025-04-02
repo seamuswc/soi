@@ -79,6 +79,12 @@
             border-radius: 5px;
             margin-bottom: 15px;
         }
+
+        .center-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
     </style>
 
     <script>
@@ -102,42 +108,63 @@
 
     <form method="POST" action="/post">
         @csrf
-        <input type="hidden" name="reference" value="{{ $reference }}">
+        <input type="hidden" name="reference" id="reference" value="{{ old('reference') }}">
 
         <label>📍 Google Maps Coordinates:</label>
-        <input name="coordinates" placeholder="13.736717,100.523186" value="{{ old('coordinates') }}">
+        <input name="coordinates" placeholder="13.736717,100.523186" value="{{ old('coordinates') }}" required>
 
         <label>🏢 Building Name:</label>
-        <input name="building_name" value="{{ old('building_name') }}">
+        <input name="building_name" value="{{ old('building_name') }}" required>
 
         <label>🪜 Floor:</label>
-        <input name="floor" value="{{ old('floor') }}">
+        <input name="floor" value="{{ old('floor') }}" required>
 
         <label>📐 SQM:</label>
-        <input name="sqm" type="number" value="{{ old('sqm') }}">
+        <input name="sqm" type="number" value="{{ old('sqm') }}" required>
 
         <label>💰 Cost (Baht):</label>
-        <input name="cost" type="number" value="{{ old('cost') }}">
+        <input name="cost" type="number" value="{{ old('cost') }}" required>
 
         <label>📝 Description (you can use emojis, new lines, etc.):</label>
-        <textarea name="description" rows="5">{{ old('description') }}</textarea>
+        <textarea name="description" rows="5" required>{{ old('description') }}</textarea>
 
         <label>▶️ YouTube Embed Link:</label>
-        <input name="youtube_link" value="{{ old('youtube_link') }}">
+        <input name="youtube_link" value="{{ old('youtube_link') }}" required>
 
         <div class="qr-box">
             <p><strong>Send exactly <span style="color:green;">1 USDC</span> to:</strong></p>
             <div id="wallet-address" class="copyable" onclick="copyWallet()">
-                {{ $wallet }}
+                3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy
             </div>
-
             <p>Scan QR to Pay:</p>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?data=solana:{{ $wallet }}?amount={{ $amount }}&reference={{ $reference }}&spl-token=Es9vMFrzaCERi95c6rWCgM9jA76wARt8PZ8f1zx6AbzP" width="200" alt="Solana Pay QR Code">
+            <canvas id="qr"></canvas>
         </div>
 
-        <br>
-        <button type="submit">✅ Submit Listing</button>
+        <div class="center-button">
+            <button type="submit" id="submit-btn">✅ Submit Listing</button>
+        </div>
     </form>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.78.2/lib/index.iife.min.js"></script>
+    <script>
+        window.onload = async function generateQr() {
+            const recipient = new solanaWeb3.PublicKey('3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy');
+            const usdcMint = new solanaWeb3.PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
+            const oldReference = "{{ old('reference') }}";
+            const reference = oldReference ? new solanaWeb3.PublicKey(oldReference) : solanaWeb3.Keypair.generate().publicKey;
+            const amount = 1;
+
+            const url = `solana:${recipient.toBase58()}?amount=${amount}&spl-token=${usdcMint.toBase58()}&reference=${reference.toBase58()}&label=soipattaya&message=Listing%20Payment&memo=soipattaya`;
+
+            new QRious({
+                element: document.getElementById('qr'),
+                value: url,
+                size: 250
+            });
+
+            document.getElementById('reference').value = reference.toBase58();
+        }
+    </script>
 </body>
 </html>
