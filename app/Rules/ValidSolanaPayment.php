@@ -18,25 +18,39 @@ class ValidSolanaPayment implements Rule
     public function passes($attribute, $value)
     {
         $this->reference = $value;
+        $wallet = env('SOLANA_WALLET');
+        $amountLamports = $this->amount * 1000000;
 
-        $url = 'https://api.helius.xyz/v0/addresses/' . env('SOLANA_WALLET') . '/transactions?api-key=' . env('HELIUS_API_KEY');
-        $response = Http::get($url);
+        // Get last 100 signatures
+        $signaturesResponse = Http::post('https://api.mainnet-beta.solana.com', [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getSignaturesForAddress',
+            'params' => [$wallet, ['limit' => 100]]
+        ]);
 
-        if (!$response->ok()) return false;
+        if (!$signaturesResponse->ok()) return false;
 
-        $transactions = $response->json();
+        $signatures = $signaturesResponse->json('result');
 
-        foreach ($transactions as $tx) {
-            if (!isset($tx['events']['transfer'])) continue;
+        foreach ($signatures as $sig) {
+            $txResponse = Http::post('https://api.mainnet-beta.solana.com', [
+                'jsonrpc' => '2.0',
+                'id' => 1,
+                'method' => 'getTransaction',
+                'params' => [$sig['signature'], 'jsonParsed']
+            ]);
 
-            foreach ($tx['events']['transfer'] as $transfer) {
-                if (
-                    isset($transfer['amount']) &&
-                    $transfer['amount'] == $this->amount * 1_000_000 &&
-                    str_contains($tx['transaction']['message'], $this->reference)
-                ) {
-                    return true;
-                }
+            if (!$txResponse->ok()) continue;
+
+            $tx = $txResponse->json('result');
+
+            // Check for reference in memo or instructions
+            $logs = json_encode($tx['meta']['logMessages'] ?? []);
+            $msg = json_encode($tx['transaction']['message']);
+
+            if (str_contains($msg, $this->reference) || str_contains($logs, $this->reference)) {
+                return true;
             }
         }
 
