@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Listing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use App\Rules\ValidSolanaPayment;
+//use App\Rules\ValidSolanaPayment;
 
 class ListingController extends Controller
 {
@@ -30,8 +30,8 @@ class ListingController extends Controller
             'cost' => 'required|integer',
             'description' => 'required|string',
             'youtube_link' => 'required|url',
-            'reference' => 'required|string',
-            'reference' => ['required', 'string', new ValidSolanaPayment()],
+            'reference' => 'required|string'
+            //'reference' => ['required', 'string', new ValidSolanaPayment()],
         ]);
 
         [$lat, $lng] = explode(',', str_replace(' ', '', $request->coordinates));
