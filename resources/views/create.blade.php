@@ -21,7 +21,7 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            max-width: 500px;
+            max-width: 700px;
             margin: 0 auto;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
@@ -39,6 +39,21 @@
             margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        textarea {
+            min-height: 250px;
         }
 
         button {
@@ -65,7 +80,7 @@
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
-            word-break: break-all;
+            word-break: break-word;
         }
 
         .copyable:active {
@@ -111,32 +126,28 @@
         <input type="hidden" name="reference" id="reference" value="{{ old('reference') }}">
 
         <label>📍 Google Maps Coordinates:</label>
-        <input name="coordinates" placeholder="13.736717,100.523186" value="{{ old('coordinates') }}" required>
+        <input name="coordinates" placeholder="13.736717,100.523186" value="{{ old('coordinates') }}" >
 
         <label>🏢 Building Name:</label>
-        <input name="building_name" value="{{ old('building_name') }}" required>
+        <input name="building_name" value="{{ old('building_name') }}" >
 
         <label>🪜 Floor:</label>
-        <input name="floor" value="{{ old('floor') }}" required>
+        <input name="floor" value="{{ old('floor') }}" >
 
         <label>📐 SQM:</label>
-        <input name="sqm" type="number" value="{{ old('sqm') }}" required>
+        <input name="sqm" type="number" value="{{ old('sqm') }}" >
 
         <label>💰 Cost (Baht):</label>
-        <input name="cost" type="number" value="{{ old('cost') }}" required>
+        <input name="cost" type="number" value="{{ old('cost') }}" >
 
         <label>📝 Description (you can use emojis, new lines, etc.):</label>
-        <textarea name="description" rows="5" required>{{ old('description') }}</textarea>
+        <textarea name="description" rows="5" >{{ old('description') }}</textarea>
 
         <label>▶️ YouTube Embed Link:</label>
-        <input name="youtube_link" value="{{ old('youtube_link') }}" required>
+        <input name="youtube_link" value="{{ old('youtube_link') }}" >
 
         <div class="qr-box">
-            <p><strong>Send exactly <span style="color:green;">1 USDC</span> to:</strong></p>
-            <div id="wallet-address" class="copyable" onclick="copyWallet()">
-                3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy
-            </div>
-            <p>Scan QR to Pay:</p>
+            <p><strong>Scan to send <span style="color:green;">1 USDC</span> to:</strong></p>
             <canvas id="qr"></canvas>
         </div>
 
