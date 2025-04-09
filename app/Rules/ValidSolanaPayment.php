@@ -13,96 +13,61 @@ class ValidSolanaPayment implements Rule
 
     public function __construct($amount = 1)
     {
-        $this->amount = $amount;
+        $this->amount = floatval($amount);
     }
 
     public function passes($attribute, $value)
     {
         $this->reference = $value;
-        $wallet = env('SOLANA_WALLET');
-        $amountLamports = $this->amount * 1_000_000;
+        $apiKey = env('HELIUS_API_KEY');
+        $usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
-        Log::info('🔍 Checking Solana payment', [
-            'reference' => $this->reference,
-            'wallet' => $wallet,
-            'amount' => $amountLamports
-        ]);
+        $url = "https://api.helius.xyz/v0/addresses/{$this->reference}/transactions?api-key={$apiKey}&limit=10";
 
-        // Step 1: Get ALL USDC token accounts
-        $tokenAccountResp = Http::post('https://api.mainnet-beta.solana.com', [
-            'jsonrpc' => '2.0',
-            'id' => 1,
-            'method' => 'getTokenAccountsByOwner',
-            'params' => [
-                $wallet,
-                ['mint' => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'],
-                ['encoding' => 'jsonParsed']
-            ]
-        ]);
+        Log::info("ValidSolanaPayment: Checking transactions for reference: {$this->reference}, URL: {$url}");
 
-        if (!$tokenAccountResp->ok()) {
-            Log::error('❌ Failed to get token account', ['response' => $tokenAccountResp->body()]);
-            return false;
-        }
+        $response = Http::get($url);
 
-        $accounts = $tokenAccountResp->json('result.value');
-        if (empty($accounts)) {
-            Log::warning('⚠️ No USDC token account found');
-            return false;
-        }
-
-        // Step 2: Loop over each token account
-        foreach ($accounts as $account) {
-            $tokenAccount = $account['pubkey'];
-
-            $signaturesResponse = Http::post('https://api.mainnet-beta.solana.com', [
-                'jsonrpc' => '2.0',
-                'id' => 1,
-                'method' => 'getSignaturesForAddress',
-                'params' => [$tokenAccount, ['limit' => 100]]
+        if (!$response->successful()) {
+            Log::error('ValidSolanaPayment: Failed to fetch transactions.', [
+                'status' => $response->status(),
+                'body' => $response->body()
             ]);
+            return false;
+        }
 
-            if (!$signaturesResponse->ok()) {
-                Log::error('❌ Failed to get signatures', ['response' => $signaturesResponse->body()]);
-                continue;
-            }
+        $data = $response->json();
+        if (empty($data)) {
+            Log::info('ValidSolanaPayment: No transactions returned from Helius.');
+            return false;
+        }
 
-            $signatures = $signaturesResponse->json('result');
+        foreach ($data as $tx) {
+            if (!isset($tx['tokenTransfers'])) continue;
 
-            foreach ($signatures as $sig) {
-                $txid = $sig['signature'];
+            foreach ($tx['tokenTransfers'] as $transfer) {
+                Log::debug('ValidSolanaPayment: Found token transfer', $transfer);
 
-                $txResponse = Http::post('https://api.mainnet-beta.solana.com', [
-                    'jsonrpc' => '2.0',
-                    'id' => 1,
-                    'method' => 'getTransaction',
-                    'params' => [$txid, 'jsonParsed']
-                ]);
-
-                if (!$txResponse->ok()) {
-                    Log::warning('⚠️ Failed to fetch transaction', ['txid' => $txid]);
-                    continue;
-                }
-
-                $tx = $txResponse->json('result');
-                $logs = json_encode($tx['meta']['logMessages'] ?? []);
-                $msg = json_encode($tx['transaction']['message'] ?? []);
-
-                if (str_contains($msg, $this->reference) || str_contains($logs, $this->reference)) {
-                    Log::info('✅ Found valid transaction', ['txid' => $txid]);
+                if (
+                    $transfer['mint'] === $usdcMint &&
+                    isset($transfer['amount']) &&
+                    floatval($transfer['amount']) >= $this->amount
+                ) {
+                    Log::info("ValidSolanaPayment: Valid USDC payment found.", [
+                        'amount' => $transfer['amount'],
+                        'mint' => $transfer['mint']
+                    ]);
                     return true;
-                } else {
-                    Log::debug('🕵️ Reference not found in tx', ['txid' => $txid]);
                 }
             }
         }
 
-        Log::warning('⚠️ No valid transaction found for reference', ['reference' => $this->reference]);
+        Log::info("ValidSolanaPayment: No valid USDC payment found for reference {$this->reference}.");
         return false;
     }
 
     public function message()
     {
-        return 'Solana Pay transaction not found. If sent, please wait a few seconds and try again.';
+        return 'No matching USDC payment was found for the reference provided.';
     }
 }

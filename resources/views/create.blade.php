@@ -147,60 +147,32 @@
         <input name="youtube_link" value="{{ old('youtube_link') }}" >
 
         <div class="qr-box">
+            <strong><span style="color:green;">SOLANA</span></strong>
             <p><strong>Scan to send <span style="color:green;">1 USDC</span> to:</strong></p>
             <canvas id="qr"></canvas>
         </div>
 
         <div class="center-button">
-            <button type="submit" id="submit-btn" style="display:none;" disabled>✅ Submit Listing</button>
+            <button type="submit" id="submit-btn">✅ Submit Listing</button>
         </div>
     </form>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.78.2/lib/index.iife.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@solana/pay@0.2.0/dist/browser/solana-pay.iife.min.js"></script>
 
     <script>
-    async function pollPayment(reference) {
-        const submitBtn = document.getElementById('submit-btn');
-        const status = document.createElement('p');
-        status.id = 'payment-status';
-        status.style.textAlign = 'center';
-        status.innerText = '⏳ Waiting for payment...';
-        submitBtn.parentElement.appendChild(status);
-
-        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
-        const findReference = window.solanaPay.findReference;
-
-        const interval = setInterval(async () => {
-            try {
-                const sigInfo = await findReference(connection, new solanaWeb3.PublicKey(reference));
-                status.innerText = '✅ Payment confirmed!';
-                status.style.color = 'green';
-                submitBtn.disabled = false;
-                submitBtn.style.display = 'inline-block';
-
-                clearInterval(interval);
-            } catch (err) {
-                if (err.name !== 'ReferenceNotFoundError') {
-                    console.error('Polling error:', err);
-                    status.innerText = '❌ Error checking payment.';
-                    status.style.color = 'red';
-                    clearInterval(interval);
-                }
-            }
-        }, 3000); // every 3s
-    }
-
-    window.onload = async function generateQr() {
+    window.onload = function generateQr() {
         const recipient = new solanaWeb3.PublicKey('3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy');
         const usdcMint = new solanaWeb3.PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
-        const oldReference = "{{ old('reference') }}";
-        const reference = oldReference ? new solanaWeb3.PublicKey(oldReference) : solanaWeb3.Keypair.generate().publicKey;
+        const reference = solanaWeb3.Keypair.generate().publicKey;
         const amount = 1;
 
-        const url = `solana:${recipient.toBase58()}?amount=${amount}&spl-token=${usdcMint.toBase58()}&reference=${reference.toBase58()}&label=soipattaya&message=Listing%20Payment&memo=${reference.toBase58()}`;
-
+        // More explicit payment URL
+        const url = `solana:${recipient}?amount=${amount}` +
+                    `&spl-token=${usdcMint}` +
+                    `&reference=${reference}` +
+                    `&label=SoiPattaya` +
+                    `&message=Listing_Payment_${reference.toBase58().slice(0,8)}`;
+        
         new QRious({
             element: document.getElementById('qr'),
             value: url,
@@ -208,10 +180,7 @@
         });
 
         document.getElementById('reference').value = reference.toBase58();
-        document.getElementById('submit-btn').disabled = true;
-
-        pollPayment(reference.toBase58());
-    };
+        };
     </script>
 
 </body>
