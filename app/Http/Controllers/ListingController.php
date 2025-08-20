@@ -6,6 +6,7 @@ use App\Models\Listing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Rules\ValidSolanaPayment;
+use App\Rules\ValidAptosPayment;
 
 class ListingController extends Controller
 {
@@ -31,13 +32,22 @@ class ListingController extends Controller
             'description' => 'required|string',
             'youtube_link' => 'required|url',
             'reference' => 'required|string',
-            'reference' => ['required', 'string', new ValidSolanaPayment()]
+            'payment_network' => 'required|in:solana,aptos'
         ]);
+
+        // Validate payment based on network
+        if ($request->payment_network === 'solana') {
+            $request->validate([
+                'reference' => [new ValidSolanaPayment()]
+            ]);
+        } else {
+            $request->validate([
+                'reference' => [new ValidAptosPayment()]
+            ]);
+        }
 
         [$lat, $lng] = explode(',', str_replace(' ', '', $request->coordinates));
 
-        
-        
         Listing::create([
             'building_name' => $request->building_name,
             'latitude' => $lat,
@@ -48,6 +58,7 @@ class ListingController extends Controller
             'description' => $request->description,
             'youtube_link' => $request->youtube_link,
             'reference' => $request->reference,
+            'payment_network' => $request->payment_network,
             'expires_at' => now()->addDays(30),
         ]);
 
@@ -63,10 +74,25 @@ class ListingController extends Controller
 
     public function renew(Listing $listing, Request $request)
     {
-        $request->validate(['reference' => 'required|string']);
+        $request->validate([
+            'reference' => 'required|string',
+            'payment_network' => 'required|in:solana,aptos'
+        ]);
+
+        // Validate payment based on network
+        if ($request->payment_network === 'solana') {
+            $request->validate([
+                'reference' => [new ValidSolanaPayment()]
+            ]);
+        } else {
+            $request->validate([
+                'reference' => [new ValidAptosPayment()]
+            ]);
+        }
 
         $listing->expires_at = now()->addDays(30);
         $listing->reference = $request->reference;
+        $listing->payment_network = $request->payment_network;
         $listing->save();
 
         return back()->with('message', 'Listing renewed for 30 more days.');

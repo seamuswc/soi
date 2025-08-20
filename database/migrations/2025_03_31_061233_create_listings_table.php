@@ -13,6 +13,17 @@ return new class extends Migration
     {
         Schema::create('listings', function (Blueprint $table) {
             $table->id();
+            $table->string('building_name');
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
+            $table->string('floor');
+            $table->integer('sqm');
+            $table->integer('cost');
+            $table->text('description');
+            $table->string('youtube_link');
+            $table->string('reference')->unique();
+            $table->string('payment_network')->default('solana'); // solana or aptos
+            $table->timestamp('expires_at');
             $table->timestamps();
         });
     }

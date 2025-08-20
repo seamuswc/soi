@@ -20,11 +20,18 @@ class ValidSolanaPayment implements Rule
     {
         $this->reference = $value;
         $apiKey = env('HELIUS_API_KEY');
+        $recipientWallet = env('SOLANA_WALLET'); // The wallet that should receive payments
         $usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
-        $url = "https://api.helius.xyz/v0/addresses/{$this->reference}/transactions?api-key={$apiKey}&limit=10";
+        if (empty($apiKey) || empty($recipientWallet)) {
+            Log::error('ValidSolanaPayment: Missing API key or wallet address');
+            return false;
+        }
 
-        Log::info("ValidSolanaPayment: Checking transactions for reference: {$this->reference}, URL: {$url}");
+        // Check transactions for the RECIPIENT wallet (not the reference)
+        $url = "https://api.helius.xyz/v0/addresses/{$recipientWallet}/transactions?api-key={$apiKey}&limit=10";
+
+        Log::info("ValidSolanaPayment: Checking transactions for recipient: {$recipientWallet}, reference: {$this->reference}");
 
         $response = Http::get($url);
 
@@ -48,16 +55,24 @@ class ValidSolanaPayment implements Rule
             foreach ($tx['tokenTransfers'] as $transfer) {
                 Log::debug('ValidSolanaPayment: Found token transfer', $transfer);
 
+                // Check if this is a USDC transfer to our wallet
                 if (
                     $transfer['mint'] === $usdcMint &&
                     isset($transfer['amount']) &&
-                    floatval($transfer['amount']) >= $this->amount
+                    floatval($transfer['amount']) >= $this->amount &&
+                    $transfer['toUserAccount'] === $recipientWallet
                 ) {
-                    Log::info("ValidSolanaPayment: Valid USDC payment found.", [
-                        'amount' => $transfer['amount'],
-                        'mint' => $transfer['mint']
-                    ]);
-                    return true;
+                    // Check if the reference is included in the transaction
+                    $txData = json_encode($tx);
+                    if (str_contains($txData, $this->reference)) {
+                        Log::info("ValidSolanaPayment: Valid USDC payment found with matching reference.", [
+                            'amount' => $transfer['amount'],
+                            'mint' => $transfer['mint'],
+                            'reference' => $this->reference,
+                            'signature' => $tx['signature'] ?? 'unknown'
+                        ]);
+                        return true;
+                    }
                 }
             }
         }

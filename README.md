@@ -55,6 +55,8 @@ Edit DB & app settings:
     SOLANA_WALLET=YourWalletAddress
     HELIUS_API_KEY=YourHeliusAPIKey
     SOLANA_CLUSTER=mainnet-beta
+    APTOS_WALLET=YourAptosWalletAddress
+    APTOS_API_KEY=YourAptosAPIKey
 
 Then run:
 
