@@ -19,24 +19,20 @@ class ValidAptosPayment implements Rule
     public function passes($attribute, $value)
     {
         $this->reference = $value;
-        $apiKey = env('APTOS_API_KEY', '');
         $usdcMint = '0x1::coin::USDC'; // Aptos USDC mint address
         $recipientWallet = env('APTOS_WALLET', '');
 
-        if (empty($apiKey) || empty($recipientWallet)) {
-            Log::error('ValidAptosPayment: Missing API key or wallet address');
+        if (empty($recipientWallet)) {
+            Log::error('ValidAptosPayment: Missing wallet address');
             return false;
         }
 
-        // Using Aptos Indexer API to check transactions for the RECIPIENT wallet
+        // Using Aptos public API to check transactions for the RECIPIENT wallet
         $url = "https://mainnet.aptoslabs.com/v1/accounts/{$recipientWallet}/transactions?limit=10";
 
         Log::info("ValidAptosPayment: Checking transactions for recipient: {$recipientWallet}, reference: {$this->reference}");
 
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$apiKey}",
-            'Content-Type' => 'application/json'
-        ])->get($url);
+        $response = Http::get($url);
 
         if (!$response->successful()) {
             Log::error('ValidAptosPayment: Failed to fetch transactions.', [
