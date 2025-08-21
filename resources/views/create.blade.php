@@ -315,6 +315,12 @@
         <div class="center-button">
             <button type="submit" id="submit-btn">✅ Submit Listing</button>
         </div>
+        <div class="wallet-buttons">
+            <button onclick="openSolanaWallet(event)">Open Solana Wallet</button>
+            <button onclick="openAptosWallet(event)">Open Aptos Wallet</button>
+            <!-- Add more wallet buttons as needed -->
+        </div>
+
     </form>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -362,11 +368,12 @@
         }
 
         function generateAptosQR(reference) {
-            const recipient = '{{ env("APTOS_WALLET", "0x1234567890abcdef") }}';
+            const recipient = '{{ env("APTOS_WALLET", "default_aptos_wallet") }}';
+            const usdcMint = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5906926a1fd406f32c364d5117::usdc::USDC';
             const amount = 1000000; // 1 USDC in smallest units (6 decimals)
             
-            // Aptos Pay URL format
-            const url = `aptos://pay?address=${recipient}&amount=${amount}&reference=${reference}&label=SoiPattaya`;
+            // Aptos Pay URL format (assuming wallet support; test with Petra/Martian)
+            const url = `aptos://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
             
             new QRious({
                 element: document.getElementById('aptos-qr'),
@@ -387,6 +394,18 @@
                         `&reference=${reference}` +
                         `&label=SoiPattaya` +
                         `&message=Listing_Payment_${reference.slice(0,8)}`;
+            
+            window.open(url, '_blank');
+        }
+
+        function openAptosWallet(event) {
+            event.preventDefault();
+            const recipient = '{{ env("APTOS_WALLET", "default_aptos_wallet") }}';
+            const usdcMint = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5906926a1fd406f32c364d5117::usdc::USDC';
+            const reference = document.getElementById('reference').value; // Note: Not verifiable on backend
+            const amount = 1000000;
+
+            const url = `aptos://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
             
             window.open(url, '_blank');
         }

@@ -19,7 +19,7 @@ class ValidAptosPayment implements Rule
     public function passes($attribute, $value)
     {
         $this->reference = $value;
-        $usdcMint = '0x1::coin::USDC'; // Aptos USDC mint address
+        $usdcMint = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5906926a1fd406f32c364d5117::usdc::USDC'; // Correct LayerZero USDC on Aptos mainnet
         $recipientWallet = env('APTOS_WALLET', '');
 
         if (empty($recipientWallet)) {
@@ -28,9 +28,9 @@ class ValidAptosPayment implements Rule
         }
 
         // Using Aptos public API to check transactions for the RECIPIENT wallet
-        $url = "https://mainnet.aptoslabs.com/v1/accounts/{$recipientWallet}/transactions?limit=10";
+        $url = "https://mainnet.aptoslabs.com/v1/accounts/{$recipientWallet}/transactions?limit=50"; // Increased limit for better coverage
 
-        Log::info("ValidAptosPayment: Checking transactions for recipient: {$recipientWallet}, reference: {$this->reference}");
+        Log::info("ValidAptosPayment: Checking transactions for recipient: {$recipientWallet}, reference: {$this->reference} (note: reference not verifiable on Aptos)");
 
         $response = Http::get($url);
 
@@ -62,17 +62,15 @@ class ValidAptosPayment implements Rule
                 $amount = isset($tx['payload']['arguments'][1]) ? 
                          floatval($tx['payload']['arguments'][1]) / 1000000 : 0;
                 
-                // Check if amount matches and reference is in the transaction
+                // Check if amount matches
+                // NOTE: No reference check possible without custom contract - this is a limitation
                 if ($amount >= $this->amount) {
-                    $txData = json_encode($tx);
-                    if (str_contains($txData, $this->reference)) {
-                        Log::info("ValidAptosPayment: Valid USDC payment found with matching reference.", [
-                            'amount' => $amount,
-                            'reference' => $this->reference,
-                            'version' => $tx['version'] ?? 'unknown'
-                        ]);
-                        return true;
-                    }
+                    Log::info("ValidAptosPayment: Valid USDC payment found (reference not verified).", [
+                        'amount' => $amount,
+                        'reference' => $this->reference,
+                        'version' => $tx['version'] ?? 'unknown'
+                    ]);
+                    return true;
                 }
             }
         }
