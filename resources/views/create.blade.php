@@ -291,8 +291,7 @@
                         <canvas id="solana-qr"></canvas>
                     </div>
                     <div class="wallet-buttons">
-                        <a href="#" class="wallet-btn solana-btn" onclick="openSolanaWallet()">Open Phantom</a>
-                        <a href="#" class="wallet-btn solana-btn" onclick="openSolflare()">Open Solflare</a>
+                        <a href="#" class="wallet-btn solana-btn" onclick="openPhantom(event)">Open in Phantom</a>
                     </div>
                 </div>
             </div>
@@ -305,8 +304,7 @@
                         <canvas id="aptos-qr"></canvas>
                     </div>
                     <div class="wallet-buttons">
-                        <a href="#" class="wallet-btn aptos-btn" onclick="openPetra()">Open Petra</a>
-                        <a href="#" class="wallet-btn aptos-btn" onclick="openMartian()">Open Martian</a>
+                        <a href="#" class="wallet-btn aptos-btn" onclick="openPontem(event)">Open in Pontem</a>
                     </div>
                 </div>
             </div>
@@ -316,9 +314,8 @@
             <button type="submit" id="submit-btn">✅ Submit Listing</button>
         </div>
         <div class="wallet-buttons">
-            <button onclick="openSolanaWallet(event)">Open Solana Wallet</button>
-            <button onclick="openAptosWallet(event)">Open Aptos Wallet</button>
-            <!-- Add more wallet buttons as needed -->
+            <button onclick="openPhantom(event)">Open in Phantom (Solana)</button>
+            <button onclick="openPontem(event)">Open in Pontem (Aptos)</button>
         </div>
 
     </form>
@@ -354,11 +351,14 @@
             const usdcMint = new solanaWeb3.PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
             const amount = 1;
 
-            const url = `solana:${recipient.toBase58()}?amount=${amount}` +
+            const solanaPayUrl = `solana:${recipient.toBase58()}?amount=${amount}` +
                         `&spl-token=${usdcMint.toBase58()}` +
                         `&reference=${reference}` +
                         `&label=SoiPattaya` +
                         `&message=Listing_Payment_${reference.slice(0,8)}`;
+            
+            // Use Phantom universal link for QR scan to open app
+            const url = `https://phantom.app/ul/v1/pay?uri=${encodeURIComponent(solanaPayUrl)}`;
             
             new QRious({
                 element: document.getElementById('solana-qr'),
@@ -372,8 +372,8 @@
             const usdcMint = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5906926a1fd406f32c364d5117::usdc::USDC';
             const amount = 1000000; // 1 USDC in smallest units (6 decimals)
             
-            // Aptos Pay URL format (assuming wallet support; test with Petra/Martian)
-            const url = `aptos://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
+            // Pontem-specific Pay URL format (verify with Pontem docs)
+            const url = `pontem://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
             
             new QRious({
                 element: document.getElementById('aptos-qr'),
@@ -382,71 +382,34 @@
             });
         }
 
-        function openSolanaWallet(event) {
+        function openPhantom(event) {
             event.preventDefault();
             const recipient = '{{ env("SOLANA_WALLET", "3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy") }}';
             const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
             const reference = document.getElementById('reference').value;
             const amount = 1;
 
-            const url = `solana:${recipient}?amount=${amount}` +
+            const solanaPayUrl = `solana:${recipient}?amount=${amount}` +
                         `&spl-token=${usdcMint}` +
                         `&reference=${reference}` +
                         `&label=SoiPattaya` +
                         `&message=Listing_Payment_${reference.slice(0,8)}`;
             
+            const url = `https://phantom.app/ul/v1/pay?uri=${encodeURIComponent(solanaPayUrl)}`;
             window.open(url, '_blank');
         }
 
-        function openAptosWallet(event) {
+        function openPontem(event) {
             event.preventDefault();
             const recipient = '{{ env("APTOS_WALLET", "default_aptos_wallet") }}';
             const usdcMint = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5906926a1fd406f32c364d5117::usdc::USDC';
             const reference = document.getElementById('reference').value; // Note: Not verifiable on backend
             const amount = 1000000;
 
-            const url = `aptos://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
+            const url = `pontem://pay?address=${recipient}&amount=${amount}&token=${usdcMint}&reference=${reference}&label=SoiPattaya&message=Listing_Payment_${reference.slice(0,8)}`;
             
             window.open(url, '_blank');
         }
-
-        function openSolflare(event) {
-            event.preventDefault();
-            const recipient = '{{ env("SOLANA_WALLET", "3BVC8axBgNE8sopUMqYq5ros5szmcxrYmXPgJEmGnZPy") }}';
-            const usdcMint = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-            const reference = document.getElementById('reference').value;
-            const amount = 1;
-
-            const url = `solflare://solana:${recipient}?amount=${amount}` +
-                        `&spl-token=${usdcMint}` +
-                        `&reference=${reference}` +
-                        `&label=SoiPattaya` +
-                        `&message=Listing_Payment_${reference.slice(0,8)}`;
-            
-            window.open(url, '_blank');
-        }
-
-        function openPetra(event) {
-            event.preventDefault();
-            const recipient = '{{ env("APTOS_WALLET", "0x1234567890abcdef") }}';
-            const amount = 1000000;
-            const reference = document.getElementById('reference').value;
-            
-            const url = `petra://pay?address=${recipient}&amount=${amount}&reference=${reference}&label=SoiPattaya`;
-            window.open(url, '_blank');
-        }
-
-        function openMartian(event) {
-            event.preventDefault();
-            const recipient = '{{ env("APTOS_WALLET", "0x1234567890abcdef") }}';
-            const amount = 1000000;
-            const reference = document.getElementById('reference').value;
-            
-            const url = `martian://pay?address=${recipient}&amount=${amount}&reference=${reference}&label=SoiPattaya`;
-            window.open(url, '_blank');
-        }
-
-
     </script>
 
 </body>
