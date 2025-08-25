@@ -1,126 +1,47 @@
-✅ STEP 1: Update Server & Install Dependencies
+# SOI Pattaya - React + Vite + Fastify App
 
-    sudo apt update && sudo apt upgrade -y
+## Setup
 
-    sudo apt install nginx mysql-server php php-fpm php-mysql php-mbstring php-xml php-bcmath php-curl php-zip unzip curl git -y
+1. Install dependencies:
+   ```
+   npm install
+   cd client && npm install
+   cd ../server && npm install
+   ```
 
-✅ STEP 2: Secure MySQL & Create Database
+2. Set up environment variables in server/.env and client/.env (see examples above).
 
-    sudo mysql_secure_installation
+3. Run Prisma migrations:
+   ```
+   cd server
+   npx prisma migrate dev
+   ```
 
-Then:
+## Development
 
-    sudo mysql -u root -p
+```
+npm run dev
+```
 
-Inside MySQL prompt:
+- Client: http://localhost:5173
+- Server: http://localhost:3000
 
-    CREATE DATABASE soipattaya;
-    CREATE USER 'soipattaya_user'@'localhost' IDENTIFIED BY 'your_secure_password';
-    GRANT ALL PRIVILEGES ON soipattaya.* TO 'soipattaya_user'@'localhost';
-    FLUSH PRIVILEGES;
-    EXIT;
+## Build
 
-✅ STEP 3: Install Composer
+```
+npm run build
+```
 
-    cd ~
+## Start Production
 
-    curl -sS https://getcomposer.org/installer | php
+```
+npm start
+```
 
-    sudo mv composer.phar /usr/local/bin/composer
+For deployment, use a Node.js host, serve client/build as static, proxy API to server.
 
-✅ STEP 4: Clone Your Laravel Project
-
-    cd /var/www
-
-    sudo git clone https://github.com/yourusername/soipattaya.git
-
-    cd soipattaya
-
-    sudo chown -R www-data:www-data .
-
-✅ STEP 5: Set Up Laravel
-
-    cp .env.example .env
-
-    nano .env
-
-Edit DB & app settings:
-
-    APP_URL=https://yourdomain.com
-    DB_CONNECTION=mysql
-    DB_DATABASE=soipattaya
-    DB_USERNAME=soipattaya_user
-    DB_PASSWORD=your_secure_password
-
-    SOLANA_WALLET=YourWalletAddress
-    HELIUS_API_KEY=YourHeliusAPIKey
-    SOLANA_CLUSTER=mainnet-beta
-    APTOS_WALLET=YourAptosWalletAddress
-
-Then run:
-
-    composer install
-
-    php artisan key:generate
-
-    php artisan migrate
-
-    php artisan storage:link
-
-✅ STEP 6: Configure NGINX
-
-    sudo nano /etc/nginx/sites-available/soipattaya
-
-Paste this config:
-
-    server {
-        listen 80;
-        listen [::]:80;
-        server_name soipattaya.com www.soipattaya.com;
-
-        root /var/www/soipattaya/public;
-        index index.php index.html index.htm;
-
-        access_log /var/log/nginx/soipattaya.access.log;
-        error_log  /var/log/nginx/soipattaya.error.log;
-
-        location / {
-            try_files $uri $uri/ /index.php?$query_string;
-        }
-
-        location ~ \.php$ {
-            include snippets/fastcgi-php.conf;
-
-            # Match this with your installed PHP version
-            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-
-            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-            include fastcgi_params;
-        }
-
-        location ~ /\.ht {
-            deny all;
-        }
-    }
-
-
-Enable and reload:
-
-    sudo ln -s /etc/nginx/sites-available/soipattaya /etc/nginx/sites-enabled/
-
-    sudo nginx -t
-
-    sudo systemctl reload nginx
-
-✅ STEP 7: Set Correct Permissions, go back two folders
-
-    sudo chown -R www-data:www-data /var/www/soipattaya
-
-    sudo chmod -R 755 /var/www/soipattaya
-
-✅ STEP 8: (Optional) Enable HTTPS with Certbot
-
-    sudo apt install certbot python3-certbot-nginx -y
-
-    sudo certbot --nginx -d yourdomain.com
+Note: Update wallet addresses and API keys in .env files.
+The app now uses direct Solana RPC for payment validation, no Helius required.
+Only Solana payments are supported.
+Users can pay via QR or directly with Phantom wallet.
 
