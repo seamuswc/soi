@@ -18,6 +18,7 @@ model Listing {
   description     String
   youtube_link    String
   reference       String
+  payment_network String   @default("solana")
   expires_at      DateTime
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt

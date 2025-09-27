@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import QRious from 'qrious';
 import { Keypair, PublicKey, Connection, clusterApiUrl } from '@solana/web3.js';
 import axios from 'axios';
 import { Transaction } from '@solana/web3.js';
@@ -17,30 +16,48 @@ function CreatePage() {
     payment_network: 'solana'
   });
 
-  const [solanaReference, setSolanaReference] = useState('');
+  const [references, setReferences] = useState({
+    solana: '',
+    aptos: '',
+    sui: ''
+  });
 
   useEffect(() => {
-    // Generate references
-    const keypair = Keypair.generate();
-    setSolanaReference(keypair.publicKey.toBase58());
-    generateQRCodes(keypair.publicKey.toBase58());
+    // Generate references for all networks
+    const solanaKeypair = Keypair.generate();
+    const aptosRef = generateAptosReference();
+    const suiRef = generateSuiReference();
+    
+    setReferences({
+      solana: solanaKeypair.publicKey.toBase58(),
+      aptos: aptosRef,
+      sui: suiRef
+    });
 
-    setFormData(prev => ({ ...prev, reference: keypair.publicKey.toBase58() }));
+    setFormData(prev => ({ ...prev, reference: solanaKeypair.publicKey.toBase58() }));
   }, []);
 
-  const generateQRCodes = (reference) => {
-    // Solana QR
-    const solanaWallet = '8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj'; // From original
-    const solanaQR = new QRious({
-      element: document.getElementById('solana-qr'),
-      value: `solana:${solanaWallet}?amount=1&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&reference=${reference}`,
-      size: 200
-    });
+  const generateAptosReference = () => {
+    // Generate a random 32-byte reference for Aptos
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  const generateSuiReference = () => {
+    // Generate a random 32-byte reference for Sui
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value,
+      reference: references[value] || prev.reference
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -53,7 +70,7 @@ function CreatePage() {
     }
   };
 
-  const handlePayWithPhantom = async () => {
+  const handlePayWithSolana = async () => {
     if (!window.solana || !window.solana.isPhantom) {
       alert('Phantom wallet not detected. Please install Phantom.');
       return;
@@ -61,8 +78,8 @@ function CreatePage() {
     try {
       const response = await window.solana.connect();
       const payer = response.publicKey.toString();
-      const recipient = '8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj'; // From env or hardcode
-      const res = await axios.post('/api/tx/usdc', { payer, recipient, amount: 1, reference: solanaReference });
+      const recipient = '8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj';
+      const res = await axios.post('/api/tx/usdc', { payer, recipient, amount: 1, reference: references.solana });
       const { transaction } = res.data;
       const txBuffer = Buffer.from(transaction, 'base64');
       const tx = Transaction.from(txBuffer);
@@ -76,46 +93,324 @@ function CreatePage() {
     }
   };
 
+  const handlePayWithAptos = async () => {
+    if (!window.aptos) {
+      alert('Aptos wallet not detected. Please install Petra wallet.');
+      return;
+    }
+    try {
+      const response = await window.aptos.connect();
+      const account = await window.aptos.account();
+      const payer = account.address;
+      const res = await axios.post('/api/tx/aptos', { 
+        payer, 
+        amount: 1, 
+        reference: references.aptos 
+      });
+      const { transaction } = res.data;
+      const txHash = await window.aptos.signAndSubmitTransaction(transaction);
+      alert('Payment successful! Now submit the listing.');
+    } catch (error) {
+      console.error(error);
+      alert('Payment failed: ' + error.message);
+    }
+  };
+
+  const handlePayWithSui = async () => {
+    if (!window.suiWallet) {
+      alert('Sui wallet not detected. Please install Sui wallet.');
+      return;
+    }
+    try {
+      const response = await window.suiWallet.connect();
+      const payer = response.accounts[0].address;
+      const res = await axios.post('/api/tx/sui', { 
+        payer, 
+        amount: 1, 
+        reference: references.sui 
+      });
+      const { transaction } = res.data;
+      const txHash = await window.suiWallet.signAndExecuteTransactionBlock({
+        transactionBlock: transaction,
+        account: response.accounts[0]
+      });
+      alert('Payment successful! Now submit the listing.');
+    } catch (error) {
+      console.error(error);
+      alert('Payment failed: ' + error.message);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="p-4 max-w-md mx-auto">
-      <div className="mb-4">
-        <label>Building Name</label>
-        <input type="text" name="building_name" value={formData.building_name} onChange={handleChange} required className="border p-2 w-full" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
+        {/* Header */}
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing</h1>
+          <p className="text-sm md:text-base text-gray-600">List your property on SOI Pattaya</p>
+        </div>
+
+        {/* Main Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-4 md:p-8">
+            {/* Property Details Section */}
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
+                <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">1</span>
+                Property Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Building Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="building_name"
+                    value={formData.building_name}
+                    onChange={handleChange}
+                    placeholder="e.g., Central Pattaya"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Floor *
+                  </label>
+                  <input
+                    type="text"
+                    name="floor"
+                    value={formData.floor}
+                    onChange={handleChange}
+                    placeholder="e.g., 5th Floor"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Size (sqm) *
+                  </label>
+                  <input
+                    type="number"
+                    name="sqm"
+                    value={formData.sqm}
+                    onChange={handleChange}
+                    placeholder="e.g., 120"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Cost (THB) *
+                  </label>
+                  <input
+                    type="number"
+                    name="cost"
+                    value={formData.cost}
+                    onChange={handleChange}
+                    placeholder="e.g., 50000"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Coordinates (lat,lng) *
+                  </label>
+                  <input
+                    type="text"
+                    name="coordinates"
+                    value={formData.coordinates}
+                    onChange={handleChange}
+                    placeholder="12.934053,100.882455"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                  <p className="text-xs text-gray-500">Get coordinates from Google Maps</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description Section */}
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
+                <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">2</span>
+                Property Information
+              </h2>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Description *
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Describe your property, amenities, and key features..."
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-base"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    YouTube Video Link *
+                  </label>
+                  <input
+                    type="url"
+                    name="youtube_link"
+                    value={formData.youtube_link}
+                    onChange={handleChange}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    required
+                  />
+                  <p className="text-xs text-gray-500">Upload a property tour video to YouTube and paste the link here</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Section */}
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
+                <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">3</span>
+                Payment Method
+              </h2>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 md:p-6 rounded-xl border border-blue-200">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Choose Payment Network *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="solana"
+                          checked={formData.payment_network === 'solana'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'solana' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-purple-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">S</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Solana</div>
+                            <div className="text-xs text-gray-500">USDC</div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-blue-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="aptos"
+                          checked={formData.payment_network === 'aptos'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">A</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Aptos</div>
+                            <div className="text-xs text-gray-500">APT</div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-green-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="sui"
+                          checked={formData.payment_network === 'sui'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">S</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Sui</div>
+                            <div className="text-xs text-gray-500">SUI</div>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Payment Button */}
+                  <div className="mt-6">
+                    {formData.payment_network === 'solana' && (
+                      <button
+                        type="button"
+                        onClick={handlePayWithSolana}
+                        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                      >
+                        💳 Pay with Phantom Wallet
+                      </button>
+                    )}
+
+                    {formData.payment_network === 'aptos' && (
+                      <button
+                        type="button"
+                        onClick={handlePayWithAptos}
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                      >
+                        💳 Pay with Petra Wallet
+                      </button>
+                    )}
+
+                    {formData.payment_network === 'sui' && (
+                      <button
+                        type="button"
+                        onClick={handlePayWithSui}
+                        className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                      >
+                        💳 Pay with Sui Wallet
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+              >
+                🚀 Create Listing
+              </button>
+              <a
+                href="/"
+                className="flex-1 bg-gray-100 text-gray-700 px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:bg-gray-200 transition-all text-center text-sm md:text-base"
+              >
+                Cancel
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
-      <div className="mb-4">
-        <label>Coordinates (lat,lng)</label>
-        <input type="text" name="coordinates" value={formData.coordinates} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>Floor</label>
-        <input type="text" name="floor" value={formData.floor} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>Size (sqm)</label>
-        <input type="number" name="sqm" value={formData.sqm} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>Cost (THB)</label>
-        <input type="number" name="cost" value={formData.cost} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>Description</label>
-        <textarea name="description" value={formData.description} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>YouTube Link</label>
-        <input type="url" name="youtube_link" value={formData.youtube_link} onChange={handleChange} required className="border p-2 w-full" />
-      </div>
-      <div className="mb-4">
-        <label>Reference</label>
-        <input type="text" name="reference" value={formData.reference} readOnly className="border p-2 w-full" />
-      </div>
-      <div className="flex justify-between mb-4">
-        <canvas id="solana-qr" className={formData.payment_network === 'solana' ? '' : 'hidden'}></canvas>
-      </div>
-      <button type="button" onClick={handlePayWithPhantom} className="bg-purple-500 text-white p-2 mt-4">Pay with Phantom</button>
-      <button type="submit" className="bg-green-500 text-white p-2 w-full">Submit Listing</button>
-    </form>
+    </div>
   );
 }
 

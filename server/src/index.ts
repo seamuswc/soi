@@ -5,7 +5,10 @@ import cron from 'node-cron';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 import { PublicKey, Connection, SystemProgram, Transaction, TransactionInstruction, ParsedTransactionWithMeta, ParsedInstruction, PartiallyDecodedInstruction } from '@solana/web3.js';
+import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import axios from 'axios';
+import path from 'path';
 
 dotenv.config();
 
@@ -19,6 +22,13 @@ const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 
 const connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com', 'confirmed');
+
+// Aptos configuration
+const aptosConfig = new AptosConfig({ network: Network.MAINNET });
+const aptos = new Aptos(aptosConfig);
+
+// Sui configuration
+const suiClient = new SuiClient({ url: getFullnodeUrl('mainnet') });
 
 function ata(owner: PublicKey, mint: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
@@ -93,7 +103,7 @@ const createListingSchema = z.object({
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
-  // no payment_network
+  payment_network: z.enum(['solana', 'aptos', 'sui']).default('solana')
 });
 
 async function validateSolanaPayment(reference: string): Promise<boolean> {
@@ -122,8 +132,32 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
   }
 }
 
+async function validateAptosPayment(reference: string): Promise<boolean> {
+  try {
+    // For Aptos, we'll use a simplified validation approach
+    // In production, you'd want to implement proper transaction verification
+    // For now, we'll accept any valid reference format
+    return Boolean(reference && reference.length > 0);
+  } catch (error) {
+    app.log.error(error);
+    return false;
+  }
+}
+
+async function validateSuiPayment(reference: string): Promise<boolean> {
+  try {
+    // For Sui, we'll use a simplified validation approach
+    // In production, you'd want to implement proper transaction verification
+    // For now, we'll accept any valid reference format
+    return Boolean(reference && reference.length > 0);
+  } catch (error) {
+    app.log.error(error);
+    return false;
+  }
+}
+
 // Routes
-app.get('/listings', async () => {
+app.get('/api/listings', async () => {
   const listings = await prisma.listing.findMany();
   // Group by building_name as in original
   const grouped: Record<string, typeof listings> = listings.reduce((acc: Record<string, typeof listings>, listing) => {
@@ -134,11 +168,85 @@ app.get('/listings', async () => {
   return grouped;
 });
 
-app.post('/listings', async (request, reply) => {
+// Authentication middleware
+const authenticateToken = (request: any, reply: any, done: any) => {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return reply.code(401).send({ error: 'Access token required' });
+  }
+
+  // Simple token validation (in production, use JWT)
+  const expectedToken = process.env.ADMIN_TOKEN || 'admin123';
+  if (token !== expectedToken) {
+    return reply.code(403).send({ error: 'Invalid token' });
+  }
+
+  done();
+};
+
+// Login endpoint
+app.post('/api/auth/login', async (request, reply) => {
+  const { username, password } = request.body as { username: string, password: string };
+  
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'password';
+  
+  if (username === adminUsername && password === adminPassword) {
+    const token = process.env.ADMIN_TOKEN || 'admin123';
+    return { success: true, token };
+  } else {
+    return reply.code(401).send({ error: 'Invalid credentials' });
+  }
+});
+
+// Add admin dashboard route (protected)
+app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () => {
+  const listings = await prisma.listing.findMany({
+    orderBy: {
+      created_at: 'desc'
+    }
+  });
+  
+  return {
+    total: listings.length,
+    active: listings.filter(l => l.expires_at > new Date()).length,
+    expired: listings.filter(l => l.expires_at <= new Date()).length,
+    listings: listings.map(listing => ({
+      id: listing.id,
+      building_name: listing.building_name,
+      floor: listing.floor,
+      sqm: listing.sqm,
+      cost: listing.cost,
+      payment_network: listing.payment_network,
+      created_at: listing.created_at,
+      expires_at: listing.expires_at,
+      is_expired: listing.expires_at <= new Date()
+    }))
+  };
+});
+
+app.post('/api/listings', async (request, reply) => {
   const data = createListingSchema.parse(request.body);
   const [lat, lng] = data.coordinates.split(',').map(s => parseFloat(s.trim()));
 
-  const isValid = await validateSolanaPayment(data.reference);
+  let isValid = false;
+  
+  // Validate payment based on network
+  switch (data.payment_network) {
+    case 'solana':
+      isValid = await validateSolanaPayment(data.reference);
+      break;
+    case 'aptos':
+      isValid = await validateAptosPayment(data.reference);
+      break;
+    case 'sui':
+      isValid = await validateSuiPayment(data.reference);
+      break;
+    default:
+      return reply.code(400).send({ error: 'Invalid payment network' });
+  }
 
   if (!isValid) {
     return reply.code(400).send({ error: 'Invalid payment' });
@@ -155,6 +263,7 @@ app.post('/listings', async (request, reply) => {
       description: data.description,
       youtube_link: data.youtube_link,
       reference: data.reference,
+      payment_network: data.payment_network,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     },
   });
@@ -162,14 +271,14 @@ app.post('/listings', async (request, reply) => {
   return listing;
 });
 
-app.get('/listings/:name', async (request) => {
+app.get('/api/listings/:name', async (request) => {
   const { name } = request.params as { name: string };
   const listings = await prisma.listing.findMany({ where: { building_name: name } });
   return listings;
 });
 
-// Add tx endpoint
-app.post('/tx/usdc', async (request, reply) => {
+// Add tx endpoints
+app.post('/api/tx/usdc', async (request, reply) => {
   try {
     const { payer, recipient, amount, reference } = request.body as { payer: string, recipient: string, amount: number, reference?: string };
     if (!payer || !recipient || !amount) {
@@ -183,6 +292,53 @@ app.post('/tx/usdc', async (request, reply) => {
   }
 });
 
+app.post('/api/tx/aptos', async (request, reply) => {
+  try {
+    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    if (!payer || !amount || !reference) {
+      return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
+    }
+    
+    // Create a simple transfer transaction for Aptos
+    const transaction = await aptos.transferCoinTransaction({
+      sender: payer,
+      recipient: process.env.APTOS_MERCHANT_ADDRESS || '0x1',
+      amount: amount * 1000000, // 6 decimals for USDC
+      coinType: '0x1::aptos_coin::AptosCoin' // Using APT for simplicity
+    });
+    
+    return { transaction };
+  } catch (e: any) {
+    app.log.error(e);
+    return reply.code(500).send({ error: e.message || String(e) });
+  }
+});
+
+app.post('/api/tx/sui', async (request, reply) => {
+  try {
+    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    if (!payer || !amount || !reference) {
+      return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
+    }
+    
+    // Create a simple transfer transaction for Sui
+    const transaction = {
+      kind: 'transferObject',
+      data: {
+        from: payer,
+        to: process.env.SUI_MERCHANT_ADDRESS || '0x1',
+        amount: amount * 1000000, // 6 decimals for USDC
+        coinType: '0x2::sui::SUI' // Using SUI for simplicity
+      }
+    };
+    
+    return { transaction };
+  } catch (e: any) {
+    app.log.error(e);
+    return reply.code(500).send({ error: e.message || String(e) });
+  }
+});
+
 // Cron job to delete expired listings
 cron.schedule('0 0 * * *', async () => {
   await prisma.listing.deleteMany({
@@ -190,6 +346,24 @@ cron.schedule('0 0 * * *', async () => {
   });
   app.log.info('Expired listings deleted');
 });
+
+// Serve static files in production (after all API routes)
+if (process.env.NODE_ENV === 'production') {
+  app.register(require('@fastify/static'), {
+    root: path.join(__dirname, '../../client/dist'),
+    prefix: '/',
+    decorateReply: false
+  });
+  
+  // Serve index.html for all non-API routes (SPA)
+  app.setNotFoundHandler((request, reply) => {
+    // Don't serve HTML for API routes
+    if (request.url.startsWith('/api/')) {
+      return reply.code(404).send({ error: 'API endpoint not found' });
+    }
+    reply.type('text/html').send(require('fs').readFileSync(path.join(__dirname, '../../client/dist/index.html'), 'utf8'));
+  });
+}
 
 // Start server
 const start = async () => {

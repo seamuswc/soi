@@ -1,0 +1,185 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import LoginPage from './LoginPage';
+
+function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('admin_token'));
+
+  useEffect(() => {
+    if (token) {
+      // Verify token is still valid
+      axios.get('/api/listings/dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(response => {
+        setDashboardData(response.data);
+        setIsAuthenticated(true);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching dashboard data:', error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('admin_token');
+          setToken(null);
+          setIsAuthenticated(false);
+        }
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const handleLogin = (newToken) => {
+    setToken(newToken);
+    setIsAuthenticated(true);
+    localStorage.setItem('admin_token', newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    setToken(null);
+    setIsAuthenticated(false);
+    setDashboardData(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl text-red-600">Error loading dashboard data</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base"
+          >
+            Logout
+          </button>
+        </div>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-gray-600">Total Listings</h3>
+            <p className="text-2xl md:text-3xl font-bold text-blue-600">{dashboardData.total}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-gray-600">Active Listings</h3>
+            <p className="text-2xl md:text-3xl font-bold text-green-600">{dashboardData.active}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-gray-600">Expired Listings</h3>
+            <p className="text-2xl md:text-3xl font-bold text-red-600">{dashboardData.expired}</p>
+          </div>
+        </div>
+
+        {/* Listings Table */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-800">All Listings</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Building
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Floor
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Size (sqm)
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cost (THB)
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment Network
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {dashboardData.listings.map((listing) => (
+                  <tr key={listing.id} className={listing.is_expired ? 'bg-red-50' : ''}>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {listing.building_name}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {listing.floor}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {listing.sqm}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {listing.cost.toLocaleString()}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        listing.payment_network === 'solana' ? 'bg-purple-100 text-purple-800' :
+                        listing.payment_network === 'aptos' ? 'bg-blue-100 text-blue-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {listing.payment_network.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        listing.is_expired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {listing.is_expired ? 'Expired' : 'Active'}
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(listing.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="mt-8 flex space-x-4">
+          <a href="/" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Back to Map
+          </a>
+          <a href="/create" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            Create New Listing
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DashboardPage;
