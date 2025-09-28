@@ -11,7 +11,8 @@
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
     "start": "node server/dist/index.js",
-    "deploy": "sudo ./deploy.sh"
+    "deploy": "sudo ./deploy.sh",
+    "deploy:one-liner": "curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",

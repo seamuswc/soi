@@ -2,7 +2,23 @@
 
 A simple property listing app with blockchain payments (Solana, Aptos, Sui) and admin dashboard.
 
-## Quick Start
+## 🚀 Single Command Deployment
+
+**For Linux servers (Ubuntu/Debian):**
+```bash
+# One-liner deployment
+curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
+```
+
+**Or use the interactive script:**
+```bash
+# Clone and run
+git clone https://github.com/seamuswc/soipattaya_JS.git
+cd soipattaya_JS
+sudo ./deploy.sh
+```
+
+## Quick Start (Local Development)
 
 ### 1. Install Dependencies
 ```bash
@@ -64,9 +80,16 @@ npm start
 
 ### 1. Install Requirements
 ```bash
-# Node.js
+# Node.js (Ubuntu/Debian)
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# Or use your system package manager:
+# Ubuntu/Debian: sudo apt install nodejs npm
+# CentOS/RHEL: sudo yum install nodejs npm
+# Fedora: sudo dnf install nodejs npm
+# Arch: sudo pacman -S nodejs npm
+# macOS: brew install node
 
 # PM2
 sudo npm install -g pm2
