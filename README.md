@@ -4,19 +4,44 @@ A simple property listing app with blockchain payments (Solana, Aptos, Sui) and 
 
 ## 🚀 Single Command Deployment
 
-**For Linux servers (Ubuntu/Debian):**
+### Option 1: One-Liner (Easiest)
 ```bash
-# One-liner deployment
 curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
 ```
 
-**Or use the interactive script:**
+### Option 2: Interactive Script
 ```bash
-# Clone and run
 git clone https://github.com/seamuswc/soipattaya_JS.git
 cd soipattaya_JS
 sudo ./deploy.sh
 ```
+
+### Option 3: NPM Script
+```bash
+git clone https://github.com/seamuswc/soipattaya_JS.git
+cd soipattaya_JS
+npm run deploy
+```
+
+### Option 4: Safe Deployment (No Server Config Changes)
+```bash
+git clone https://github.com/seamuswc/soipattaya_JS.git
+cd soipattaya_JS
+sudo ./deploy-safe.sh
+```
+
+**What each command does:**
+- ✅ Installs Node.js, PM2, Nginx
+- ✅ Clones from [GitHub](https://github.com/seamuswc/soipattaya_JS.git)
+- ✅ Installs dependencies
+- ✅ Sets up environment variables
+- ✅ Creates database
+- ✅ Builds application
+- ✅ Configures Nginx (Options 1-3 only)
+- ✅ Starts with PM2
+- ✅ Sets up firewall (Options 1-3 only)
+
+**⚠️ Safe Mode (Option 4):** Only installs the app, doesn't modify server configurations
 
 ## Quick Start (Local Development)
 
@@ -187,9 +212,30 @@ npm start           # Start production
 npm run setup       # Interactive setup
 ```
 
+## After Deployment
+
+1. **Edit environment variables:**
+   ```bash
+   nano /opt/soipattaya/.env
+   ```
+
+2. **Check status:**
+   ```bash
+   pm2 status
+   ```
+
+3. **View logs:**
+   ```bash
+   pm2 logs soipattaya
+   ```
+
+4. **Access your app:**
+   - Visit: `http://your-server-ip`
+   - Admin: `http://your-server-ip/dashboard`
+
 ## Troubleshooting
 
-**Port in use:**
+**Port already in use:**
 ```bash
 sudo lsof -i :3000
 sudo kill -9 <PID>
@@ -205,4 +251,16 @@ npx prisma db push
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
+```
+
+**Restart services:**
+```bash
+pm2 restart soipattaya
+sudo systemctl reload nginx
+```
+
+**Check logs:**
+```bash
+pm2 logs soipattaya
+sudo journalctl -u nginx
 ```
