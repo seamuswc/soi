@@ -12,7 +12,8 @@ fi
 # Configuration
 REPO_URL="https://github.com/seamuswc/soipattaya_JS.git"
 APP_DIR="/opt/soipattaya"
-DOMAIN="_" # Use '_' for any domain, or replace with your actual domain
+DOMAIN="soipattaya.com" # Your actual domain
+SITE_NAME="soipattaya"
 
 echo "📋 Configuration:"
 echo "   Repository: $REPO_URL"
@@ -108,12 +109,12 @@ npm run build
 
 # Configure Nginx
 echo "🌐 Configuring Nginx..."
-cp nginx.conf /etc/nginx/sites-available/soipattaya
-sed -i "s|your-domain.com|$DOMAIN|" /etc/nginx/sites-available/soipattaya
-sed -i "s|/opt/soipattaya|$APP_DIR|" /etc/nginx/sites-available/soipattaya
+cp nginx.conf /etc/nginx/sites-available/$SITE_NAME
+sed -i "s|_|$DOMAIN www.$DOMAIN|" /etc/nginx/sites-available/$SITE_NAME
+sed -i "s|/opt/soipattaya|$APP_DIR|" /etc/nginx/sites-available/$SITE_NAME
 
 # Enable site
-ln -sf /etc/nginx/sites-available/soipattaya /etc/nginx/sites-enabled/
+ln -sf /etc/nginx/sites-available/$SITE_NAME /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
 # Test and reload Nginx

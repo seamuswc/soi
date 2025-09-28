@@ -8,7 +8,7 @@ console.log('============================\n');
 
 // Create simple .env file
 const envContent = `# SOI Pattaya Environment
-DATABASE_URL="file:./server/database.sqlite"
+DATABASE_URL="file:/opt/soipattaya/server/database.sqlite"
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="soipattaya2024"
 ADMIN_TOKEN="admin_token_12345"
@@ -16,8 +16,9 @@ VITE_GOOGLE_MAPS_API_KEY="your_google_maps_api_key_here"
 SOLANA_MERCHANT_ADDRESS="your_solana_address_here"
 APTOS_MERCHANT_ADDRESS="your_aptos_address_here"
 SUI_MERCHANT_ADDRESS="your_sui_address_here"
-NODE_ENV="development"
+NODE_ENV="production"
 PORT=3000
+SITE_DOMAIN="soipattaya.com"
 `;
 
 // Write .env file

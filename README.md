@@ -34,13 +34,14 @@ sudo ./deploy-safe.sh
 - ✅ Installs Node.js, PM2, Nginx
 - ✅ Clones from [GitHub](https://github.com/seamuswc/soipattaya_JS.git)
 - ✅ Installs dependencies
-- ✅ Sets up environment variables
+- ✅ Sets up environment variables (pre-configured for soipattaya.com)
 - ✅ Creates database
 - ✅ Builds application
-- ✅ Configures Nginx (Options 1-3 only)
+- ✅ Configures Nginx for soipattaya.com (Options 1-3 only)
 - ✅ Starts with PM2
 - ✅ Sets up firewall (Options 1-3 only)
 
+**🌐 Domain Configuration:** All scripts are pre-configured for `soipattaya.com`
 **⚠️ Safe Mode (Option 4):** Only installs the app, doesn't modify server configurations
 
 ## Quick Start (Local Development)
