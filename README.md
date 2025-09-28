@@ -9,13 +9,29 @@
    cd ../server && npm install
    ```
 
-2. Set up environment variables in server/.env and client/.env (see examples above).
+2. **Set up environment variables (ONE-TIME SETUP):**
+   ```
+   npm run setup
+   ```
+   This interactive script will guide you through setting up all environment variables in one place.
 
 3. Run Prisma migrations:
    ```
    cd server
    npx prisma migrate dev
    ```
+
+## Environment Variables
+
+The application uses a single `.env` file in the root directory that contains all necessary configuration:
+
+- **Database**: SQLite database path
+- **Admin**: Username, password, and token for dashboard access
+- **Google Maps**: API key for map functionality
+- **Blockchain**: Merchant addresses for Solana, Aptos, and Sui payments
+- **Server**: Port and environment settings
+
+The setup script automatically creates both root `.env` and `client/.env` files with the appropriate variables for each environment.
 
 ## Development
 
@@ -245,12 +261,9 @@ module.exports = {
     cwd: '/opt/soipattaya',
     instances: 1,
     exec_mode: 'fork',
+    env_file: '/opt/soipattaya/.env',  // Load from .env file
     env: {
       NODE_ENV: 'production',
-      DATABASE_URL: 'file:/opt/soipattaya/server/database.sqlite',
-      ADMIN_USERNAME: 'admin',
-      ADMIN_PASSWORD: 'your_secure_password_here',
-      ADMIN_TOKEN: 'your_secure_token_here',
       PORT: 3000
     },
     error_file: '/var/log/pm2/soipattaya-error.log',

@@ -10,6 +10,12 @@ import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import axios from 'axios';
 import path from 'path';
 
+// Load environment variables from multiple sources
+// 1. Try to load from root .env file first
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+// 2. Fallback to server/.env
+dotenv.config({ path: path.join(__dirname, '../.env') });
+// 3. Load from process.env (for production)
 dotenv.config();
 
 const app = fastify({ logger: true });
