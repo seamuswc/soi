@@ -10,9 +10,9 @@ console.log('============================\n');
 const envContent = `# SOI Pattaya Environment
 DATABASE_URL="file:/var/www/soipattaya/server/database.sqlite"
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="soipattaya2024"
+ADMIN_PASSWORD="poop"
 ADMIN_TOKEN="admin_token_12345"
-VITE_GOOGLE_MAPS_API_KEY="your_google_maps_api_key_here"
+VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
 SOLANA_MERCHANT_ADDRESS="your_solana_address_here"
 APTOS_MERCHANT_ADDRESS="your_aptos_address_here"
 SUI_MERCHANT_ADDRESS="your_sui_address_here"

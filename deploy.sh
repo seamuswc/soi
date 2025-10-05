@@ -97,6 +97,10 @@ echo "   nano $APP_DIR/.env"
 echo ""
 read -p "Press Enter after you have updated the .env file..."
 
+# Copy .env to server directory for Prisma
+echo "📋 Copying environment variables to server..."
+cp $APP_DIR/.env $APP_DIR/server/.env
+
 # Setup database
 echo "🗄️ Setting up database..."
 cd server
