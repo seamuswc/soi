@@ -29,7 +29,8 @@ cd server && npx prisma db push && cd .. && npm run build
 
 # Configure Nginx
 cp nginx.conf /etc/nginx/sites-available/soipattaya
-sed -i 's|_|soipattaya.com www.soipattaya.com|' /etc/nginx/sites-available/soipattaya
+sed -i 's|DOMAIN_PLACEHOLDER|soipattaya.com www.soipattaya.com|' /etc/nginx/sites-available/soipattaya
+sed -i 's|APP_DIR_PLACEHOLDER|/var/www/soipattaya|' /etc/nginx/sites-available/soipattaya
 ln -sf /etc/nginx/sites-available/soipattaya /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx

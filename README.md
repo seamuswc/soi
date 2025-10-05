@@ -37,9 +37,10 @@ sudo ./deploy-safe.sh
 - ✅ Sets up environment variables (pre-configured for soipattaya.com)
 - ✅ Creates database
 - ✅ Builds application
-- ✅ Configures Nginx for soipattaya.com (Options 1-3 only)
+- ✅ Configures Nginx for soipattaya.com
+- ✅ Installs SSL certificate (HTTPS)
 - ✅ Starts with PM2
-- ✅ Sets up firewall (Options 1-3 only)
+- ✅ Sets up firewall
 
 **🌐 Domain Configuration:** All scripts are pre-configured for `soipattaya.com`
 **⚠️ Safe Mode (Option 4):** Only installs the app, doesn't modify server configurations

@@ -11,7 +11,7 @@ fi
 
 # Configuration
 REPO_URL="https://github.com/seamuswc/soipattaya_JS.git"
-APP_DIR="/opt/soipattaya"
+APP_DIR="/var/www/soipattaya"
 
 echo "📋 Configuration:"
 echo "   Repository: $REPO_URL"

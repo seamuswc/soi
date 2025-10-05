@@ -8,7 +8,7 @@ console.log('============================\n');
 
 // Create simple .env file
 const envContent = `# SOI Pattaya Environment
-DATABASE_URL="file:/opt/soipattaya/server/database.sqlite"
+DATABASE_URL="file:/var/www/soipattaya/server/database.sqlite"
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="soipattaya2024"
 ADMIN_TOKEN="admin_token_12345"

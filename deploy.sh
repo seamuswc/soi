@@ -11,7 +11,7 @@ fi
 
 # Configuration
 REPO_URL="https://github.com/seamuswc/soipattaya_JS.git"
-APP_DIR="/opt/soipattaya"
+APP_DIR="/var/www/soipattaya"
 DOMAIN="soipattaya.com" # Your actual domain
 SITE_NAME="soipattaya"
 
@@ -127,18 +127,26 @@ pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 
-# Setup firewall (optional)
+# Setup firewall
 echo "🔥 Configuring firewall..."
 ufw allow 22
 ufw allow 80
 ufw allow 443
 ufw --force enable
 
+# Install SSL with Certbot
+echo "🔒 Installing SSL certificate..."
+apt install -y certbot python3-certbot-nginx
+
+# Get SSL certificate
+echo "🔒 Obtaining SSL certificate..."
+certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
+
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your app should be running at: http://$(curl -s ifconfig.me)"
+echo "🌐 Your app is running at: https://$DOMAIN"
 echo "📊 Check status: pm2 status"
 echo "📝 View logs: pm2 logs soipattaya"
 echo "🔧 Edit config: nano $APP_DIR/.env"
 echo ""
-echo "🎉 SOI Pattaya is now live!"
+echo "🎉 SOI Pattaya is now live with SSL!"
