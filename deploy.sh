@@ -31,7 +31,7 @@ echo "📦 Installing Node.js..."
 # Try different package managers
 if command -v apt &> /dev/null; then
     # Ubuntu/Debian - use NodeSource repository
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
 elif command -v yum &> /dev/null; then
     # CentOS/RHEL - use NodeSource repository

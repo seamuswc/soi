@@ -9,7 +9,7 @@ echo "===================================="
 apt update && apt upgrade -y
 
 # Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
 
 # Install PM2 and Nginx
 npm install -g pm2 && apt install -y nginx git
