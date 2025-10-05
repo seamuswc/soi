@@ -136,6 +136,10 @@ pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 
+# Install SSL with Certbot
+echo "🔒 Installing SSL certificate..."
+apt install -y certbot python3-certbot-nginx
+
 # Setup firewall
 echo "🔥 Configuring firewall..."
 ufw allow 22
@@ -143,9 +147,13 @@ ufw allow 80
 ufw allow 443
 ufw --force enable
 
+# Get SSL certificate
+echo "🔒 Obtaining SSL certificate..."
+certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
+
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your app should be running at: http://$DOMAIN"
+echo "🌐 Your app should be running at: https://$DOMAIN"
 echo "📊 Check status: pm2 status"
 echo "📝 View logs: pm2 logs soipattaya"
 echo "🔧 Edit config: nano $APP_DIR/.env"

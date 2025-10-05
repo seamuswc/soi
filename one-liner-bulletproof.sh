@@ -11,8 +11,8 @@ apt update -y && apt upgrade -y
 # Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
 
-# Install PM2, Nginx, Git
-npm install -g pm2 && apt install -y nginx git
+# Install PM2, Nginx, Git, Certbot
+npm install -g pm2 && apt install -y nginx git certbot python3-certbot-nginx
 
 # Stop existing services
 pm2 stop all 2>/dev/null || true
@@ -79,6 +79,9 @@ pm2 start ecosystem.config.js && pm2 save && pm2 startup
 # Setup firewall
 ufw allow 22,80,443 && ufw --force enable
 
-echo "✅ Done! App running at: http://soipattaya.com"
+# Get SSL certificate
+certbot --nginx -d soipattaya.com -d www.soipattaya.com --non-interactive --agree-tos --email admin@soipattaya.com
+
+echo "✅ Done! App running at: https://soipattaya.com"
 echo "🔑 Admin: admin / soipattaya2024"
 echo "📝 Edit config: nano /opt/soipattaya/.env"

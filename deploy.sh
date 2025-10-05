@@ -110,8 +110,8 @@ npm run build
 # Configure Nginx
 echo "🌐 Configuring Nginx..."
 cp nginx.conf /etc/nginx/sites-available/$SITE_NAME
-sed -i "s|_|$DOMAIN www.$DOMAIN|" /etc/nginx/sites-available/$SITE_NAME
-sed -i "s|/opt/soipattaya|$APP_DIR|" /etc/nginx/sites-available/$SITE_NAME
+sed -i "s|DOMAIN_PLACEHOLDER|$DOMAIN www.$DOMAIN|" /etc/nginx/sites-available/$SITE_NAME
+sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|" /etc/nginx/sites-available/$SITE_NAME
 
 # Enable site
 ln -sf /etc/nginx/sites-available/$SITE_NAME /etc/nginx/sites-enabled/
