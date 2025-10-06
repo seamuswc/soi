@@ -12,7 +12,8 @@
     "build:server": "cd server && npm run build",
     "start": "node server/dist/index.js",
     "deploy": "sudo ./deploy.sh",
-    "deploy:one-liner": "curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash"
+    "deploy:one-liner": "curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash",
+    "update": "sudo bash ./update.sh"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",

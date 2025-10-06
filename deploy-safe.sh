@@ -91,6 +91,10 @@ echo "   nano $APP_DIR/.env"
 echo ""
 read -p "Press Enter after you have updated the .env file..."
 
+# Ensure Vite envs are present for client build
+echo "🔐 Syncing VITE_* vars to client/.env"
+grep -E '^VITE_[A-Z0-9_]+' $APP_DIR/.env > $APP_DIR/client/.env || true
+
 # Setup database
 echo "🗄️ Setting up database..."
 cd server
