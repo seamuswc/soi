@@ -105,7 +105,7 @@ function MapPage() {
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool / สระว่ายน้ำ</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking / ที่จอดรถ</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ช่วยคนไทย</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ไทยช่วยไทย</label>
           </div>
           <button
             className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"

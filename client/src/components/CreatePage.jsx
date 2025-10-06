@@ -275,7 +275,7 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>เฉพาะคนไทย (Thai only)</span>
+                    <span>ไทยช่วยไทย</span>
                   </label>
                 </div>
 
