@@ -88,39 +88,33 @@ function MapPage() {
 
   return (
     <div className="relative h-screen">
-      {/* Floating Controls */}
-      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex gap-2">
+      {/* Controls and Filters (top-left) */}
+      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex flex-col gap-2">
         <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base">
           Create New Listing
         </a>
-      </div>
-
-      {/* Filters toggle (bottom-left) */}
-      <FilterToggle
-        renderPanel={() => (
-          <div className="bg-white/95 backdrop-blur rounded-t-lg shadow p-3 md:p-4 w-screen md:w-80 space-y-2 border-t md:border md:rounded-lg md:absolute">
-            <div className="text-sm font-semibold mb-1">Filters</div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <input className="border rounded px-2 py-1" placeholder="Min sqm" value={minSqm} onChange={e => setMinSqm(e.target.value)} />
-              <input className="border rounded px-2 py-1" placeholder="Max sqm" value={maxSqm} onChange={e => setMaxSqm(e.target.value)} />
-              <input className="border rounded px-2 py-1" placeholder="Min THB" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
-              <input className="border rounded px-2 py-1" placeholder="Max THB" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
-            </div>
-            <div className="space-y-1 text-sm">
-              <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool / สระว่ายน้ำ</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking / ที่จอดรถ</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
-              <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ช่วยคนไทย</label>
-            </div>
-            <button
-              className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
-              onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); }}
-            >
-              Clear
-            </button>
+        <div className="bg-white/95 backdrop-blur rounded-lg shadow p-3 md:p-4 w-72 space-y-2 border">
+          <div className="text-sm font-semibold mb-1">Filters / ตัวกรอง</div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <input className="border rounded px-2 py-1" placeholder="Min sqm" value={minSqm} onChange={e => setMinSqm(e.target.value)} />
+            <input className="border rounded px-2 py-1" placeholder="Max sqm" value={maxSqm} onChange={e => setMaxSqm(e.target.value)} />
+            <input className="border rounded px-2 py-1" placeholder="Min THB" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+            <input className="border rounded px-2 py-1" placeholder="Max THB" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
           </div>
-        )}
-      />
+          <div className="space-y-1 text-sm">
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool / สระว่ายน้ำ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking / ที่จอดรถ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ช่วยคนไทย</label>
+          </div>
+          <button
+            className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
+            onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); }}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
 
       {/* Full Screen Map */}
       {!apiKey || mapError ? (
