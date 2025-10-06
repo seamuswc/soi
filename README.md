@@ -12,13 +12,6 @@ cd soipattaya_JS
 sudo ./deploy.sh
 ```
 
-## 🛟 Safe install (no server config changes)
-```bash
-git clone https://github.com/seamuswc/soipattaya_JS.git
-cd soipattaya_JS
-sudo ./deploy-safe.sh
-```
-
 Notes
 - **Domain**: scripts assume `soipattaya.com` (edit in `deploy.sh` if different)
 - **Env**: after install, edit `.env` in the app root, then `pm2 restart all`
