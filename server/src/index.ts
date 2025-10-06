@@ -110,7 +110,8 @@ const createListingSchema = z.object({
   , has_pool: z.boolean().optional().default(false)
   , has_parking: z.boolean().optional().default(false)
   , is_top_floor: z.boolean().optional().default(false)
-  , rental_months: z.enum(['1','6']).optional().default('1')
+  , six_months: z.boolean().optional().default(false)
+  , promo_code: z.string().optional()
 });
 
 async function validateSolanaPayment(reference: string): Promise<boolean> {
@@ -259,8 +260,27 @@ app.post('/api/listings', async (request, reply) => {
     return reply.code(400).send({ error: 'Invalid payment' });
   }
 
-  const months = Number(data.rental_months || '1');
+  const months = data.six_months ? 6 : 1;
   const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
+
+  // Promo handling
+  const defaultPromo = process.env.PROMO_CODE || 'mew';
+  const maxUses = Number(process.env.PROMO_MAX_USES || '0');
+  if (data.promo_code && data.promo_code.toLowerCase() === defaultPromo.toLowerCase()) {
+    if (maxUses > 0) {
+      const promo = await prisma.promo.upsert({
+        where: { code: defaultPromo },
+        update: {},
+        create: { code: defaultPromo, remaining_uses: maxUses }
+      });
+      if (promo.remaining_uses <= 0) {
+        return reply.code(400).send({ error: 'Promo exhausted' });
+      }
+      await prisma.promo.update({ where: { code: defaultPromo }, data: { remaining_uses: { decrement: 1 } } });
+    }
+    // For promo, skip payment validation
+    isValid = true;
+  }
 
   const listing = await prisma.listing.create({
     data: {
@@ -278,6 +298,7 @@ app.post('/api/listings', async (request, reply) => {
       has_pool: data.has_pool ?? false,
       has_parking: data.has_parking ?? false,
       is_top_floor: data.is_top_floor ?? false,
+      six_months: data.six_months ?? false,
       expires_at: expiresAt,
     },
   });

@@ -25,6 +25,7 @@ function MapPage() {
   const [filterPool, setFilterPool] = useState(false);
   const [filterParking, setFilterParking] = useState(false);
   const [filterTopFloor, setFilterTopFloor] = useState(false);
+  const [filterSixMonths, setFilterSixMonths] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [mapError, setMapError] = useState(false);
 
@@ -113,6 +114,7 @@ function MapPage() {
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool / สระว่ายน้ำ</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking / ที่จอดรถ</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterSixMonths} onChange={e => setFilterSixMonths(e.target.checked)} /> 6-month rental</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ไทยช่วยไทย</label>
           </div>
           <button
@@ -170,6 +172,7 @@ function MapPage() {
               .filter(l => (filterPool ? l.has_pool : true))
               .filter(l => (filterParking ? l.has_parking : true))
               .filter(l => (filterTopFloor ? l.is_top_floor : true))
+              .filter(l => (filterSixMonths ? l.six_months : true))
               .map((l, idx) => (
                 <Marker
                   key={idx}

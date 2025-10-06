@@ -18,7 +18,8 @@ function CreatePage() {
     has_pool: false,
     has_parking: false,
     is_top_floor: false,
-    rental_months: '1'
+    six_months: false,
+    promo_code: ''
   });
 
   const [references, setReferences] = useState({
@@ -328,6 +329,29 @@ function CreatePage() {
                   />
                   <p className="text-xs text-gray-500">Upload a property tour video to YouTube and paste the link here</p>
                 </div>
+                
+                {/* Promo code */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Promo Code</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="promo_code"
+                      value={formData.promo_code}
+                      onChange={handleChange}
+                      placeholder="Enter code (default: mew)"
+                      className="flex-1 px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, promo_code: 'mew' }))}
+                      className="px-4 py-2 bg-gray-100 rounded-lg border hover:bg-gray-200"
+                    >
+                      Use default
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">If valid and available, promo skips payment.</p>
+                </div>
               </div>
             </div>
 
@@ -445,18 +469,16 @@ function CreatePage() {
 
             {/* Submit Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rental Term / ระยะเวลาเช่า</label>
-                <select
-                  name="rental_months"
-                  value={formData.rental_months}
+              <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  name="six_months"
+                  checked={formData.six_months}
                   onChange={handleChange}
-                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                >
-                  <option value="1">1 month</option>
-                  <option value="6">6 months</option>
-                </select>
-              </div>
+                  className="h-4 w-4"
+                />
+                <span>6-month rental</span>
+              </label>
               <button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
