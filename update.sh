@@ -6,10 +6,11 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_ROOT"
 
-echo "📦 Ensuring Node 20.x and latest npm/pm2..."
+echo "📦 Ensuring Node 20.x and latest npm/pm2 (non-interactive where possible)..."
 if command -v apt &> /dev/null; then
+  export DEBIAN_FRONTEND=noninteractive
   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || true
-  sudo apt-get install -y nodejs || true
+  sudo apt-get -o Dpkg::Options::="--force-confold" install -yq nodejs || true
 fi
 npm install -g npm pm2@latest || true
 

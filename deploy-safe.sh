@@ -19,9 +19,11 @@ echo "   App Directory: $APP_DIR"
 echo "   ⚠️  SAFE MODE: Will NOT modify existing server configurations"
 echo ""
 
-# Update system
+# Update system (non-interactive, keep existing configs)
 echo "🔄 Updating system packages..."
-apt update && apt upgrade -y
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -yq
+apt-get -o Dpkg::Options::="--force-confold" -yq upgrade
 
 # Install Node.js using package manager
 echo "📦 Installing Node.js..."
@@ -60,9 +62,9 @@ fi
 echo "📦 Updating npm and installing PM2..."
 npm install -g npm pm2@latest
 
-# Install Git if not present
+# Install Git if not present (non-interactive)
 echo "📦 Installing Git..."
-apt install -y git
+apt-get -o Dpkg::Options::="--force-confold" install -yq git
 
 # Clone or update repository
 echo "📥 Setting up application..."

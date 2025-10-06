@@ -21,9 +21,11 @@ echo "   App Directory: $APP_DIR"
 echo "   Domain: $DOMAIN"
 echo ""
 
-# Update system
+# Update system (non-interactive, keep existing configs)
 echo "🔄 Updating system packages..."
-apt update && apt upgrade -y
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -yq
+apt-get -o Dpkg::Options::="--force-confold" -yq upgrade
 
 # Install Node.js using package manager
 echo "📦 Installing Node.js..."
@@ -62,13 +64,13 @@ fi
 echo "📦 Updating npm and installing PM2..."
 npm install -g npm pm2@latest
 
-# Install Nginx
+# Install Nginx (non-interactive)
 echo "📦 Installing Nginx..."
-apt install -y nginx
+apt-get -o Dpkg::Options::="--force-confold" install -yq nginx
 
-# Install Git if not present
+# Install Git if not present (non-interactive)
 echo "📦 Installing Git..."
-apt install -y git
+apt-get -o Dpkg::Options::="--force-confold" install -yq git
 
 # Clone or update repository
 echo "📥 Setting up application..."
@@ -135,16 +137,16 @@ pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 
-# Setup firewall
+# Setup firewall (non-interactive)
 echo "🔥 Configuring firewall..."
-ufw allow 22
-ufw allow 80
-ufw allow 443
-ufw --force enable
+ufw allow 22 || true
+ufw allow 80 || true
+ufw allow 443 || true
+ufw --force enable || true
 
-# Install SSL with Certbot
+# Install SSL with Certbot (non-interactive)
 echo "🔒 Installing SSL certificate..."
-apt install -y certbot python3-certbot-nginx
+apt-get -o Dpkg::Options::="--force-confold" install -yq certbot python3-certbot-nginx
 
 # Get SSL certificate
 echo "🔒 Obtaining SSL certificate..."
