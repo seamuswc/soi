@@ -17,7 +17,8 @@ function CreatePage() {
     thai_only: false,
     has_pool: false,
     has_parking: false,
-    is_top_floor: false
+    is_top_floor: false,
+    rental_months: '1'
   });
 
   const [references, setReferences] = useState({
@@ -444,6 +445,18 @@ function CreatePage() {
 
             {/* Submit Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rental Term / ระยะเวลาเช่า</label>
+                <select
+                  name="rental_months"
+                  value={formData.rental_months}
+                  onChange={handleChange}
+                  className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                >
+                  <option value="1">1 month</option>
+                  <option value="6">6 months</option>
+                </select>
+              </div>
               <button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
