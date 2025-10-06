@@ -14,6 +14,7 @@ const center = {
 
 function MapPage() {
   const [listings, setListings] = useState({});
+  const [thaiOnly, setThaiOnly] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [mapError, setMapError] = useState(false);
 
@@ -24,13 +25,43 @@ function MapPage() {
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
+  const mapOptions = {
+    disableDefaultUI: false,
+    mapTypeControl: false,
+    fullscreenControl: true,
+    streetViewControl: false,
+    styles: [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'road.arterial',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'road.local',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      }
+    ]
+  };
+
   return (
     <div className="relative h-screen">
-      {/* Floating Create Button */}
-      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
+      {/* Floating Controls */}
+      <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex gap-2">
         <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base">
           Create New Listing
         </a>
+        <button
+          onClick={() => setThaiOnly(prev => !prev)}
+          className={`px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg text-sm md:text-base transition-colors ${thaiOnly ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 border'}`}
+        >
+          สำหรับคนไทย (Thai)
+        </button>
       </div>
 
       {/* Full Screen Map */}
@@ -67,13 +98,18 @@ function MapPage() {
             mapContainerStyle={containerStyle}
             center={center}
             zoom={13}
+            options={mapOptions}
           >
-            {selectedBuilding && (
-              <Marker
-                position={{ lat: selectedBuilding.latitude, lng: selectedBuilding.longitude }}
-                title={selectedBuilding.building_name}
-              />
-            )}
+            {Object.values(listings).flat()
+              .filter(l => (thaiOnly ? l.thai_only : true))
+              .map((l, idx) => (
+                <Marker
+                  key={idx}
+                  position={{ lat: l.latitude, lng: l.longitude }}
+                  title={l.building_name}
+                  onClick={() => setSelectedBuilding(l)}
+                />
+              ))}
           </GoogleMap>
         </LoadScript>
       )}

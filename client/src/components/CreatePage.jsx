@@ -13,7 +13,8 @@ function CreatePage() {
     description: '',
     youtube_link: '',
     reference: '',
-    payment_network: 'solana'
+    payment_network: 'solana',
+    thai_only: false
   });
 
   const [references, setReferences] = useState({
@@ -52,10 +53,10 @@ function CreatePage() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({ 
       ...prev, 
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
       reference: references[value] || prev.reference
     }));
   };
@@ -260,6 +261,19 @@ function CreatePage() {
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-base"
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="thai_only"
+                      checked={formData.thai_only}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>เฉพาะคนไทย (Thai only)</span>
+                  </label>
                 </div>
 
                 <div className="space-y-2">

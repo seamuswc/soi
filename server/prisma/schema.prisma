@@ -19,6 +19,7 @@ model Listing {
   youtube_link    String
   reference       String
   payment_network String   @default("solana")
+  thai_only       Boolean  @default(false)
   expires_at      DateTime
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
