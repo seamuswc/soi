@@ -17,6 +17,7 @@ function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [listings, setListings] = useState({});
   const [thaiOnly, setThaiOnly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [minSqm, setMinSqm] = useState('');
   const [maxSqm, setMaxSqm] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -93,6 +94,13 @@ function MapPage() {
         <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base">
           Create New Listing
         </a>
+        <button
+          onClick={() => setShowFilters(v => !v)}
+          className="bg-white text-gray-800 border px-3 md:px-4 py-2 md:py-2 rounded-lg shadow text-sm md:text-base"
+        >
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+        {showFilters && (
         <div className="bg-white/95 backdrop-blur rounded-lg shadow p-3 md:p-4 w-72 space-y-2 border">
           <div className="text-sm font-semibold mb-1">Filters / ตัวกรอง</div>
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -114,6 +122,7 @@ function MapPage() {
             Clear
           </button>
         </div>
+        )}
       </div>
 
       {/* Full Screen Map */}
