@@ -167,7 +167,7 @@ function CreatePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Building Name *
+                    Building Name / ชื่ออาคาร *
                   </label>
                   <input
                     type="text"
@@ -182,7 +182,7 @@ function CreatePage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Floor *
+                    Floor / ชั้น *
                   </label>
                   <input
                     type="text"
@@ -197,7 +197,7 @@ function CreatePage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Size (sqm) *
+                    Size (sqm) / ขนาด (ตร.ม.) *
                   </label>
                   <input
                     type="number"
@@ -212,7 +212,7 @@ function CreatePage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Cost (THB) *
+                    Cost (THB) / ราคา (บาท) *
                   </label>
                   <input
                     type="number"
@@ -227,7 +227,7 @@ function CreatePage() {
 
                 <div className="space-y-2 md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Coordinates (lat,lng) *
+                    Coordinates (lat,lng) / พิกัด *
                   </label>
                   <input
                     type="text"
@@ -253,7 +253,7 @@ function CreatePage() {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Description *
+                    Description / คำอธิบาย *
                   </label>
                   <textarea
                     name="description"
@@ -288,7 +288,7 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>Pool</span>
+                    <span>Pool / สระว่ายน้ำ</span>
                   </label>
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
@@ -298,7 +298,7 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>Parking</span>
+                    <span>Parking / ที่จอดรถ</span>
                   </label>
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
@@ -308,13 +308,13 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>Top Floor</span>
+                    <span>Top Floor / ชั้นบนสุด</span>
                   </label>
                 </div>
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    YouTube Video Link *
+                    YouTube Video Link / ลิงก์วิดีโอ *
                   </label>
                   <input
                     type="url"
