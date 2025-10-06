@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import axios from 'axios';
 
@@ -13,6 +14,7 @@ const center = {
 };
 
 function MapPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [listings, setListings] = useState({});
   const [thaiOnly, setThaiOnly] = useState(false);
   const [minSqm, setMinSqm] = useState('');
@@ -29,6 +31,33 @@ function MapPage() {
     axios.get('/api/listings')
       .then(response => setListings(response.data));
   }, []);
+
+  // Initialize filters from URL
+  useEffect(() => {
+    setThaiOnly(searchParams.get('thai') === '1');
+    setFilterPool(searchParams.get('pool') === '1');
+    setFilterParking(searchParams.get('parking') === '1');
+    setFilterTopFloor(searchParams.get('top') === '1');
+    setMinSqm(searchParams.get('minSqm') || '');
+    setMaxSqm(searchParams.get('maxSqm') || '');
+    setMinPrice(searchParams.get('min') || '');
+    setMaxPrice(searchParams.get('max') || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist filters to URL on change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (thaiOnly) params.set('thai', '1');
+    if (filterPool) params.set('pool', '1');
+    if (filterParking) params.set('parking', '1');
+    if (filterTopFloor) params.set('top', '1');
+    if (minSqm) params.set('minSqm', String(minSqm));
+    if (maxSqm) params.set('maxSqm', String(maxSqm));
+    if (minPrice) params.set('min', String(minPrice));
+    if (maxPrice) params.set('max', String(maxPrice));
+    setSearchParams(params);
+  }, [thaiOnly, filterPool, filterParking, filterTopFloor, minSqm, maxSqm, minPrice, maxPrice, setSearchParams]);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 

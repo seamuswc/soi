@@ -35,11 +35,11 @@ if command -v apt &> /dev/null; then
     apt-get install -y nodejs
 elif command -v yum &> /dev/null; then
     # CentOS/RHEL - use NodeSource repository
-    curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
     yum install -y nodejs
 elif command -v dnf &> /dev/null; then
     # Fedora - use NodeSource repository
-    curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
     dnf install -y nodejs
 elif command -v pacman &> /dev/null; then
     # Arch Linux
@@ -53,14 +53,14 @@ else
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    nvm install 18
-    nvm use 18
-    nvm alias default 18
+    nvm install 20
+    nvm use 20
+    nvm alias default 20
 fi
 
-# Install PM2
-echo "📦 Installing PM2..."
-npm install -g pm2
+# Update npm and install latest PM2
+echo "📦 Updating npm and installing PM2..."
+npm install -g npm pm2@latest
 
 # Install Nginx
 echo "📦 Installing Nginx..."
@@ -84,9 +84,9 @@ fi
 
 # Install dependencies
 echo "📦 Installing dependencies..."
-npm install
-cd client && npm install && cd ..
-cd server && npm install && cd ..
+if [ -f package-lock.json ]; then npm ci; else npm install; fi
+cd client && if [ -f package-lock.json ]; then npm ci; else npm install; fi && cd ..
+cd server && if [ -f package-lock.json ]; then npm ci; else npm install; fi && cd ..
 
 # Setup environment variables
 echo "⚙️ Setting up environment variables..."

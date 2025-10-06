@@ -6,15 +6,22 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_ROOT"
 
+echo "📦 Ensuring Node 20.x and latest npm/pm2..."
+if command -v apt &> /dev/null; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || true
+  sudo apt-get install -y nodejs || true
+fi
+npm install -g npm pm2@latest || true
+
 echo "🔄 Updating code..."
 git pull
 
 echo "📦 Installing dependencies (root)..."
-npm install
+if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 echo "📦 Installing dependencies (client)..."
 pushd client >/dev/null
-npm install
+if [ -f package-lock.json ]; then npm ci; else npm install; fi
 # Ensure Vite envs are present for client build
 if [ -f "$PROJECT_ROOT/.env" ]; then
   echo "🔐 Syncing VITE_* vars to client/.env"
@@ -24,7 +31,7 @@ popd >/dev/null
 
 echo "📦 Installing dependencies (server) and applying DB changes..."
 pushd server >/dev/null
-npm install
+if [ -f package-lock.json ]; then npm ci; else npm install; fi
 if ! npx prisma migrate deploy; then
   npx prisma db push
 fi
