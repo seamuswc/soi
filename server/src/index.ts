@@ -107,6 +107,9 @@ const createListingSchema = z.object({
   reference: z.string(),
   payment_network: z.enum(['solana', 'aptos', 'sui']).default('solana'),
   thai_only: z.boolean().optional().default(false)
+  , has_pool: z.boolean().optional().default(false)
+  , has_parking: z.boolean().optional().default(false)
+  , is_top_floor: z.boolean().optional().default(false)
 });
 
 async function validateSolanaPayment(reference: string): Promise<boolean> {
@@ -268,6 +271,9 @@ app.post('/api/listings', async (request, reply) => {
       reference: data.reference,
       payment_network: data.payment_network,
       thai_only: data.thai_only ?? false,
+      has_pool: data.has_pool ?? false,
+      has_parking: data.has_parking ?? false,
+      is_top_floor: data.is_top_floor ?? false,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     },
   });

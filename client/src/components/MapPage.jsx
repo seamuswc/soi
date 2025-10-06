@@ -15,6 +15,13 @@ const center = {
 function MapPage() {
   const [listings, setListings] = useState({});
   const [thaiOnly, setThaiOnly] = useState(false);
+  const [minSqm, setMinSqm] = useState('');
+  const [maxSqm, setMaxSqm] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [filterPool, setFilterPool] = useState(false);
+  const [filterParking, setFilterParking] = useState(false);
+  const [filterTopFloor, setFilterTopFloor] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [mapError, setMapError] = useState(false);
 
@@ -64,6 +71,28 @@ function MapPage() {
         </button>
       </div>
 
+      {/* Left filter panel */}
+      <div className="absolute top-16 left-2 md:top-20 md:left-4 z-10 bg-white/95 backdrop-blur rounded-lg shadow p-3 md:p-4 w-60 space-y-2 border">
+        <div className="text-sm font-semibold mb-1">Filters</div>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <input className="border rounded px-2 py-1" placeholder="Min sqm" value={minSqm} onChange={e => setMinSqm(e.target.value)} />
+          <input className="border rounded px-2 py-1" placeholder="Max sqm" value={maxSqm} onChange={e => setMaxSqm(e.target.value)} />
+          <input className="border rounded px-2 py-1" placeholder="Min THB" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+          <input className="border rounded px-2 py-1" placeholder="Max THB" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+        </div>
+        <div className="space-y-1 text-sm">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor</label>
+        </div>
+        <button
+          className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
+          onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); }}
+        >
+          Clear
+        </button>
+      </div>
+
       {/* Full Screen Map */}
       {!apiKey || mapError ? (
         <div className="flex items-center justify-center h-full bg-gray-100 p-4">
@@ -102,6 +131,13 @@ function MapPage() {
           >
             {Object.values(listings).flat()
               .filter(l => (thaiOnly ? l.thai_only : true))
+              .filter(l => (minSqm ? l.sqm >= Number(minSqm) : true))
+              .filter(l => (maxSqm ? l.sqm <= Number(maxSqm) : true))
+              .filter(l => (minPrice ? l.cost >= Number(minPrice) : true))
+              .filter(l => (maxPrice ? l.cost <= Number(maxPrice) : true))
+              .filter(l => (filterPool ? l.has_pool : true))
+              .filter(l => (filterParking ? l.has_parking : true))
+              .filter(l => (filterTopFloor ? l.is_top_floor : true))
               .map((l, idx) => (
                 <Marker
                   key={idx}

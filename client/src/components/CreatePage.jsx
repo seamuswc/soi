@@ -14,7 +14,10 @@ function CreatePage() {
     youtube_link: '',
     reference: '',
     payment_network: 'solana',
-    thai_only: false
+    thai_only: false,
+    has_pool: false,
+    has_parking: false,
+    is_top_floor: false
   });
 
   const [references, setReferences] = useState({
@@ -273,6 +276,39 @@ function CreatePage() {
                       className="h-4 w-4"
                     />
                     <span>เฉพาะคนไทย (Thai only)</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="has_pool"
+                      checked={formData.has_pool}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>Pool</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="has_parking"
+                      checked={formData.has_parking}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>Parking</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="is_top_floor"
+                      checked={formData.is_top_floor}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>Top Floor</span>
                   </label>
                 </div>
 
