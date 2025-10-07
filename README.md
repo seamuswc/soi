@@ -25,6 +25,7 @@ pm2 start soipattaya    # Start app
 ## Update to latest code
 
 cd /var/www/soipattaya 
+git pull
 npm run update
 
 ## 🛡️ Safe Updates (Recommended)
@@ -45,6 +46,9 @@ npm run maintenance status # Check status
 ```bash
 # Set promo code and usage limit
 npm run promo "WELCOME20" 100
+
+# Check promo usage statistics
+npm run check-promo
 
 # Examples:
 npm run promo "SAVE50" 50
