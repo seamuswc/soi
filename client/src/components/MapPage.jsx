@@ -99,7 +99,7 @@ function MapPage() {
           onClick={() => setShowFilters(v => !v)}
           className="bg-white text-gray-800 border px-3 md:px-4 py-2 md:py-2 rounded-lg shadow text-sm md:text-base"
         >
-          {showFilters ? 'Hide Filters / ซ่อนตัวกรอง' : 'Show Filters / แสดงตัวกรอง'}
+          {showFilters ? 'Hide / ซ่อน' : 'Filters / ตัวกรอง'}
         </button>
         {showFilters && (
         <div className="bg-white/95 backdrop-blur rounded-lg shadow p-3 md:p-4 w-72 space-y-2 border">
@@ -205,7 +205,7 @@ function FilterToggle({ renderPanel }) {
             onClick={() => setOpen(o => !o)}
             className="m-2 md:m-0 bg-white text-gray-800 border px-4 py-2 rounded-lg shadow text-sm md:text-base"
           >
-            {open ? 'Hide Filters / ซ่อนตัวกรอง' : 'Show Filters / แสดงตัวกรอง'}
+            {open ? 'Hide / ซ่อน' : 'Filters / ตัวกรอง'}
           </button>
         </div>
       </div>
