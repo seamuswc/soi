@@ -249,7 +249,7 @@ function CreatePage() {
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">2</span>
-                Property Information
+                Property Information / ข้อมูลอสังหาริมทรัพย์
               </h2>
               
               <div className="space-y-6">
