@@ -93,13 +93,13 @@ function MapPage() {
       {/* Controls and Filters (top-left) */}
       <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex flex-col gap-2">
         <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base">
-          Create New Listing
+          Create / สร้าง
         </a>
         <button
           onClick={() => setShowFilters(v => !v)}
           className="bg-white text-gray-800 border px-3 md:px-4 py-2 md:py-2 rounded-lg shadow text-sm md:text-base"
         >
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
+          {showFilters ? 'Hide Filters / ซ่อนตัวกรอง' : 'Show Filters / แสดงตัวกรอง'}
         </button>
         {showFilters && (
         <div className="bg-white/95 backdrop-blur rounded-lg shadow p-3 md:p-4 w-72 space-y-2 border">
@@ -121,7 +121,7 @@ function MapPage() {
             className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
             onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); }}
           >
-            Clear
+            Clear / ล้าง
           </button>
         </div>
         )}
@@ -205,7 +205,7 @@ function FilterToggle({ renderPanel }) {
             onClick={() => setOpen(o => !o)}
             className="m-2 md:m-0 bg-white text-gray-800 border px-4 py-2 rounded-lg shadow text-sm md:text-base"
           >
-            {open ? 'Hide Filters' : 'Show Filters'}
+            {open ? 'Hide Filters / ซ่อนตัวกรอง' : 'Show Filters / แสดงตัวกรอง'}
           </button>
         </div>
       </div>

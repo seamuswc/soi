@@ -564,7 +564,7 @@ function CreatePage() {
                 href="/"
                 className="flex-1 bg-gray-100 text-gray-700 px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:bg-gray-200 transition-all text-center text-sm md:text-base"
               >
-                Cancel
+                Cancel / ยกเลิก
               </a>
             </div>
           </form>
