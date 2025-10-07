@@ -5,6 +5,7 @@
   "scripts": {
     "setup": "node setup-env.js",
     "promo": "node set-promo.js",
+    "maintenance": "node maintenance.js",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
@@ -14,7 +15,8 @@
     "start": "node server/dist/index.js",
     "deploy": "sudo ./deploy.sh",
     "deploy:one-liner": "curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash",
-    "update": "sudo bash ./update.sh"
+    "update": "sudo bash ./update.sh",
+    "safe-update": "npm run maintenance on && npm run update && npm run maintenance off"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",

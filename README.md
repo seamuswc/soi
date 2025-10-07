@@ -32,4 +32,28 @@ pm2 start soipattaya    # Start app
 cd /var/www/soipattaya 
 npm run update
 
+## 🛡️ Safe Updates (Recommended)
+
+```bash
+# Safe update with maintenance mode (no user interruption)
+npm run safe-update
+
+# Manual maintenance control
+npm run maintenance on     # Enable maintenance mode
+npm run update            # Run update safely  
+npm run maintenance off   # Restore site
+npm run maintenance status # Check status
+```
+
+## 🎟️ Promo Code Management
+
+```bash
+# Set promo code and usage limit
+npm run promo "WELCOME20" 100
+
+# Examples:
+npm run promo "SAVE50" 50
+npm run promo "NEWUSER" 0  # Unlimited uses
+```
+
 ```
