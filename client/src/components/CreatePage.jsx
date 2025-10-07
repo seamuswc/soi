@@ -68,10 +68,16 @@ function CreatePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/listings', formData);
+      // Convert string values to numbers for API
+      const submitData = {
+        ...formData,
+        sqm: parseInt(formData.sqm) || 0,
+        cost: parseInt(formData.cost) || 0
+      };
+      await axios.post('/api/listings', submitData);
       window.location.href = '/';
     } catch (error) {
-      // Handle error silently in production
+      console.error('Submit error:', error);
       alert('Failed to submit listing. Please try again.');
     }
   };

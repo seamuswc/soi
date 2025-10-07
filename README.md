@@ -49,5 +49,56 @@ npm run promo "WELCOME20" 100
 
 # Check promo usage statistics
 npm run check-promo
+```
 
+## 🔄 Server Migration
+
+### Quick Migration (Automated)
+
+**On your OLD server:**
+```bash
+cd /var/www/soipattaya
+./migrate-server.sh backup
+```
+
+**Transfer the .tar.gz file to new server, then:**
+
+**On your NEW server:**
+```bash
+git clone https://github.com/seamuswc/soipattaya_JS.git
+cd soipattaya_JS
+./migrate-server.sh restore soipattaya-migration-*.tar.gz
+```
+
+### Manual Migration
+
+If you prefer manual control:
+
+```bash
+# 1. Backup database on old server
+node backup-database.js
+
+# 2. Copy backup files to new server
+scp backups/latest-backup.json user@new-server:/tmp/
+scp .env user@new-server:/tmp/
+
+# 3. On new server - restore everything
+git clone https://github.com/seamuswc/soipattaya_JS.git
+cd soipattaya_JS
+cp /tmp/latest-backup.json backups/
+cp /tmp/.env .env
+npm install && cd server && npm install && cd .. && cd client && npm install && cd ..
+npm run build
+node restore-database.js backups/latest-backup.json
+pm2 start ecosystem.config.js
+```
+
+### What Gets Migrated
+- ✅ All property listings and data
+- ✅ Promo codes and usage tracking  
+- ✅ Environment variables
+- ✅ Database schema and migrations
+- ✅ Application configuration
+
+See `MIGRATION.md` for detailed instructions and troubleshooting.
 

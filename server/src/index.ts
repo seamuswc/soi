@@ -178,8 +178,8 @@ const createListingSchema = z.object({
   building_name: z.string(),
   coordinates: z.string(),
   floor: z.string(),
-  sqm: z.number(),
-  cost: z.number(),
+  sqm: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
+  cost: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
@@ -244,6 +244,12 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
 }
 
 // Routes
+app.get('/api/config', async () => {
+  return {
+    recipient: process.env.SOLANA_MERCHANT_ADDRESS
+  };
+});
+
 app.get('/api/listings', async () => {
   const listings = await prisma.listing.findMany();
   // Group by building_name as in original
@@ -315,17 +321,18 @@ app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () =
 });
 
 app.post('/api/listings', async (request, reply) => {
-  const data = createListingSchema.parse(request.body);
-  const [lat, lng] = data.coordinates.split(',').map(s => parseFloat(s.trim()));
+  try {
+    const data = createListingSchema.parse(request.body);
+    const [lat, lng] = data.coordinates.split(',').map(s => parseFloat(s.trim()));
 
-  let isValid = false;
-  
-  // Validate payment based on network
-  isValid = await validatePayment(data.payment_network, data.reference);
+    let isValid = false;
+    
+    // Validate payment based on network
+    isValid = await validatePayment(data.payment_network, data.reference);
 
-  if (!isValid) {
-    return reply.code(400).send({ error: 'Invalid payment' });
-  }
+    if (!isValid) {
+      return reply.code(400).send({ error: 'Invalid payment' });
+    }
 
   const months = data.six_months ? 6 : 1;
   const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
@@ -377,6 +384,10 @@ app.post('/api/listings', async (request, reply) => {
   });
 
   return listing;
+  } catch (error) {
+    app.log.error('Error creating listing:', error);
+    return reply.code(500).send({ error: 'Internal server error' });
+  }
 });
 
 app.get('/api/listings/:name', async (request) => {
