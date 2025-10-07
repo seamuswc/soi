@@ -367,22 +367,22 @@ function CreatePage() {
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
-                      name="thai_only"
-                      checked={formData.thai_only}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>ไทยช่วยไทย</span>
-                  </label>
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
                       name="six_months"
                       checked={formData.six_months}
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
                     <span>6-month rental / เช่า 6 เดือน</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="thai_only"
+                      checked={formData.thai_only}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>ไทยช่วยไทย</span>
                   </label>
                 </div>
 
