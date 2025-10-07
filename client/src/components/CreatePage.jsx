@@ -176,7 +176,7 @@ function CreatePage() {
                     name="building_name"
                     value={formData.building_name}
                     onChange={handleChange}
-                    placeholder="e.g., Central Pattaya"
+                    placeholder="เช่น Central Pattaya"
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     required
                   />
@@ -191,7 +191,7 @@ function CreatePage() {
                     name="floor"
                     value={formData.floor}
                     onChange={handleChange}
-                    placeholder="e.g., 5th Floor"
+                    placeholder="เช่น ชั้น 5"
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     required
                   />
@@ -206,7 +206,7 @@ function CreatePage() {
                     name="sqm"
                     value={formData.sqm}
                     onChange={handleChange}
-                    placeholder="e.g., 120"
+                    placeholder="เช่น 120"
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     required
                   />
@@ -221,7 +221,7 @@ function CreatePage() {
                     name="cost"
                     value={formData.cost}
                     onChange={handleChange}
-                    placeholder="e.g., 50000"
+                    placeholder="เช่น 50000"
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     required
                   />
@@ -272,16 +272,6 @@ function CreatePage() {
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
-                      name="thai_only"
-                      checked={formData.thai_only}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>ไทยช่วยไทย</span>
-                  </label>
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
                       name="has_pool"
                       checked={formData.has_pool}
                       onChange={handleChange}
@@ -319,6 +309,16 @@ function CreatePage() {
                     />
                     <span>6-month rental / เช่า 6 เดือน</span>
                   </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="thai_only"
+                      checked={formData.thai_only}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>ไทยช่วยไทย</span>
+                  </label>
                 </div>
 
                 <div className="space-y-2">
@@ -334,7 +334,7 @@ function CreatePage() {
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     required
                   />
-                  <p className="text-xs text-gray-500">Upload a property tour video to YouTube and paste the link here</p>
+                  <p className="text-xs text-gray-500">อัปโหลดวิดีโอทัวร์อสังหาริมทรัพย์ไปยัง YouTube และวางลิงก์ที่นี่ / Upload a property tour video to YouTube and paste the link here</p>
                 </div>
                 
                 {/* Promo code */}
@@ -348,7 +348,7 @@ function CreatePage() {
                     placeholder="Enter promo code"
                     className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                   />
-                  <p className="text-xs text-gray-500">If valid and available, promo skips payment.</p>
+                  <p className="text-xs text-gray-500">หากถูกต้องและมีอยู่ รหัสโปรโมชั่นจะข้ามการชำระเงิน / If valid and available, promo skips payment.</p>
                 </div>
               </div>
             </div>

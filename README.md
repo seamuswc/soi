@@ -12,11 +12,6 @@ cd soipattaya_JS
 sudo ./deploy.sh
 ```
 
-Notes
-- **Domain**: scripts assume `soipattaya.com` (edit in `deploy.sh` if different)
-- **Env**: after install, edit `.env` in the app root, then `pm2 restart all`
-  - PROMO_CODE=yourcode
-  - PROMO_MAX_USES=10
 
 ## After Setup
 ```bash

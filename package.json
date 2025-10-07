@@ -5,6 +5,7 @@
   "scripts": {
     "setup": "node setup-env.js",
     "promo": "node set-promo.js",
+    "check-promo": "node check-promo.js",
     "maintenance": "node maintenance.js",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
