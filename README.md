@@ -50,9 +50,4 @@ npm run promo "WELCOME20" 100
 # Check promo usage statistics
 npm run check-promo
 
-# Examples:
-npm run promo "SAVE50" 50
-npm run promo "NEWUSER" 0  # Unlimited uses
-```
 
-```

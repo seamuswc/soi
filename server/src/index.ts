@@ -105,7 +105,7 @@ const createListingSchema = z.object({
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
-  payment_network: z.enum(['solana', 'aptos', 'sui']).default('solana'),
+  payment_network: z.enum(['solana', 'aptos', 'sui', 'base']).default('solana'),
   thai_only: z.boolean().optional().default(false)
   , has_pool: z.boolean().optional().default(false)
   , has_parking: z.boolean().optional().default(false)
@@ -155,6 +155,18 @@ async function validateAptosPayment(reference: string): Promise<boolean> {
 async function validateSuiPayment(reference: string): Promise<boolean> {
   try {
     // For Sui, we'll use a simplified validation approach
+    // In production, you'd want to implement proper transaction verification
+    // For now, we'll accept any valid reference format
+    return Boolean(reference && reference.length > 0);
+  } catch (error) {
+    app.log.error(error);
+    return false;
+  }
+}
+
+async function validateBasePayment(reference: string): Promise<boolean> {
+  try {
+    // For Base, we'll use a simplified validation approach
     // In production, you'd want to implement proper transaction verification
     // For now, we'll accept any valid reference format
     return Boolean(reference && reference.length > 0);
@@ -251,6 +263,9 @@ app.post('/api/listings', async (request, reply) => {
       break;
     case 'sui':
       isValid = await validateSuiPayment(data.reference);
+      break;
+    case 'base':
+      isValid = await validateBasePayment(data.reference);
       break;
     default:
       return reply.code(400).send({ error: 'Invalid payment network' });
@@ -371,6 +386,30 @@ app.post('/api/tx/sui', async (request, reply) => {
         amount: amount * 1000000, // 6 decimals for USDC
         coinType: '0x2::sui::SUI' // Using SUI for simplicity
       }
+    };
+    
+    return { transaction };
+  } catch (e: any) {
+    app.log.error(e);
+    return reply.code(500).send({ error: e.message || String(e) });
+  }
+});
+
+app.post('/api/tx/base', async (request, reply) => {
+  try {
+    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    if (!payer || !amount || !reference) {
+      return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
+    }
+    
+    // Create a simple transfer transaction for Base
+    const transaction = {
+      to: process.env.BASE_MERCHANT_ADDRESS || '0x1',
+      from: payer,
+      value: '0x0', // 0 ETH value since we're using USDC
+      data: '0x', // Empty data for simple transfer
+      gas: '0x5208', // 21000 gas limit
+      gasPrice: '0x3b9aca00' // 1 gwei gas price
     };
     
     return { transaction };

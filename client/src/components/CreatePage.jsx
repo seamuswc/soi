@@ -25,7 +25,8 @@ function CreatePage() {
   const [references, setReferences] = useState({
     solana: '',
     aptos: '',
-    sui: ''
+    sui: '',
+    base: ''
   });
 
   useEffect(() => {
@@ -33,11 +34,13 @@ function CreatePage() {
     const solanaKeypair = Keypair.generate();
     const aptosRef = generateAptosReference();
     const suiRef = generateSuiReference();
+    const baseRef = generateBaseReference();
     
     setReferences({
       solana: solanaKeypair.publicKey.toBase58(),
       aptos: aptosRef,
-      sui: suiRef
+      sui: suiRef,
+      base: baseRef
     });
 
     setFormData(prev => ({ ...prev, reference: solanaKeypair.publicKey.toBase58() }));
@@ -55,6 +58,13 @@ function CreatePage() {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  const generateBaseReference = () => {
+    // Generate a random 32-byte reference for Base
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return '0x' + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   };
 
   const handleChange = (e) => {
@@ -139,6 +149,31 @@ function CreatePage() {
       const txHash = await window.suiWallet.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
         account: response.accounts[0]
+      });
+      alert('Payment successful! Now submit the listing.');
+    } catch (error) {
+      console.error(error);
+      alert('Payment failed: ' + error.message);
+    }
+  };
+
+  const handlePayWithBase = async () => {
+    if (!window.ethereum) {
+      alert('Ethereum wallet not detected. Please install MetaMask or similar wallet.');
+      return;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const payer = accounts[0];
+      const res = await axios.post('/api/tx/base', { 
+        payer, 
+        amount: 1, 
+        reference: references.base 
+      });
+      const { transaction } = res.data;
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [transaction]
       });
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
@@ -366,7 +401,7 @@ function CreatePage() {
                     <label className="block text-sm font-medium text-gray-700">
                       Choose Payment Network / เลือกเครือข่ายการชำระเงิน *
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
                         <input
                           type="radio"
@@ -426,6 +461,26 @@ function CreatePage() {
                           </div>
                         </div>
                       </label>
+
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-orange-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="base"
+                          checked={formData.payment_network === 'base'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-orange-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">B</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Base</div>
+                            <div className="text-xs text-gray-500">USDC</div>
+                          </div>
+                        </div>
+                      </label>
                     </div>
                   </div>
 
@@ -458,6 +513,16 @@ function CreatePage() {
                         className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                       >
                         💳 Pay with Sui Wallet
+                      </button>
+                    )}
+
+                    {formData.payment_network === 'base' && (
+                      <button
+                        type="button"
+                        onClick={handlePayWithBase}
+                        className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-orange-700 hover:to-orange-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                      >
+                        💳 Pay with MetaMask (Base)
                       </button>
                     )}
                   </div>

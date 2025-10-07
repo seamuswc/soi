@@ -16,6 +16,7 @@ VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
 SOLANA_MERCHANT_ADDRESS="your_solana_address_here"
 APTOS_MERCHANT_ADDRESS="your_aptos_address_here"
 SUI_MERCHANT_ADDRESS="your_sui_address_here"
+BASE_MERCHANT_ADDRESS="your_base_address_here"
 NODE_ENV="production"
 PORT=3000
 SITE_DOMAIN="soipattaya.com"
