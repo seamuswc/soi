@@ -355,12 +355,12 @@ app.post('/api/tx/aptos', async (request, reply) => {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
     
-    // Create a simple transfer transaction for Aptos
+    // Create USDC transfer transaction for Aptos
     const transaction = await aptos.transferCoinTransaction({
       sender: payer,
       recipient: process.env.APTOS_MERCHANT_ADDRESS || '0x1',
       amount: amount * 1000000, // 6 decimals for USDC
-      coinType: '0x1::aptos_coin::AptosCoin' // Using APT for simplicity
+      coinType: '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC' // USDC on Aptos
     });
     
     return { transaction };
@@ -377,14 +377,14 @@ app.post('/api/tx/sui', async (request, reply) => {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
     
-    // Create a simple transfer transaction for Sui
+    // Create USDC transfer transaction for Sui
     const transaction = {
       kind: 'transferObject',
       data: {
         from: payer,
         to: process.env.SUI_MERCHANT_ADDRESS || '0x1',
         amount: amount * 1000000, // 6 decimals for USDC
-        coinType: '0x2::sui::SUI' // Using SUI for simplicity
+        coinType: '0x5d4b302506645c3ff4b4467ffe4e6a893f2a31f4fdcb4d8647132a503af2daad::usdc::USDC' // USDC on Sui
       }
     };
     
@@ -402,13 +402,22 @@ app.post('/api/tx/base', async (request, reply) => {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
     
-    // Create a simple transfer transaction for Base
+    // Create USDC ERC-20 transfer transaction for Base
+    // USDC contract on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+    const usdcContract = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const recipient = process.env.BASE_MERCHANT_ADDRESS || '0x1';
+    const amountWei = (amount * 1000000).toString(16).padStart(64, '0'); // 6 decimals for USDC
+    
+    // ERC-20 transfer function signature: transfer(address,uint256)
+    const transferSignature = 'a9059cbb'; // transfer(address,uint256)
+    const recipientPadded = recipient.slice(2).padStart(64, '0');
+    
     const transaction = {
-      to: process.env.BASE_MERCHANT_ADDRESS || '0x1',
+      to: usdcContract,
       from: payer,
       value: '0x0', // 0 ETH value since we're using USDC
-      data: '0x', // Empty data for simple transfer
-      gas: '0x5208', // 21000 gas limit
+      data: `0x${transferSignature}${recipientPadded}${amountWei}`, // transfer(recipient, amount)
+      gas: '0x7530', // 30000 gas limit for ERC-20 transfer
       gasPrice: '0x3b9aca00' // 1 gwei gas price
     };
     

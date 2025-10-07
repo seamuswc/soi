@@ -94,7 +94,9 @@ function CreatePage() {
     try {
       const response = await window.solana.connect();
       const payer = response.publicKey.toString();
-      const recipient = '8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj';
+      // Get merchant address from server config
+      const configRes = await axios.get('/api/config');
+      const recipient = configRes.data.recipient;
       const res = await axios.post('/api/tx/usdc', { payer, recipient, amount: 1, reference: references.solana });
       const { transaction } = res.data;
       const txBuffer = Buffer.from(transaction, 'base64');
@@ -163,8 +165,36 @@ function CreatePage() {
       return;
     }
     try {
+      // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const payer = accounts[0];
+      
+      // Switch to Base network if not already on it
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x2105' }], // Base mainnet chain ID
+        });
+      } catch (switchError) {
+        // If Base network is not added, add it
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x2105',
+              chainName: 'Base',
+              rpcUrls: ['https://mainnet.base.org'],
+              nativeCurrency: {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                decimals: 18,
+              },
+              blockExplorerUrls: ['https://basescan.org'],
+            }],
+          });
+        }
+      }
+      
       const res = await axios.post('/api/tx/base', { 
         payer, 
         amount: 1, 
