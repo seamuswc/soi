@@ -384,7 +384,7 @@ app.post('/api/listings', async (request, reply) => {
   });
 
   return listing;
-  } catch (error) {
+  } catch (error: any) {
     app.log.error('Error creating listing:', error);
     return reply.code(500).send({ error: 'Internal server error' });
   }
