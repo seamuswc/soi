@@ -264,21 +264,27 @@ app.post('/api/listings', async (request, reply) => {
   const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
 
   // Promo handling
-  const defaultPromo = process.env.PROMO_CODE || 'mew';
-  const maxUses = Number(process.env.PROMO_MAX_USES || '0');
-  if (data.promo_code && data.promo_code.toLowerCase() === defaultPromo.toLowerCase()) {
-    if (maxUses > 0) {
+  const configuredPromo = process.env.PROMO_CODE;
+  const configuredMaxUses = process.env.PROMO_MAX_USES ? Number(process.env.PROMO_MAX_USES) : undefined;
+  if (data.promo_code) {
+    if (!configuredPromo) {
+      return reply.code(400).send({ error: 'Promo not configured' });
+    }
+    if (data.promo_code.toLowerCase() !== configuredPromo.toLowerCase()) {
+      return reply.code(400).send({ error: 'Invalid promo' });
+    }
+    if (configuredMaxUses !== undefined) {
       const promo = await prisma.promo.upsert({
-        where: { code: defaultPromo },
+        where: { code: configuredPromo },
         update: {},
-        create: { code: defaultPromo, remaining_uses: maxUses }
+        create: { code: configuredPromo, remaining_uses: configuredMaxUses }
       });
       if (promo.remaining_uses <= 0) {
         return reply.code(400).send({ error: 'Promo exhausted' });
       }
-      await prisma.promo.update({ where: { code: defaultPromo }, data: { remaining_uses: { decrement: 1 } } });
+      await prisma.promo.update({ where: { code: configuredPromo }, data: { remaining_uses: { decrement: 1 } } });
     }
-    // For promo, skip payment validation
+    // promo accepted: skip payment validation
     isValid = true;
   }
 
