@@ -14,6 +14,84 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 dotenv.config();
 
+// Environment variable validation
+function validateEnvironment() {
+  const required = {
+    SOLANA_MERCHANT_ADDRESS: process.env.SOLANA_MERCHANT_ADDRESS,
+    APTOS_MERCHANT_ADDRESS: process.env.APTOS_MERCHANT_ADDRESS,
+    SUI_MERCHANT_ADDRESS: process.env.SUI_MERCHANT_ADDRESS,
+    BASE_MERCHANT_ADDRESS: process.env.BASE_MERCHANT_ADDRESS,
+    ADMIN_USERNAME: process.env.ADMIN_USERNAME,
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    ADMIN_TOKEN: process.env.ADMIN_TOKEN
+  };
+
+  const missing = Object.entries(required)
+    .filter(([key, value]) => !value || value.trim() === '')
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+
+  // Validate merchant addresses format
+  try {
+    if (process.env.SOLANA_MERCHANT_ADDRESS) {
+      new PublicKey(process.env.SOLANA_MERCHANT_ADDRESS);
+    }
+  } catch (error) {
+    throw new Error('Invalid SOLANA_MERCHANT_ADDRESS format');
+  }
+
+  return true;
+}
+
+// Validate environment on startup
+try {
+  validateEnvironment();
+} catch (error) {
+  // Environment validation failed - exit gracefully
+  process.exit(1);
+}
+
+// TypeScript Interfaces
+interface PaymentRequest {
+  payer: string;
+  amount: number;
+  reference: string;
+}
+
+interface TransactionResponse {
+  transaction: any;
+}
+
+interface ListingData {
+  building_name: string;
+  coordinates: string;
+  floor: string;
+  sqm: string;
+  cost: string;
+  description: string;
+  youtube_link: string;
+  reference: string;
+  payment_network: 'solana' | 'aptos' | 'sui' | 'base';
+  thai_only: boolean;
+  has_pool: boolean;
+  has_parking: boolean;
+  is_top_floor: boolean;
+  six_months: boolean;
+  promo_code?: string;
+}
+
+// Constants
+const USDC_DECIMALS = 6;
+const USDC_AMOUNT_WEI = 1000000; // 1 USDC with 6 decimals
+const GAS_LIMIT = '0x7530'; // 30000 gas limit
+const GAS_PRICE = '0x3b9aca00'; // 1 gwei gas price
+const USDC_CONTRACT_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const APTOS_USDC_COIN_TYPE = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC';
+const SUI_USDC_COIN_TYPE = '0x5d4b302506645c3ff4b4467ffe4e6a893f2a31f4fdcb4d8647132a503af2daad::usdc::USDC';
+
 const app = fastify({ logger: true });
 const prisma = new PrismaClient();
 
@@ -114,6 +192,31 @@ const createListingSchema = z.object({
   , promo_code: z.string().optional()
 });
 
+async function validatePayment(network: 'solana' | 'aptos' | 'sui' | 'base', reference: string): Promise<boolean> {
+  try {
+    // Basic reference validation for all networks
+    if (!reference || reference.length === 0) return false;
+
+    // Network-specific validation
+    switch (network) {
+      case 'solana':
+        return await validateSolanaPayment(reference);
+      case 'aptos':
+      case 'sui':
+      case 'base':
+        // Simplified validation for non-Solana networks
+        // In production, implement proper transaction verification
+        return Boolean(reference && reference.length > 0);
+      default:
+        app.log.error(`Unknown payment network: ${network}`);
+        return false;
+    }
+  } catch (error) {
+    app.log.error(`Payment validation error for ${network}: ${error}`);
+    return false;
+  }
+}
+
 async function validateSolanaPayment(reference: string): Promise<boolean> {
   try {
     const refPk = new PublicKey(reference);
@@ -128,48 +231,12 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
     let valid = false;
     tx.transaction.message.instructions.forEach((ix: ParsedInstruction | PartiallyDecodedInstruction) => {
       if (ix.programId.equals(TOKEN_PROGRAM_ID) && 'parsed' in ix && ix.parsed.type === 'transferChecked') {
-        if (ix.parsed.info.destination === merchantAta.toBase58() && ix.parsed.info.tokenAmount.amount === '1000000') {
+        if (ix.parsed.info.destination === merchantAta.toBase58() && ix.parsed.info.tokenAmount.amount === USDC_AMOUNT_WEI.toString()) {
           valid = true;
         }
       }
     });
     return valid;
-  } catch (error) {
-    app.log.error(error);
-    return false;
-  }
-}
-
-async function validateAptosPayment(reference: string): Promise<boolean> {
-  try {
-    // For Aptos, we'll use a simplified validation approach
-    // In production, you'd want to implement proper transaction verification
-    // For now, we'll accept any valid reference format
-    return Boolean(reference && reference.length > 0);
-  } catch (error) {
-    app.log.error(error);
-    return false;
-  }
-}
-
-async function validateSuiPayment(reference: string): Promise<boolean> {
-  try {
-    // For Sui, we'll use a simplified validation approach
-    // In production, you'd want to implement proper transaction verification
-    // For now, we'll accept any valid reference format
-    return Boolean(reference && reference.length > 0);
-  } catch (error) {
-    app.log.error(error);
-    return false;
-  }
-}
-
-async function validateBasePayment(reference: string): Promise<boolean> {
-  try {
-    // For Base, we'll use a simplified validation approach
-    // In production, you'd want to implement proper transaction verification
-    // For now, we'll accept any valid reference format
-    return Boolean(reference && reference.length > 0);
   } catch (error) {
     app.log.error(error);
     return false;
@@ -254,22 +321,7 @@ app.post('/api/listings', async (request, reply) => {
   let isValid = false;
   
   // Validate payment based on network
-  switch (data.payment_network) {
-    case 'solana':
-      isValid = await validateSolanaPayment(data.reference);
-      break;
-    case 'aptos':
-      isValid = await validateAptosPayment(data.reference);
-      break;
-    case 'sui':
-      isValid = await validateSuiPayment(data.reference);
-      break;
-    case 'base':
-      isValid = await validateBasePayment(data.reference);
-      break;
-    default:
-      return reply.code(400).send({ error: 'Invalid payment network' });
-  }
+  isValid = await validatePayment(data.payment_network, data.reference);
 
   if (!isValid) {
     return reply.code(400).send({ error: 'Invalid payment' });
@@ -350,7 +402,7 @@ app.post('/api/tx/usdc', async (request, reply) => {
 
 app.post('/api/tx/aptos', async (request, reply) => {
   try {
-    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    const { payer, amount, reference } = request.body as PaymentRequest;
     if (!payer || !amount || !reference) {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
@@ -359,8 +411,8 @@ app.post('/api/tx/aptos', async (request, reply) => {
     const transaction = await aptos.transferCoinTransaction({
       sender: payer,
       recipient: process.env.APTOS_MERCHANT_ADDRESS || '0x1',
-      amount: amount * 1000000, // 6 decimals for USDC
-      coinType: '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC' // USDC on Aptos
+      amount: amount * USDC_AMOUNT_WEI, // USDC with proper decimals
+      coinType: APTOS_USDC_COIN_TYPE // USDC on Aptos
     });
     
     return { transaction };
@@ -372,7 +424,7 @@ app.post('/api/tx/aptos', async (request, reply) => {
 
 app.post('/api/tx/sui', async (request, reply) => {
   try {
-    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    const { payer, amount, reference } = request.body as PaymentRequest;
     if (!payer || !amount || !reference) {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
@@ -383,8 +435,8 @@ app.post('/api/tx/sui', async (request, reply) => {
       data: {
         from: payer,
         to: process.env.SUI_MERCHANT_ADDRESS || '0x1',
-        amount: amount * 1000000, // 6 decimals for USDC
-        coinType: '0x5d4b302506645c3ff4b4467ffe4e6a893f2a31f4fdcb4d8647132a503af2daad::usdc::USDC' // USDC on Sui
+        amount: amount * USDC_AMOUNT_WEI, // USDC with proper decimals
+        coinType: SUI_USDC_COIN_TYPE // USDC on Sui
       }
     };
     
@@ -397,16 +449,15 @@ app.post('/api/tx/sui', async (request, reply) => {
 
 app.post('/api/tx/base', async (request, reply) => {
   try {
-    const { payer, amount, reference } = request.body as { payer: string, amount: number, reference: string };
+    const { payer, amount, reference } = request.body as PaymentRequest;
     if (!payer || !amount || !reference) {
       return reply.code(400).send({ error: 'Missing payer, amount, or reference' });
     }
     
     // Create USDC ERC-20 transfer transaction for Base
-    // USDC contract on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
-    const usdcContract = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+    const usdcContract = USDC_CONTRACT_BASE;
     const recipient = process.env.BASE_MERCHANT_ADDRESS || '0x1';
-    const amountWei = (amount * 1000000).toString(16).padStart(64, '0'); // 6 decimals for USDC
+    const amountWei = (amount * USDC_AMOUNT_WEI).toString(16).padStart(64, '0'); // USDC with proper decimals
     
     // ERC-20 transfer function signature: transfer(address,uint256)
     const transferSignature = 'a9059cbb'; // transfer(address,uint256)
@@ -417,8 +468,8 @@ app.post('/api/tx/base', async (request, reply) => {
       from: payer,
       value: '0x0', // 0 ETH value since we're using USDC
       data: `0x${transferSignature}${recipientPadded}${amountWei}`, // transfer(recipient, amount)
-      gas: '0x7530', // 30000 gas limit for ERC-20 transfer
-      gasPrice: '0x3b9aca00' // 1 gwei gas price
+      gas: GAS_LIMIT, // 30000 gas limit for ERC-20 transfer
+      gasPrice: GAS_PRICE // 1 gwei gas price
     };
     
     return { transaction };
