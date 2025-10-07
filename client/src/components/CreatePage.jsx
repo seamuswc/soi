@@ -32,9 +32,9 @@ function CreatePage() {
   useEffect(() => {
     // Generate references for all networks
     const solanaKeypair = Keypair.generate();
-    const aptosRef = generateAptosReference();
-    const suiRef = generateSuiReference();
-    const baseRef = generateBaseReference();
+    const aptosRef = generateReference('aptos');
+    const suiRef = generateReference('sui');
+    const baseRef = generateReference('base');
     
     setReferences({
       solana: solanaKeypair.publicKey.toBase58(),
@@ -46,25 +46,14 @@ function CreatePage() {
     setFormData(prev => ({ ...prev, reference: solanaKeypair.publicKey.toBase58() }));
   }, []);
 
-  const generateAptosReference = () => {
-    // Generate a random 32-byte reference for Aptos
+  const generateReference = (network) => {
+    // Generate a random 32-byte reference for any network
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  };
-
-  const generateSuiReference = () => {
-    // Generate a random 32-byte reference for Sui
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  };
-
-  const generateBaseReference = () => {
-    // Generate a random 32-byte reference for Base
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return '0x' + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    const hexString = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    
+    // Add 0x prefix for Base (EVM-compatible) networks
+    return network === 'base' ? '0x' + hexString : hexString;
   };
 
   const handleChange = (e) => {
@@ -82,7 +71,8 @@ function CreatePage() {
       await axios.post('/api/listings', formData);
       window.location.href = '/';
     } catch (error) {
-      console.error(error);
+      // Handle error silently in production
+      alert('Failed to submit listing. Please try again.');
     }
   };
 
@@ -106,7 +96,6 @@ function CreatePage() {
       await connection.confirmTransaction(signature, 'confirmed');
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
-      console.error(error);
       alert('Payment failed: ' + error.message);
     }
   };
@@ -129,7 +118,6 @@ function CreatePage() {
       const txHash = await window.aptos.signAndSubmitTransaction(transaction);
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
-      console.error(error);
       alert('Payment failed: ' + error.message);
     }
   };
@@ -154,7 +142,6 @@ function CreatePage() {
       });
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
-      console.error(error);
       alert('Payment failed: ' + error.message);
     }
   };
@@ -207,7 +194,6 @@ function CreatePage() {
       });
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
-      console.error(error);
       alert('Payment failed: ' + error.message);
     }
   };
