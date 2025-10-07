@@ -429,16 +429,8 @@ function CreatePage() {
                         />
                         <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'solana' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
-                              <svg viewBox="0 0 24 24" className="w-8 h-8">
-                                <defs>
-                                  <linearGradient id="solana-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#9945FF"/>
-                                    <stop offset="100%" stopColor="#14F195"/>
-                                  </linearGradient>
-                                </defs>
-                                <path fill="url(#solana-gradient)" d="M5.315 3.274c-.346-.346-.81-.518-1.274-.518s-.928.172-1.274.518L.518 5.041c-.346.346-.518.81-.518 1.274s.172.928.518 1.274l2.249 2.249c.346.346.81.518 1.274.518s.928-.172 1.274-.518L7.55 7.589c.346-.346.518-.81.518-1.274s-.172-.928-.518-1.274L5.315 3.274zm13.37 0c-.346-.346-.81-.518-1.274-.518s-.928.172-1.274.518l-2.249 2.249c-.346.346-.518.81-.518 1.274s.172.928.518 1.274l2.249 2.249c.346.346.81.518 1.274.518s.928-.172 1.274-.518L20.934 7.589c.346-.346.518-.81.518-1.274s-.172-.928-.518-1.274L18.685 3.274zM5.315 13.274c-.346-.346-.81-.518-1.274-.518s-.928.172-1.274.518L.518 15.041c-.346.346-.518.81-.518 1.274s.172.928.518 1.274l2.249 2.249c.346.346.81.518 1.274.518s.928-.172 1.274-.518L7.55 17.589c.346-.346.518-.81.518-1.274s-.172-.928-.518-1.274L5.315 13.274zm13.37 0c-.346-.346-.81-.518-1.274-.518s-.928.172-1.274.518l-2.249 2.249c-.346.346-.518.81-.518 1.274s.172.928.518 1.274l2.249 2.249c.346.346.81.518 1.274.518s.928-.172 1.274-.518L20.934 17.589c.346-.346.518-.81.518-1.274s-.172-.928-.518-1.274L18.685 13.274z"/>
-                              </svg>
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-teal-400 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">S</span>
                             </div>
                             <div className="font-medium text-gray-800">Solana</div>
                             <div className="text-xs text-gray-500">USDC</div>
@@ -455,12 +447,10 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-gray-500 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
-                              <svg viewBox="0 0 24 24" className="w-8 h-8">
-                                <path fill="#000000" d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-17v6h2V5h-2zm0 8v6h2v-6h-2z"/>
-                              </svg>
+                            <div className="w-8 h-8 bg-gray-900 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-cyan-400 font-bold text-sm">A</span>
                             </div>
                             <div className="font-medium text-gray-800">Aptos</div>
                             <div className="text-xs text-gray-500">APT</div>
@@ -477,18 +467,10 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:border-sky-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
-                              <svg viewBox="0 0 24 24" className="w-8 h-8">
-                                <defs>
-                                  <linearGradient id="sui-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#4FA8FF"/>
-                                    <stop offset="100%" stopColor="#1BC5BD"/>
-                                  </linearGradient>
-                                </defs>
-                                <path fill="url(#sui-gradient)" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                              </svg>
+                            <div className="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center" style={{backgroundColor: '#4DA2FF'}}>
+                              <span className="text-white font-bold text-sm">S</span>
                             </div>
                             <div className="font-medium text-gray-800">Sui</div>
                             <div className="text-xs text-gray-500">SUI</div>
@@ -505,18 +487,10 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
-                              <svg viewBox="0 0 24 24" className="w-8 h-8">
-                                <defs>
-                                  <linearGradient id="base-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#0052FF"/>
-                                    <stop offset="100%" stopColor="#00D4FF"/>
-                                  </linearGradient>
-                                </defs>
-                                <path fill="url(#base-gradient)" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                              </svg>
+                            <div className="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center" style={{backgroundColor: '#0052FF'}}>
+                              <span className="text-white font-bold text-sm">B</span>
                             </div>
                             <div className="font-medium text-gray-800">Base</div>
                             <div className="text-xs text-gray-500">USDC</div>
