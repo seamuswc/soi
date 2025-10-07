@@ -452,7 +452,7 @@ function CreatePage() {
                         </div>
                       </label>
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-blue-500' : ''}`}>
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-gray-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
@@ -461,9 +461,9 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-gray-500 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gray-800 rounded-full mx-auto mb-2 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">A</span>
                             </div>
                             <div className="font-medium text-gray-800">Aptos</div>
@@ -472,7 +472,7 @@ function CreatePage() {
                         </div>
                       </label>
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-green-500' : ''}`}>
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-sky-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
@@ -481,9 +481,9 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-sky-500 bg-sky-50' : 'border-gray-200 hover:border-sky-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-sky-400 rounded-full mx-auto mb-2 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">S</span>
                             </div>
                             <div className="font-medium text-gray-800">Sui</div>
@@ -492,7 +492,7 @@ function CreatePage() {
                         </div>
                       </label>
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-orange-500' : ''}`}>
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-blue-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
@@ -501,9 +501,9 @@ function CreatePage() {
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-orange-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">B</span>
                             </div>
                             <div className="font-medium text-gray-800">Base</div>
@@ -550,7 +550,7 @@ function CreatePage() {
                       <button
                         type="button"
                         onClick={handlePayWithBase}
-                        className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-orange-700 hover:to-orange-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                       >
                         💳 Pay with MetaMask (Base)
                       </button>
