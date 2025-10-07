@@ -19,6 +19,8 @@ SUI_MERCHANT_ADDRESS="your_sui_address_here"
 NODE_ENV="production"
 PORT=3000
 SITE_DOMAIN="soipattaya.com"
+PROMO_CODE=""
+PROMO_MAX_USES=""
 `;
 
 // Write .env file
