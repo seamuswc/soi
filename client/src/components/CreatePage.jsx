@@ -152,8 +152,8 @@ function CreatePage() {
       <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing</h1>
-          <p className="text-sm md:text-base text-gray-600">List your property on SOI Pattaya</p>
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing / สร้างรายการใหม่</h1>
+          <p className="text-sm md:text-base text-gray-600">List your property on SOI Pattaya / รายการอสังหาริมทรัพย์ของคุณใน SOI Pattaya</p>
         </div>
 
         {/* Main Form Card */}
@@ -163,7 +163,7 @@ function CreatePage() {
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">1</span>
-                Property Details
+                Property Details / รายละเอียดอสังหาริมทรัพย์
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -281,7 +281,7 @@ function CreatePage() {
                   </label>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -312,6 +312,16 @@ function CreatePage() {
                     />
                     <span>Top Floor / ชั้นบนสุด</span>
                   </label>
+                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      name="six_months"
+                      checked={formData.six_months}
+                      onChange={handleChange}
+                      className="h-4 w-4"
+                    />
+                    <span>6-month rental / เช่า 6 เดือน</span>
+                  </label>
                 </div>
 
                 <div className="space-y-2">
@@ -332,24 +342,15 @@ function CreatePage() {
                 
                 {/* Promo code */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Promo Code</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name="promo_code"
-                      value={formData.promo_code}
-                      onChange={handleChange}
-                      placeholder="Enter code (default: mew)"
-                      className="flex-1 px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, promo_code: 'mew' }))}
-                      className="px-4 py-2 bg-gray-100 rounded-lg border hover:bg-gray-200"
-                    >
-                      Use default
-                    </button>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700">Promo Code / รหัสโปรโมชั่น</label>
+                  <input
+                    type="text"
+                    name="promo_code"
+                    value={formData.promo_code}
+                    onChange={handleChange}
+                    placeholder="Enter promo code"
+                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                  />
                   <p className="text-xs text-gray-500">If valid and available, promo skips payment.</p>
                 </div>
               </div>
@@ -359,14 +360,14 @@ function CreatePage() {
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">3</span>
-                Payment Method
+                Payment Method / วิธีการชำระเงิน
               </h2>
               
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 md:p-6 rounded-xl border border-blue-200">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
-                      Choose Payment Network *
+                      Choose Payment Network / เลือกเครือข่ายการชำระเงิน *
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
@@ -469,21 +470,11 @@ function CreatePage() {
 
             {/* Submit Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  name="six_months"
-                  checked={formData.six_months}
-                  onChange={handleChange}
-                  className="h-4 w-4"
-                />
-                <span>6-month rental</span>
-              </label>
               <button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
               >
-                🚀 Create Listing
+                🚀 Create Listing / สร้างรายการ
               </button>
               <a
                 href="/"
