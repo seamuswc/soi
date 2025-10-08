@@ -21,11 +21,10 @@ echo "   App Directory: $APP_DIR"
 echo "   Domain: $DOMAIN"
 echo ""
 
-# Update system (non-interactive, keep existing configs)
-echo "🔄 Updating system packages..."
+# Update package lists only (no system upgrades)
+echo "🔄 Updating package lists..."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -yq
-apt-get -o Dpkg::Options::="--force-confold" -yq upgrade
 
 # Install Node.js using package manager
 echo "📦 Installing Node.js..."

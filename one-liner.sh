@@ -31,9 +31,8 @@ export DEBIAN_FRONTEND=noninteractive
 # Pre-configure SSH to keep local version (prevents SSH connection loss)
 echo "openssh-server openssh-server/sshd_config_keep_local boolean true" | debconf-set-selections
 
-echo "📦 Updating system packages..."
+echo "📦 Updating package lists..."
 apt-get update -yq
-apt-get -o Dpkg::Options::="--force-confold" -yq upgrade
 
 echo "📦 Installing Node.js..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
