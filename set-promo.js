@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 // Get command line arguments
 const args = process.argv.slice(2);
@@ -27,60 +27,30 @@ console.log(`Code: ${promoCode}`);
 console.log(`Max Uses: ${maxUses}`);
 console.log('');
 
-// Read existing .env file or create new one
-let envContent = '';
-const envPath = '.env';
+async function setPromo() {
+  try {
+    // Create or update promo code in database
+    const promo = await prisma.promo.upsert({
+      where: { code: promoCode.toLowerCase() },
+      update: { remaining_uses: parseInt(maxUses) },
+      create: { 
+        code: promoCode.toLowerCase(), 
+        remaining_uses: parseInt(maxUses) 
+      }
+    });
 
-if (fs.existsSync(envPath)) {
-  envContent = fs.readFileSync(envPath, 'utf8');
-} else {
-  // Create default .env content if file doesn't exist
-  envContent = `# SOI Pattaya Environment
-DATABASE_URL="file:/var/www/soipattaya/server/database.sqlite"
-ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="poop"
-ADMIN_TOKEN="admin_token_12345"
-VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
-SOLANA_MERCHANT_ADDRESS="your_solana_address_here"
-APTOS_MERCHANT_ADDRESS="your_aptos_address_here"
-SUI_MERCHANT_ADDRESS="your_sui_address_here"
-NODE_ENV="production"
-PORT=3000
-SITE_DOMAIN="soipattaya.com"
-`;
-}
-
-// Update or add PROMO_CODE and PROMO_MAX_USES
-const lines = envContent.split('\n');
-let promoCodeFound = false;
-let promoMaxUsesFound = false;
-
-for (let i = 0; i < lines.length; i++) {
-  if (lines[i].startsWith('PROMO_CODE=')) {
-    lines[i] = `PROMO_CODE="${promoCode}"`;
-    promoCodeFound = true;
-  }
-  if (lines[i].startsWith('PROMO_MAX_USES=')) {
-    lines[i] = `PROMO_MAX_USES="${maxUses}"`;
-    promoMaxUsesFound = true;
+    console.log('✅ Promo code configured successfully!');
+    console.log(`📋 Code: ${promoCode}`);
+    console.log(`🔢 Remaining uses: ${promo.remaining_uses}`);
+    console.log('');
+    console.log('🎉 Promo is active immediately - NO restart needed!');
+    
+  } catch (error) {
+    console.error('❌ Error setting promo:', error.message);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-// Add lines if they don't exist
-if (!promoCodeFound) {
-  lines.push(`PROMO_CODE="${promoCode}"`);
-}
-if (!promoMaxUsesFound) {
-  lines.push(`PROMO_MAX_USES="${maxUses}"`);
-}
-
-// Write updated .env file
-const updatedContent = lines.join('\n');
-fs.writeFileSync(envPath, updatedContent);
-
-console.log('✅ Promo code updated successfully!');
-console.log(`📁 Updated: ${envPath}`);
-console.log('');
-console.log('🔄 Restart your server to apply changes:');
-console.log('   npm run dev    (for development)');
-console.log('   npm run start  (for production)');
+setPromo();
