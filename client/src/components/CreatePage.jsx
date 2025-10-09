@@ -569,6 +569,25 @@ function CreatePage() {
             </div>
           </form>
         </div>
+
+        {/* Bulk Purchase Info */}
+        <div className="mt-6 bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-center">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+            💼 Bulk Listings / รายการจำนวนมาก
+          </h3>
+          <p className="text-gray-700 mb-2">
+            <strong>English:</strong> To buy listings in bulk and pay with ScanPay in Thai Baht, please email us:
+          </p>
+          <p className="text-gray-700 mb-4">
+            <strong>ไทย:</strong> หากต้องการซื้อรายการจำนวนมากและชำระด้วย ScanPay ในสกุลเงินบาท กรุณาอีเมลมาที่:
+          </p>
+          <a 
+            href="mailto:pay@soipattaya.com" 
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+          >
+            📧 pay@soipattaya.com
+          </a>
+        </div>
       </div>
     </div>
   );
