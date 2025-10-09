@@ -109,24 +109,41 @@ ufw allow 80 || true
 ufw allow 443 || true
 ufw --force enable || true
 
-# Install SSL with Certbot (optional - run manually if needed)
+# Install SSL with Certbot
 echo "🔒 Installing Certbot for SSL..."
 apt-get -o Dpkg::Options::="--force-confold" install -yq certbot python3-certbot-nginx
 
-# Note: SSL certificate setup is skipped during automated deployment
-# To enable SSL after deployment, run:
-# sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
-echo "⚠️  SSL certificate not configured automatically (prevents SSH issues)"
-echo "📝 To enable SSL, run: sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
+# Backup SSH config before SSL setup
+echo "🛡️  Backing up SSH configuration..."
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+
+# Get SSL certificate
+echo "🔒 Obtaining SSL certificate from Let's Encrypt..."
+if certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN; then
+    echo "✅ SSL certificate installed successfully"
+else
+    echo "⚠️  SSL certificate installation failed (non-fatal)"
+    echo "📝 You can run SSL setup manually later: sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
+fi
+
+# Ensure SSH config wasn't changed by certbot
+echo "🔒 Verifying SSH configuration..."
+if ! grep -q "^PubkeyAuthentication yes" /etc/ssh/sshd_config; then
+    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+fi
+if ! grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+fi
+
+# Restart SSH safely
+echo "🔄 Reloading SSH service..."
+systemctl reload sshd || true
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your app is running at: http://$DOMAIN"
+echo "🌐 Your app is running at: https://$DOMAIN"
 echo "📊 Check status: pm2 status"
 echo "📝 View logs: pm2 logs soipattaya"
 echo "🔧 Edit config: nano $APP_DIR/.env"
 echo ""
-echo "🎉 SOI Pattaya is now live!"
-echo ""
-echo "🔒 To enable SSL (HTTPS), run:"
-echo "   sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
+echo "🎉 SOI Pattaya is now live with SSL!"
