@@ -1,7 +1,11 @@
 #!/bin/bash
+# One-liner deployment for SOI Pattaya
+# Usage: curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
 
-echo "🚀 SOI Pattaya - One-Command Deployment"
-echo "======================================"
+set -euo pipefail
+
+echo "🚀 SOI Pattaya - One-Liner Deployment"
+echo "===================================="
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
@@ -12,7 +16,7 @@ fi
 # Configuration
 REPO_URL="https://github.com/seamuswc/soipattaya_JS.git"
 APP_DIR="/var/www/soipattaya"
-DOMAIN="soipattaya.com" # Your actual domain
+DOMAIN="soipattaya.com"
 SITE_NAME="soipattaya"
 
 echo "📋 Configuration:"
@@ -21,55 +25,22 @@ echo "   App Directory: $APP_DIR"
 echo "   Domain: $DOMAIN"
 echo ""
 
-# Update package lists only (no system upgrades)
-echo "🔄 Updating package lists..."
+# Set non-interactive mode to avoid SSH config conflicts
 export DEBIAN_FRONTEND=noninteractive
+
+# Pre-configure SSH to keep local version (prevents SSH connection loss)
+echo "openssh-server openssh-server/sshd_config_keep_local boolean true" | debconf-set-selections
+
+echo "📦 Updating package lists..."
 apt-get update -yq
 
-# Install Node.js using package manager
 echo "📦 Installing Node.js..."
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
 
-# Try different package managers
-if command -v apt &> /dev/null; then
-    # Ubuntu/Debian - use NodeSource repository
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
-elif command -v yum &> /dev/null; then
-    # CentOS/RHEL - use NodeSource repository
-    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-    yum install -y nodejs
-elif command -v dnf &> /dev/null; then
-    # Fedora - use NodeSource repository
-    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-    dnf install -y nodejs
-elif command -v pacman &> /dev/null; then
-    # Arch Linux
-    pacman -S --noconfirm nodejs npm
-elif command -v brew &> /dev/null; then
-    # macOS
-    brew install node
-else
-    # Fallback to nvm
-    echo "Using nvm as fallback..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    nvm install 20
-    nvm use 20
-    nvm alias default 20
-fi
-
-# Update npm and install latest PM2
-echo "📦 Updating npm and installing PM2..."
+echo "📦 Installing PM2 and Nginx..."
 npm install -g npm pm2@latest
-
-# Install Nginx (non-interactive)
-echo "📦 Installing Nginx..."
-apt-get -o Dpkg::Options::="--force-confold" install -yq nginx
-
-# Install Git if not present (non-interactive)
-echo "📦 Installing Git..."
-apt-get -o Dpkg::Options::="--force-confold" install -yq git
+apt-get -o Dpkg::Options::="--force-confold" install -yq nginx git
 
 # Clone or update repository
 echo "📥 Setting up application..."
@@ -138,13 +109,35 @@ ufw allow 80 || true
 ufw allow 443 || true
 ufw --force enable || true
 
-# Install SSL with Certbot (non-interactive)
-echo "🔒 Installing SSL certificate..."
+# Install SSL with Certbot
+echo "🔒 Installing Certbot for SSL..."
 apt-get -o Dpkg::Options::="--force-confold" install -yq certbot python3-certbot-nginx
 
+# Backup SSH config before SSL setup
+echo "🛡️  Backing up SSH configuration..."
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+
 # Get SSL certificate
-echo "🔒 Obtaining SSL certificate..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
+echo "🔒 Obtaining SSL certificate from Let's Encrypt..."
+if certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN; then
+    echo "✅ SSL certificate installed successfully"
+else
+    echo "⚠️  SSL certificate installation failed (non-fatal)"
+    echo "📝 You can run SSL setup manually later: sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
+fi
+
+# Ensure SSH config wasn't changed by certbot
+echo "🔒 Verifying SSH configuration..."
+if ! grep -q "^PubkeyAuthentication yes" /etc/ssh/sshd_config; then
+    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+fi
+if ! grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+fi
+
+# Restart SSH safely
+echo "🔄 Reloading SSH service..."
+systemctl reload sshd || true
 
 echo ""
 echo "✅ Deployment complete!"
