@@ -211,6 +211,14 @@ function CreatePage() {
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing / สร้างรายการใหม่</h1>
           <p className="text-sm md:text-base text-gray-600">List your property on SOI Pattaya / รายการอสังหาริมทรัพย์ของคุณใน SOI Pattaya</p>
+          
+          {/* Pricing Info */}
+          <div className="mt-4 inline-block bg-white border-2 border-gray-200 rounded-lg px-6 py-3 shadow-sm">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold">💰 Crypto:</span> $1 USD per listing | 
+              <span className="font-semibold ml-2">🇹🇭 ScanPay:</span> 30 Baht per listing
+            </p>
+          </div>
         </div>
 
         {/* Main Form Card */}
