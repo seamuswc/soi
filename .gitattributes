@@ -6,6 +6,9 @@
 *.md diff=markdown
 *.php diff=php
 
+# Suppress line ending warnings for node_modules
+node_modules/** -text
+
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
