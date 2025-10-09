@@ -467,7 +467,7 @@ function CreatePage() {
                               <span className="text-cyan-400 font-bold text-sm">A</span>
                             </div>
                             <div className="font-medium text-gray-800">Aptos</div>
-                            <div className="text-xs text-gray-500">Pay with USDC</div>
+                            <div className="text-xs text-gray-500">USDC</div>
                           </div>
                         </div>
                       </label>
@@ -487,7 +487,7 @@ function CreatePage() {
                               <span className="text-white font-bold text-sm">S</span>
                             </div>
                             <div className="font-medium text-gray-800">Sui</div>
-                            <div className="text-xs text-gray-500">Pay with USDC</div>
+                            <div className="text-xs text-gray-500">USDC</div>
                           </div>
                         </div>
                       </label>
