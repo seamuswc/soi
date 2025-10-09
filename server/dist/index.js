@@ -131,8 +131,8 @@ const createListingSchema = zod_1.z.object({
     building_name: zod_1.z.string(),
     coordinates: zod_1.z.string(),
     floor: zod_1.z.string(),
-    sqm: zod_1.z.number(),
-    cost: zod_1.z.number(),
+    sqm: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
+    cost: zod_1.z.union([zod_1.z.string(), zod_1.z.number()]).transform(val => typeof val === 'string' ? parseInt(val) : val),
     description: zod_1.z.string(),
     youtube_link: zod_1.z.string().url(),
     reference: zod_1.z.string(),
@@ -199,6 +199,11 @@ async function validateSolanaPayment(reference) {
     }
 }
 // Routes
+app.get('/api/config', async () => {
+    return {
+        recipient: process.env.SOLANA_MERCHANT_ADDRESS
+    };
+});
 app.get('/api/listings', async () => {
     const listings = await prisma.listing.findMany();
     // Group by building_name as in original
@@ -261,61 +266,67 @@ app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () =
     };
 });
 app.post('/api/listings', async (request, reply) => {
-    const data = createListingSchema.parse(request.body);
-    const [lat, lng] = data.coordinates.split(',').map(s => parseFloat(s.trim()));
-    let isValid = false;
-    // Validate payment based on network
-    isValid = await validatePayment(data.payment_network, data.reference);
-    if (!isValid) {
-        return reply.code(400).send({ error: 'Invalid payment' });
-    }
-    const months = data.six_months ? 6 : 1;
-    const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
-    // Promo handling
-    const configuredPromo = process.env.PROMO_CODE;
-    const configuredMaxUses = process.env.PROMO_MAX_USES ? Number(process.env.PROMO_MAX_USES) : undefined;
-    if (data.promo_code) {
-        if (!configuredPromo) {
-            return reply.code(400).send({ error: 'Promo not configured' });
+    try {
+        const data = createListingSchema.parse(request.body);
+        const [lat, lng] = data.coordinates.split(',').map(s => parseFloat(s.trim()));
+        let isValid = false;
+        // Validate payment based on network
+        isValid = await validatePayment(data.payment_network, data.reference);
+        if (!isValid) {
+            return reply.code(400).send({ error: 'Invalid payment' });
         }
-        if (data.promo_code.toLowerCase() !== configuredPromo.toLowerCase()) {
-            return reply.code(400).send({ error: 'Invalid promo' });
-        }
-        if (configuredMaxUses !== undefined) {
-            const promo = await prisma.promo.upsert({
-                where: { code: configuredPromo },
-                update: {},
-                create: { code: configuredPromo, remaining_uses: configuredMaxUses }
-            });
-            if (promo.remaining_uses <= 0) {
-                return reply.code(400).send({ error: 'Promo exhausted' });
+        const months = data.six_months ? 6 : 1;
+        const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
+        // Promo handling
+        const configuredPromo = process.env.PROMO_CODE;
+        const configuredMaxUses = process.env.PROMO_MAX_USES ? Number(process.env.PROMO_MAX_USES) : undefined;
+        if (data.promo_code) {
+            if (!configuredPromo) {
+                return reply.code(400).send({ error: 'Promo not configured' });
             }
-            await prisma.promo.update({ where: { code: configuredPromo }, data: { remaining_uses: { decrement: 1 } } });
+            if (data.promo_code.toLowerCase() !== configuredPromo.toLowerCase()) {
+                return reply.code(400).send({ error: 'Invalid promo' });
+            }
+            if (configuredMaxUses !== undefined) {
+                const promo = await prisma.promo.upsert({
+                    where: { code: configuredPromo },
+                    update: {},
+                    create: { code: configuredPromo, remaining_uses: configuredMaxUses }
+                });
+                if (promo.remaining_uses <= 0) {
+                    return reply.code(400).send({ error: 'Promo exhausted' });
+                }
+                await prisma.promo.update({ where: { code: configuredPromo }, data: { remaining_uses: { decrement: 1 } } });
+            }
+            // promo accepted: skip payment validation
+            isValid = true;
         }
-        // promo accepted: skip payment validation
-        isValid = true;
+        const listing = await prisma.listing.create({
+            data: {
+                building_name: data.building_name,
+                latitude: lat,
+                longitude: lng,
+                floor: data.floor,
+                sqm: data.sqm,
+                cost: data.cost,
+                description: data.description,
+                youtube_link: data.youtube_link,
+                reference: data.reference,
+                payment_network: data.payment_network,
+                thai_only: data.thai_only ?? false,
+                has_pool: data.has_pool ?? false,
+                has_parking: data.has_parking ?? false,
+                is_top_floor: data.is_top_floor ?? false,
+                six_months: data.six_months ?? false,
+                expires_at: expiresAt,
+            },
+        });
+        return listing;
     }
-    const listing = await prisma.listing.create({
-        data: {
-            building_name: data.building_name,
-            latitude: lat,
-            longitude: lng,
-            floor: data.floor,
-            sqm: data.sqm,
-            cost: data.cost,
-            description: data.description,
-            youtube_link: data.youtube_link,
-            reference: data.reference,
-            payment_network: data.payment_network,
-            thai_only: data.thai_only ?? false,
-            has_pool: data.has_pool ?? false,
-            has_parking: data.has_parking ?? false,
-            is_top_floor: data.is_top_floor ?? false,
-            six_months: data.six_months ?? false,
-            expires_at: expiresAt,
-        },
-    });
-    return listing;
+    catch (error) {
+        app.log.error('Error creating listing:', error);
+        return reply.code(500).send({ error: 'Internal server error' });
+    }
 });
 app.get('/api/listings/:name', async (request) => {
     const { name } = request.params;

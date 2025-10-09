@@ -5,6 +5,12 @@
 curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
 ```
 
+### Enable SSL (HTTPS) after deployment
+```bash
+# Run this after the main deployment completes
+curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/setup-ssl.sh | sudo bash
+```
+
 ## 🧰 Manual deploy on a fresh server
 ```bash
 git clone https://github.com/seamuswc/soipattaya_JS.git

@@ -109,19 +109,24 @@ ufw allow 80 || true
 ufw allow 443 || true
 ufw --force enable || true
 
-# Install SSL with Certbot (non-interactive)
-echo "🔒 Installing SSL certificate..."
+# Install SSL with Certbot (optional - run manually if needed)
+echo "🔒 Installing Certbot for SSL..."
 apt-get -o Dpkg::Options::="--force-confold" install -yq certbot python3-certbot-nginx
 
-# Get SSL certificate
-echo "🔒 Obtaining SSL certificate..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
+# Note: SSL certificate setup is skipped during automated deployment
+# To enable SSL after deployment, run:
+# sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
+echo "⚠️  SSL certificate not configured automatically (prevents SSH issues)"
+echo "📝 To enable SSL, run: sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your app is running at: https://$DOMAIN"
+echo "🌐 Your app is running at: http://$DOMAIN"
 echo "📊 Check status: pm2 status"
 echo "📝 View logs: pm2 logs soipattaya"
 echo "🔧 Edit config: nano $APP_DIR/.env"
 echo ""
-echo "🎉 SOI Pattaya is now live with SSL!"
+echo "🎉 SOI Pattaya is now live!"
+echo ""
+echo "🔒 To enable SSL (HTTPS), run:"
+echo "   sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
