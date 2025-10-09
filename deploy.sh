@@ -92,15 +92,10 @@ cd server && if [ -f package-lock.json ]; then npm ci; else npm install; fi && c
 # Setup environment variables
 echo "⚙️ Setting up environment variables..."
 npm run setup
-echo ""
-echo "⚠️  IMPORTANT: Please edit the .env file with your actual values:"
-echo "   nano $APP_DIR/.env"
-echo ""
-read -p "Press Enter after you have updated the .env file..."
 
 # Copy .env to server directory for Prisma
 echo "📋 Copying environment variables to server..."
-cp $APP_DIR/.env $APP_DIR/server/.env
+cp $APP_DIR/.env $APP_DIR/server/.env || true
 
 # Ensure Vite envs are present for client build
 echo "🔐 Syncing VITE_* vars to client/.env"
