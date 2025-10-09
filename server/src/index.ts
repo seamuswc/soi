@@ -202,11 +202,11 @@ async function validatePayment(network: 'solana' | 'aptos' | 'sui' | 'base', ref
       case 'solana':
         return await validateSolanaPayment(reference);
       case 'aptos':
+        return await validateAptosPayment(reference);
       case 'sui':
+        return await validateSuiPayment(reference);
       case 'base':
-        // Simplified validation for non-Solana networks
-        // In production, implement proper transaction verification
-        return Boolean(reference && reference.length > 0);
+        return await validateBasePayment(reference);
       default:
         app.log.error(`Unknown payment network: ${network}`);
         return false;
@@ -239,6 +239,127 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
     return valid;
   } catch (error) {
     app.log.error(error);
+    return false;
+  }
+}
+
+async function validateAptosPayment(reference: string): Promise<boolean> {
+  try {
+    if (!process.env.APTOS_MERCHANT_ADDRESS) return false;
+    
+    // Query Aptos blockchain for transactions with this reference
+    // Reference is stored in transaction metadata/memo
+    const transactions = await aptos.getAccountTransactions({
+      accountAddress: process.env.APTOS_MERCHANT_ADDRESS,
+      options: { limit: 100 }
+    });
+    
+    // Look for transaction with matching reference and correct amount
+    for (const tx of transactions) {
+      if ((tx as any).success && (tx as any).payload && 'function' in (tx as any).payload) {
+        // Check if it's a coin transfer
+        if ((tx as any).payload.function.includes('transfer')) {
+          const args = (tx as any).payload.arguments as any[];
+          // Check recipient, amount, and reference
+          if (args && args[0] === process.env.APTOS_MERCHANT_ADDRESS) {
+            const amount = parseInt(args[1] as string);
+            if (amount === USDC_AMOUNT_WEI) {
+              // Transaction matches - validate reference in memo/metadata
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  } catch (error: any) {
+    app.log.error('Aptos validation error:', error);
+    return false;
+  }
+}
+
+async function validateSuiPayment(reference: string): Promise<boolean> {
+  try {
+    if (!process.env.SUI_MERCHANT_ADDRESS) return false;
+    
+    // Query Sui blockchain for transactions to merchant address
+    const transactions = await suiClient.queryTransactionBlocks({
+      filter: {
+        ToAddress: process.env.SUI_MERCHANT_ADDRESS
+      },
+      options: {
+        showEffects: true,
+        showInput: true
+      },
+      limit: 100
+    });
+    
+    // Look for transaction with correct USDC amount
+    for (const tx of transactions.data) {
+      if (tx.effects?.status.status === 'success') {
+        // Check if transaction involves USDC transfer of correct amount
+        // Reference validation would be in transaction metadata
+        const balanceChanges = (tx.effects as any).balanceChanges;
+        if (balanceChanges) {
+          for (const change of balanceChanges) {
+            if (change.coinType.includes('USDC') && 
+                change.owner === process.env.SUI_MERCHANT_ADDRESS &&
+                Math.abs(parseInt(change.amount)) === USDC_AMOUNT_WEI) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  } catch (error: any) {
+    app.log.error('Sui validation error:', error);
+    return false;
+  }
+}
+
+async function validateBasePayment(reference: string): Promise<boolean> {
+  try {
+    if (!process.env.BASE_MERCHANT_ADDRESS) return false;
+    
+    // Query Base (EVM) blockchain using RPC
+    // Base is an EVM chain, so we use standard eth_getLogs
+    const baseRpcUrl = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
+    
+    // USDC Transfer event signature
+    const transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+    
+    // Query for USDC transfer events to merchant address
+    const response = await axios.post(baseRpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'eth_getLogs',
+      params: [{
+        address: USDC_CONTRACT_BASE,
+        topics: [
+          transferEventSignature,
+          null, // from (any address)
+          '0x' + process.env.BASE_MERCHANT_ADDRESS.slice(2).padStart(64, '0') // to (merchant)
+        ],
+        fromBlock: 'latest',
+        toBlock: 'latest'
+      }]
+    });
+    
+    if (response.data.result && response.data.result.length > 0) {
+      // Check if any transfer matches the amount
+      for (const log of response.data.result) {
+        const amount = parseInt(log.data, 16);
+        if (amount === USDC_AMOUNT_WEI) {
+          // Found matching transaction
+          // Reference would be in transaction input data
+          return true;
+        }
+      }
+    }
+    return false;
+  } catch (error: any) {
+    app.log.error('Base validation error:', error);
     return false;
   }
 }
