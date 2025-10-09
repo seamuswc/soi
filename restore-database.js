@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-const { PrismaClient } = require('@prisma/client');
 const fs = require('fs');
 const path = require('path');
 
+// Load Prisma from server directory
+const { PrismaClient } = require(path.join(__dirname, 'server', 'node_modules', '@prisma', 'client'));
 const prisma = new PrismaClient();
 
 async function restoreDatabase(backupFile) {
