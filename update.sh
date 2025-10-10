@@ -19,7 +19,10 @@ git pull
 
 echo "📦 Installing dependencies (root)..."
 if [ -f package-lock.json ]; then 
-  npm ci || npm install
+  if ! npm ci 2>/dev/null; then
+    echo "⚠️  npm ci failed, falling back to npm install..."
+    npm install
+  fi
 else 
   npm install
 fi
@@ -27,7 +30,10 @@ fi
 echo "📦 Installing dependencies (client)..."
 pushd client >/dev/null
 if [ -f package-lock.json ]; then 
-  npm ci || npm install
+  if ! npm ci 2>/dev/null; then
+    echo "⚠️  npm ci failed, falling back to npm install..."
+    npm install
+  fi
 else 
   npm install
 fi
@@ -41,7 +47,10 @@ popd >/dev/null
 echo "📦 Installing dependencies (server) and applying DB changes..."
 pushd server >/dev/null
 if [ -f package-lock.json ]; then 
-  npm ci || npm install
+  if ! npm ci 2>/dev/null; then
+    echo "⚠️  npm ci failed, falling back to npm install..."
+    npm install
+  fi
 else 
   npm install
 fi
