@@ -8,6 +8,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [paymentUrl, setPaymentUrl] = useState('');
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState('pending'); // pending, checking, confirmed, failed
+  const [checkInterval, setCheckInterval] = useState(null);
 
   useEffect(() => {
     generatePaymentUrl();
@@ -17,8 +18,15 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       startPaymentCheck();
     }, 3000);
 
-    return () => clearTimeout(checkTimer);
-  }, []);
+    return () => {
+      clearTimeout(checkTimer);
+      // Clean up payment checking when modal closes
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      setChecking(false);
+    };
+  }, [checkInterval]);
 
   const generatePaymentUrl = () => {
     if (network === 'solana') {
@@ -55,7 +63,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     const maxAttempts = 150; // 5 minutes
     let attempts = 0;
 
-    const checkInterval = setInterval(async () => {
+    const interval = setInterval(async () => {
       attempts++;
       
       try {
@@ -63,7 +71,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         
         if (response.data.confirmed) {
           setStatus('confirmed');
-          clearInterval(checkInterval);
+          clearInterval(interval);
+          setCheckInterval(null);
           setTimeout(() => {
             onSuccess();
           }, 2000);
@@ -73,10 +82,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       }
 
       if (attempts >= maxAttempts) {
-        clearInterval(checkInterval);
+        clearInterval(interval);
+        setCheckInterval(null);
         setStatus('failed');
       }
     }, 2000);
+    
+    setCheckInterval(interval);
   };
 
   const getNetworkName = () => {
@@ -100,8 +112,14 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 relative">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close button */}
         <button
           onClick={onClose}
