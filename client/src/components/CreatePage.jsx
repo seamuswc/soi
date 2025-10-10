@@ -82,9 +82,40 @@ function CreatePage() {
     }
   };
 
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   const handlePayWithSolana = async () => {
+    // Check if mobile device
+    if (isMobile()) {
+      // On mobile, guide user to open their wallet app
+      const walletOptions = [
+        { name: 'Phantom', deepLink: 'https://phantom.app/ul/browse/' + encodeURIComponent(window.location.href) + '?ref=soipattaya' },
+        { name: 'Solflare', deepLink: 'https://solflare.com/ul/v1/browse/' + encodeURIComponent(window.location.href) },
+      ];
+      
+      const choice = confirm(
+        '📱 Mobile Wallet Detection:\n\n' +
+        'To pay with Solana on mobile:\n' +
+        '1. Open your Phantom or Solflare wallet app\n' +
+        '2. Use the in-app browser\n' +
+        '3. Navigate to this page\n' +
+        '4. Click the payment button\n\n' +
+        'Click OK to open in Phantom wallet, or Cancel to try another wallet.'
+      );
+      
+      if (choice) {
+        window.location.href = walletOptions[0].deepLink;
+      } else {
+        alert('Please open this page in your wallet\'s browser (e.g., Phantom, Solflare)');
+      }
+      return;
+    }
+
+    // Desktop browser extension check
     if (!window.solana || !window.solana.isPhantom) {
-      alert('Phantom wallet not detected. Please install Phantom.');
+      alert('Phantom wallet not detected. Please install Phantom browser extension or use mobile wallet app.');
       return;
     }
     try {
@@ -107,13 +138,35 @@ function CreatePage() {
   };
 
   const handlePayWithAptos = async () => {
-    if (!window.aptos) {
-      alert('Aptos wallet not detected. Please install Petra wallet.');
+    // Check if mobile device
+    if (isMobile()) {
+      const choice = confirm(
+        '📱 Mobile Wallet Detection:\n\n' +
+        'To pay with Aptos on mobile:\n' +
+        '1. Open your Petra or Pontem wallet app\n' +
+        '2. Use the in-app browser (DApp browser)\n' +
+        '3. Navigate to this page\n' +
+        '4. Click the payment button\n\n' +
+        'Supported: Petra, Pontem, Martian, Fewcha\n\n' +
+        'Click OK to continue or Cancel to dismiss.'
+      );
+      
+      if (choice) {
+        alert('Please open this page in your Aptos wallet\'s DApp browser (Petra, Pontem, etc.)');
+      }
+      return;
+    }
+
+    // Desktop browser extension check - Try Petra first (window.aptos), then Pontem (window.pontem)
+    const wallet = window.aptos || window.pontem;
+    
+    if (!wallet) {
+      alert('Aptos wallet not detected. Please install Petra or Pontem wallet browser extension, or use mobile wallet app.');
       return;
     }
     try {
-      const response = await window.aptos.connect();
-      const account = await window.aptos.account();
+      const response = await wallet.connect();
+      const account = await wallet.account();
       const payer = account.address;
       const res = await axios.post('/api/tx/aptos', { 
         payer, 
@@ -121,7 +174,7 @@ function CreatePage() {
         reference: references.aptos 
       });
       const { transaction } = res.data;
-      const txHash = await window.aptos.signAndSubmitTransaction(transaction);
+      const txHash = await wallet.signAndSubmitTransaction(transaction);
       alert('Payment successful! Now submit the listing.');
     } catch (error) {
       alert('Payment failed: ' + error.message);
@@ -129,12 +182,37 @@ function CreatePage() {
   };
 
   const handlePayWithSui = async () => {
-    if (!window.suiWallet) {
-      alert('Sui wallet not detected. Please install Sui wallet.');
+    // Check if mobile device
+    if (isMobile()) {
+      const choice = confirm(
+        '📱 Mobile Wallet Detection:\n\n' +
+        'To pay with Sui on mobile:\n' +
+        '1. Open your Sui Wallet app\n' +
+        '2. Use the in-app browser (DApp browser)\n' +
+        '3. Navigate to this page\n' +
+        '4. Click the payment button\n\n' +
+        'Supported: Sui Wallet (official), Suiet, Ethos, Martian\n\n' +
+        'Click OK to continue or Cancel to dismiss.'
+      );
+      
+      if (choice) {
+        alert('Please open this page in your Sui wallet\'s DApp browser.');
+      }
+      return;
+    }
+
+    // Desktop browser extension check - Try multiple Sui wallets
+    // Official Sui Wallet uses window.suiWallet
+    // Suiet uses window.suiet
+    // Ethos uses window.ethos
+    const wallet = window.suiWallet || window.suiet || window.ethos;
+    
+    if (!wallet) {
+      alert('Sui wallet not detected. Please install Sui Wallet (official), Suiet, or Ethos browser extension, or use mobile wallet app.');
       return;
     }
     try {
-      const response = await window.suiWallet.connect();
+      const response = await wallet.connect();
       const payer = response.accounts[0].address;
       const res = await axios.post('/api/tx/sui', { 
         payer, 
@@ -142,7 +220,7 @@ function CreatePage() {
         reference: references.sui 
       });
       const { transaction } = res.data;
-      const txHash = await window.suiWallet.signAndExecuteTransactionBlock({
+      const txHash = await wallet.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
         account: response.accounts[0]
       });
@@ -153,8 +231,35 @@ function CreatePage() {
   };
 
   const handlePayWithBase = async () => {
+    // Check if mobile device
+    if (isMobile()) {
+      const walletOptions = [
+        { name: 'MetaMask', deepLink: 'https://metamask.app.link/dapp/' + encodeURIComponent(window.location.href.replace(/^https?:\/\//, '')) },
+        { name: 'Coinbase Wallet', deepLink: 'https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href) },
+        { name: 'Rainbow', deepLink: 'https://rnbwapp.com/open?url=' + encodeURIComponent(window.location.href) },
+      ];
+      
+      const choice = confirm(
+        '📱 Mobile Wallet Detection:\n\n' +
+        'To pay with Base (Ethereum) on mobile:\n' +
+        '1. Open your MetaMask, Coinbase Wallet, or Rainbow app\n' +
+        '2. Use the in-app browser (DApp browser)\n' +
+        '3. Navigate to this page\n' +
+        '4. Click the payment button\n\n' +
+        'Click OK to open in MetaMask, or Cancel for other wallets.'
+      );
+      
+      if (choice) {
+        window.location.href = walletOptions[0].deepLink;
+      } else {
+        alert('Please open this page in your wallet\'s DApp browser (MetaMask, Coinbase Wallet, Rainbow, etc.)');
+      }
+      return;
+    }
+
+    // Desktop browser extension check
     if (!window.ethereum) {
-      alert('Ethereum wallet not detected. Please install MetaMask or similar wallet.');
+      alert('Ethereum wallet not detected. Please install MetaMask or similar wallet browser extension, or use mobile wallet app.');
       return;
     }
     try {

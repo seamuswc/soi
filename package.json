@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "setup": "node setup-env.js",
+    "merchant": "node set-merchant.js",
     "promo": "node set-promo.js",
     "check-promo": "node check-promo.js",
     "maintenance": "node maintenance.js",

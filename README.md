@@ -52,6 +52,37 @@ npm run promo "WELCOME20" 100
 npm run check-promo
 ```
 
+## 💰 Crypto Merchant Address Management
+
+```bash
+# Interactive tool to set/update merchant addresses
+npm run merchant
+
+# Supports: Solana, Aptos, Sui, Base
+# Updates addresses in .env file for receiving payments
+```
+
+## 🛠️ Available NPM Commands
+
+```bash
+npm run setup           # Initial environment setup wizard
+npm run merchant        # Update crypto merchant addresses
+npm run promo           # Set promo code and usage limit
+npm run check-promo     # Check promo code statistics
+npm run maintenance     # Toggle maintenance mode (on/off/status)
+npm run dev             # Start development servers (client + server)
+npm run dev:client      # Start only frontend dev server
+npm run dev:server      # Start only backend dev server
+npm run build           # Build both client and server for production
+npm run build:client    # Build only frontend
+npm run build:server    # Build only backend
+npm run start           # Start production server
+npm run deploy          # Deploy to production (requires sudo)
+npm run deploy:one-liner # One-command deploy from GitHub
+npm run update          # Update app with latest code
+npm run safe-update     # Update with automatic maintenance mode
+```
+
 ## 🔄 Server Migration
 
 ### Quick Migration (Automated)
