@@ -367,7 +367,6 @@ function CreatePage() {
                         </div>
                       </label>
 
-                      {/* APTOS - COMMENTED OUT FOR NOW
                       <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-gray-500' : ''}`}>
                         <input
                           type="radio"
@@ -387,7 +386,6 @@ function CreatePage() {
                           </div>
                         </div>
                       </label>
-                      */}
 
                       {/* SUI - COMMENTED OUT FOR NOW
                       <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-sky-500' : ''}`}>
