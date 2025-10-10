@@ -105,7 +105,12 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
-    setShowQRModal(true);
+    if (formData.payment_network === 'thb') {
+      // Redirect to LINE for Thai Baht payment
+      window.location.href = `https://line.me/R/ti/p/@soipattaya?message=I want to list a property - Reference: ${formData.reference}`;
+    } else {
+      setShowQRModal(true);
+    }
   };
 
   const handlePaymentSuccess = () => {
@@ -126,7 +131,7 @@ function CreatePage() {
           <div className="mt-4 inline-block bg-white border-2 border-gray-200 rounded-lg px-6 py-3 shadow-sm">
             <p className="text-sm text-gray-700">
               <span className="font-semibold">💰 Crypto:</span> $1 USD per listing | 
-              <span className="font-semibold ml-2">🇹🇭 ScanPay:</span> 30 Baht per listing
+              <span className="font-semibold ml-2">🇹🇭 LINE Pay:</span> 35฿ per listing
             </p>
           </div>
         </div>
@@ -362,6 +367,7 @@ function CreatePage() {
                         </div>
                       </label>
 
+                      {/* APTOS - COMMENTED OUT FOR NOW
                       <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-gray-500' : ''}`}>
                         <input
                           type="radio"
@@ -381,7 +387,9 @@ function CreatePage() {
                           </div>
                         </div>
                       </label>
+                      */}
 
+                      {/* SUI - COMMENTED OUT FOR NOW
                       <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-sky-500' : ''}`}>
                         <input
                           type="radio"
@@ -398,6 +406,27 @@ function CreatePage() {
                             </div>
                             <div className="font-medium text-gray-800">Sui</div>
                             <div className="text-xs text-gray-500">USDC</div>
+                          </div>
+                        </div>
+                      </label>
+                      */}
+
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'thb' ? 'ring-2 ring-green-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="thb"
+                          checked={formData.payment_network === 'thb'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'thb' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">฿</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Thai Baht</div>
+                            <div className="text-xs text-gray-500">LINE Pay</div>
                           </div>
                         </div>
                       </label>
@@ -435,6 +464,10 @@ function CreatePage() {
                       {paymentPaid ? (
                         <>
                           ✅ Payment Confirmed
+                        </>
+                      ) : formData.payment_network === 'thb' ? (
+                        <>
+                          💬 Contact via LINE - 35฿
                         </>
                       ) : (
                         <>
