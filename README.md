@@ -62,11 +62,22 @@ npm run merchant
 # Updates addresses in .env file for receiving payments
 ```
 
+## 📱 LINE Account Management
+
+```bash
+# Set or update LINE account for Thai Baht payments
+npm run line
+
+# Updates LINE_ACCOUNT in .env file
+# Used for ScanPay bank transfers via LINE chat
+```
+
 ## 🛠️ Available NPM Commands
 
 ```bash
 npm run setup           # Initial environment setup wizard
 npm run merchant        # Update crypto merchant addresses
+npm run line            # Set LINE account for THB payments
 npm run promo           # Set promo code and usage limit
 npm run check-promo     # Check promo code statistics
 npm run maintenance     # Toggle maintenance mode (on/off/status)

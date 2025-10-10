@@ -107,7 +107,8 @@ function CreatePage() {
   const handlePayment = () => {
     if (formData.payment_network === 'thb') {
       // Redirect to LINE for Thai Baht payment via ScanPay bank transfer
-      window.location.href = `https://line.me/R/ti/p/@soipattaya?message=I want to list a property - Reference: ${formData.reference} - Paying 35 Baht via ScanPay`;
+      const lineAccount = merchantAddresses.lineAccount || '@soipattaya';
+      window.location.href = `https://line.me/R/ti/p/${lineAccount}?message=I want to list a property - Reference: ${formData.reference} - Paying 35 Baht via ScanPay`;
     } else {
       setShowQRModal(true);
     }

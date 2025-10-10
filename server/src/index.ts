@@ -377,7 +377,8 @@ app.get('/api/config/merchant-addresses', async () => {
     solana: process.env.SOLANA_MERCHANT_ADDRESS || '',
     aptos: process.env.APTOS_MERCHANT_ADDRESS || '',
     sui: process.env.SUI_MERCHANT_ADDRESS || '',
-    base: process.env.BASE_MERCHANT_ADDRESS || ''
+    base: process.env.BASE_MERCHANT_ADDRESS || '',
+    lineAccount: process.env.LINE_ACCOUNT || '@soipattaya'
   };
 });
 
