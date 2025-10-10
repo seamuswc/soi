@@ -27,9 +27,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   }, [checkInterval]);
 
   const generatePaymentUrl = () => {
-    // Use simple HTTP URLs for all networks (no deep links)
-    const url = `${window.location.origin}/pay?network=${network}&to=${merchantAddress}&amount=${amount}&ref=${reference}`;
-    setPaymentUrl(url);
+    // Generate payment info string (not a URL, just info for the user)
+    const paymentInfo = `Network: ${network.toUpperCase()}\nTo: ${merchantAddress}\nAmount: ${amount} USDC\nReference: ${reference}`;
+    setPaymentUrl(paymentInfo);
   };
 
   const startPaymentCheck = async () => {
@@ -112,10 +112,23 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           <p className="text-3xl font-bold mt-2">{amount} USDC</p>
         </div>
 
-        {/* Status Messages */}
-        {status === 'pending' && (
-          <div className="text-center mb-6">
-            <p className="text-gray-600">Open your wallet app and scan the QR code</p>
+        {/* Payment Details */}
+        {status === 'pending' && merchantAddress && (
+          <div className="bg-blue-50 rounded-lg p-4 mb-6 text-sm">
+            <div className="space-y-2">
+              <div>
+                <span className="font-semibold text-gray-700">Send to:</span>
+                <p className="text-xs font-mono text-gray-600 break-all mt-1">{merchantAddress}</p>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Amount:</span>
+                <p className="text-gray-600">{amount} USDC</p>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Memo/Reference:</span>
+                <p className="text-xs font-mono text-gray-600 break-all mt-1">{reference}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -163,10 +176,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
             <p className="font-medium mb-2">📱 How to pay:</p>
             <ol className="list-decimal list-inside space-y-1">
               <li>Open your {getNetworkName()} wallet app</li>
-              <li>Tap "Scan" or "Send"</li>
-              <li>Scan this QR code</li>
-              <li>Confirm the transaction</li>
+              <li>Send {amount} USDC to the address shown above</li>
+              <li>Include the reference ID in the memo/message</li>
+              <li>Payment will be detected automatically</li>
             </ol>
+            <p className="text-xs text-gray-500 mt-3">
+              Or scan the QR code with your wallet if supported
+            </p>
           </div>
         )}
 
