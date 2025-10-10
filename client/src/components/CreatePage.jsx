@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Keypair, PublicKey, Connection, clusterApiUrl } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import axios from 'axios';
-import { Transaction } from '@solana/web3.js';
+import PaymentQRModal from './PaymentQRModal';
 
 function CreatePage() {
   const [formData, setFormData] = useState({
@@ -29,6 +29,16 @@ function CreatePage() {
     base: ''
   });
 
+  const [merchantAddresses, setMerchantAddresses] = useState({
+    solana: '',
+    aptos: '',
+    sui: '',
+    base: ''
+  });
+
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [paymentPaid, setPaymentPaid] = useState(false);
+
   useEffect(() => {
     // Generate references for all networks
     const solanaKeypair = Keypair.generate();
@@ -44,7 +54,19 @@ function CreatePage() {
     });
 
     setFormData(prev => ({ ...prev, reference: solanaKeypair.publicKey.toBase58() }));
+
+    // Fetch merchant addresses from server
+    fetchMerchantAddresses();
   }, []);
+
+  const fetchMerchantAddresses = async () => {
+    try {
+      const response = await axios.get('/api/config/merchant-addresses');
+      setMerchantAddresses(response.data);
+    } catch (error) {
+      console.error('Failed to fetch merchant addresses:', error);
+    }
+  };
 
   const generateReference = (network) => {
     // Generate a random 32-byte reference for any network
@@ -82,157 +104,14 @@ function CreatePage() {
     }
   };
 
-  const isMobile = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const handlePayment = () => {
+    setShowQRModal(true);
   };
 
-  const handlePayWithSolana = async () => {
-    // Check if wallet is available (works on both desktop and mobile)
-    if (!window.solana) {
-      if (isMobile()) {
-        alert('Solana wallet not detected.\n\nPlease open this page in your Phantom or Solflare wallet app\'s browser to make payments.');
-      } else {
-        alert('Solana wallet not detected. Please install Phantom or Solflare browser extension.');
-      }
-      return;
-    }
-
-    try {
-      const response = await window.solana.connect();
-      const payer = response.publicKey.toString();
-      // Get merchant address from server config
-      const configRes = await axios.get('/api/config');
-      const recipient = configRes.data.recipient;
-      const res = await axios.post('/api/tx/usdc', { payer, recipient, amount: 1, reference: references.solana });
-      const { transaction } = res.data;
-      const txBuffer = Buffer.from(transaction, 'base64');
-      const tx = Transaction.from(txBuffer);
-      const { signature } = await window.solana.signAndSendTransaction(tx);
-      const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-      await connection.confirmTransaction(signature, 'confirmed');
-      alert('Payment successful! Now submit the listing.');
-    } catch (error) {
-      alert('Payment failed: ' + error.message);
-    }
-  };
-
-  const handlePayWithAptos = async () => {
-    // Try all Aptos wallet providers
-    const wallet = window.aptos || window.pontem || window.martian || window.fewcha;
-    
-    if (!wallet) {
-      if (isMobile()) {
-        alert('Aptos wallet not detected.\n\nPlease open this page in your Petra, Pontem, or Martian wallet app\'s browser to make payments.');
-      } else {
-        alert('Aptos wallet not detected. Please install Petra, Pontem, Martian, or Fewcha wallet.');
-      }
-      return;
-    }
-
-    try {
-      const response = await wallet.connect();
-      const account = await wallet.account();
-      const payer = account.address;
-      const res = await axios.post('/api/tx/aptos', { 
-        payer, 
-        amount: 1, 
-        reference: references.aptos 
-      });
-      const { transaction } = res.data;
-      const txHash = await wallet.signAndSubmitTransaction(transaction);
-      alert('Payment successful! Now submit the listing.');
-    } catch (error) {
-      alert('Payment failed: ' + error.message);
-    }
-  };
-
-  const handlePayWithSui = async () => {
-    // Try all Sui wallet providers
-    const wallet = window.suiWallet || window.suiet || window.ethos || window.martian?.sui;
-    
-    if (!wallet) {
-      if (isMobile()) {
-        alert('Sui wallet not detected.\n\nPlease open this page in your Sui Wallet, Suiet, or Ethos wallet app\'s browser to make payments.');
-      } else {
-        alert('Sui wallet not detected. Please install Sui Wallet, Suiet, Ethos, or Martian wallet.');
-      }
-      return;
-    }
-
-    try {
-      const response = await wallet.connect();
-      const payer = response.accounts[0].address;
-      const res = await axios.post('/api/tx/sui', { 
-        payer, 
-        amount: 1, 
-        reference: references.sui 
-      });
-      const { transaction } = res.data;
-      const txHash = await wallet.signAndExecuteTransactionBlock({
-        transactionBlock: transaction,
-        account: response.accounts[0]
-      });
-      alert('Payment successful! Now submit the listing.');
-    } catch (error) {
-      alert('Payment failed: ' + error.message);
-    }
-  };
-
-  const handlePayWithBase = async () => {
-    if (!window.ethereum) {
-      if (isMobile()) {
-        alert('Ethereum wallet not detected.\n\nPlease open this page in your MetaMask, Coinbase Wallet, or Rainbow wallet app\'s browser to make payments.');
-      } else {
-        alert('Ethereum wallet not detected. Please install MetaMask, Coinbase Wallet, or similar wallet.');
-      }
-      return;
-    }
-
-    try {
-      // Request account access
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const payer = accounts[0];
-      
-      // Switch to Base network if not already on it
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x2105' }], // Base mainnet chain ID
-        });
-      } catch (switchError) {
-        // If Base network is not added, add it
-        if (switchError.code === 4902) {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x2105',
-              chainName: 'Base',
-              rpcUrls: ['https://mainnet.base.org'],
-              nativeCurrency: {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                decimals: 18,
-              },
-              blockExplorerUrls: ['https://basescan.org'],
-            }],
-          });
-        }
-      }
-      
-      const res = await axios.post('/api/tx/base', { 
-        payer, 
-        amount: 1, 
-        reference: references.base 
-      });
-      const { transaction } = res.data;
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [transaction]
-      });
-      alert('Payment successful! Now submit the listing.');
-    } catch (error) {
-      alert('Payment failed: ' + error.message);
-    }
+  const handlePaymentSuccess = () => {
+    setPaymentPaid(true);
+    setShowQRModal(false);
+    alert('Payment confirmed! ✅ Now submit your listing.');
   };
 
   return (
@@ -547,45 +426,22 @@ function CreatePage() {
 
                   {/* Payment Button */}
                   <div className="mt-6">
-                    {formData.payment_network === 'solana' && (
-                      <button
-                        type="button"
-                        onClick={handlePayWithSolana}
-                        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-                      >
-                        💳 Pay with Solana Wallet
-                      </button>
-                    )}
-
-                    {formData.payment_network === 'aptos' && (
-                      <button
-                        type="button"
-                        onClick={handlePayWithAptos}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-                      >
-                        💳 Pay with Aptos Wallet
-                      </button>
-                    )}
-
-                    {formData.payment_network === 'sui' && (
-                      <button
-                        type="button"
-                        onClick={handlePayWithSui}
-                        className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-                      >
-                        💳 Pay with Sui Wallet
-                      </button>
-                    )}
-
-                    {formData.payment_network === 'base' && (
-                      <button
-                        type="button"
-                        onClick={handlePayWithBase}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-                      >
-                        💳 Pay with Ethereum Wallet
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handlePayment}
+                      disabled={paymentPaid}
+                      className={`w-full ${paymentPaid ? 'bg-green-600' : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'} text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg text-sm md:text-base flex items-center justify-center gap-2`}
+                    >
+                      {paymentPaid ? (
+                        <>
+                          ✅ Payment Confirmed
+                        </>
+                      ) : (
+                        <>
+                          📱 Scan QR to Pay - 1 USDC
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -628,6 +484,18 @@ function CreatePage() {
           </a>
         </div>
       </div>
+
+      {/* QR Code Payment Modal */}
+      {showQRModal && (
+        <PaymentQRModal
+          network={formData.payment_network}
+          amount={1}
+          reference={formData.reference}
+          merchantAddress={merchantAddresses[formData.payment_network]}
+          onClose={() => setShowQRModal(false)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }

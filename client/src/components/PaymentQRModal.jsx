@@ -1,0 +1,181 @@
+import React, { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { encodeURL, createQR } from '@solana/pay';
+import { PublicKey } from '@solana/web3.js';
+import axios from 'axios';
+
+function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess }) {
+  const [paymentUrl, setPaymentUrl] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [status, setStatus] = useState('pending'); // pending, checking, confirmed, failed
+
+  useEffect(() => {
+    generatePaymentUrl();
+    
+    // Start checking for payment after 3 seconds
+    const checkTimer = setTimeout(() => {
+      startPaymentCheck();
+    }, 3000);
+
+    return () => clearTimeout(checkTimer);
+  }, []);
+
+  const generatePaymentUrl = () => {
+    if (network === 'solana') {
+      // Solana Pay URL format
+      const url = new URL(`solana:${merchantAddress}`);
+      url.searchParams.append('amount', amount);
+      url.searchParams.append('spl-token', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // USDC mint
+      url.searchParams.append('reference', reference);
+      url.searchParams.append('label', 'SOI Pattaya');
+      url.searchParams.append('message', 'Property listing payment');
+      setPaymentUrl(url.toString());
+    } else if (network === 'base') {
+      // Ethereum payment request URL
+      const url = `ethereum:${merchantAddress}@8453/transfer?address=${merchantAddress}&uint256=${amount * 1e6}&reference=${reference}`;
+      setPaymentUrl(url);
+    } else {
+      // For Aptos/Sui, create a generic payment URL
+      setPaymentUrl(`${window.location.origin}/pay?network=${network}&to=${merchantAddress}&amount=${amount}&ref=${reference}`);
+    }
+  };
+
+  const startPaymentCheck = async () => {
+    setChecking(true);
+    setStatus('checking');
+    
+    // Poll for payment every 2 seconds for up to 5 minutes
+    const maxAttempts = 150; // 5 minutes
+    let attempts = 0;
+
+    const checkInterval = setInterval(async () => {
+      attempts++;
+      
+      try {
+        const response = await axios.get(`/api/payment/check/${network}/${reference}`);
+        
+        if (response.data.confirmed) {
+          setStatus('confirmed');
+          clearInterval(checkInterval);
+          setTimeout(() => {
+            onSuccess();
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Payment check error:', error);
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(checkInterval);
+        setStatus('failed');
+      }
+    }, 2000);
+  };
+
+  const getNetworkName = () => {
+    const names = {
+      solana: 'Solana',
+      aptos: 'Aptos',
+      sui: 'Sui',
+      base: 'Base (Ethereum)'
+    };
+    return names[network] || network;
+  };
+
+  const getNetworkColor = () => {
+    const colors = {
+      solana: 'from-purple-600 to-purple-700',
+      aptos: 'from-blue-600 to-blue-700',
+      sui: 'from-cyan-600 to-cyan-700',
+      base: 'from-blue-600 to-blue-700'
+    };
+    return colors[network] || 'from-gray-600 to-gray-700';
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          ×
+        </button>
+
+        {/* Header */}
+        <div className={`bg-gradient-to-r ${getNetworkColor()} text-white rounded-xl p-6 mb-6 text-center`}>
+          <h2 className="text-2xl font-bold mb-2">Scan to Pay</h2>
+          <p className="text-sm opacity-90">{getNetworkName()}</p>
+          <p className="text-3xl font-bold mt-2">{amount} USDC</p>
+        </div>
+
+        {/* Status Messages */}
+        {status === 'pending' && (
+          <div className="text-center mb-6">
+            <p className="text-gray-600">Open your wallet app and scan the QR code</p>
+          </div>
+        )}
+
+        {status === 'checking' && (
+          <div className="text-center mb-6">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-2"></div>
+            <p className="text-blue-600 font-medium">Waiting for payment...</p>
+            <p className="text-sm text-gray-500 mt-1">This may take a few moments</p>
+          </div>
+        )}
+
+        {status === 'confirmed' && (
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-2">✅</div>
+            <p className="text-green-600 font-bold text-xl">Payment Confirmed!</p>
+            <p className="text-sm text-gray-500 mt-1">Redirecting...</p>
+          </div>
+        )}
+
+        {status === 'failed' && (
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-2">⏱️</div>
+            <p className="text-orange-600 font-medium">Payment timeout</p>
+            <p className="text-sm text-gray-500 mt-1">Please try again or contact support</p>
+          </div>
+        )}
+
+        {/* QR Code */}
+        {status !== 'confirmed' && paymentUrl && (
+          <div className="flex justify-center mb-6">
+            <div className="bg-white p-4 rounded-xl shadow-lg">
+              <QRCodeSVG
+                value={paymentUrl}
+                size={256}
+                level="H"
+                includeMargin={true}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Instructions */}
+        {status === 'pending' && (
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+            <p className="font-medium mb-2">📱 How to pay:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Open your {getNetworkName()} wallet app</li>
+              <li>Tap "Scan" or "Send"</li>
+              <li>Scan this QR code</li>
+              <li>Confirm the transaction</li>
+            </ol>
+          </div>
+        )}
+
+        {/* Reference ID */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-400">Reference: {reference.substring(0, 16)}...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default PaymentQRModal;
+

@@ -371,6 +371,33 @@ app.get('/api/config', async () => {
   };
 });
 
+// Get all merchant addresses
+app.get('/api/config/merchant-addresses', async () => {
+  return {
+    solana: process.env.SOLANA_MERCHANT_ADDRESS || '',
+    aptos: process.env.APTOS_MERCHANT_ADDRESS || '',
+    sui: process.env.SUI_MERCHANT_ADDRESS || '',
+    base: process.env.BASE_MERCHANT_ADDRESS || ''
+  };
+});
+
+// Check if payment has been received
+app.get('/api/payment/check/:network/:reference', async (request) => {
+  const { network, reference } = request.params as { network: string; reference: string };
+  
+  try {
+    // Validate network type
+    if (!['solana', 'aptos', 'sui', 'base'].includes(network)) {
+      return { confirmed: false };
+    }
+    const isValid = await validatePayment(network as 'solana' | 'aptos' | 'sui' | 'base', reference);
+    return { confirmed: isValid };
+  } catch (error: any) {
+    app.log.error('Payment check error:', error);
+    return { confirmed: false };
+  }
+});
+
 app.get('/api/listings', async () => {
   const listings = await prisma.listing.findMany();
   // Group by building_name as in original
