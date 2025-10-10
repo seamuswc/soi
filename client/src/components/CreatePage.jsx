@@ -120,7 +120,7 @@ function CreatePage() {
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing / สร้างรายการใหม่</h1>
-          <p className="text-sm md:text-base text-gray-600">List your property on SOI Pattaya / รายการอสังหาริมทรัพย์ของคุณใน SOI Pattaya</p>
+          <p className="text-sm md:text-base text-gray-600">List your property on SoiPattaya / รายการอสังหาริมทรัพย์ของคุณใน SoiPattaya</p>
           
           {/* Pricing Info */}
           <div className="mt-4 inline-block bg-white border-2 border-gray-200 rounded-lg px-6 py-3 shadow-sm">
