@@ -18,11 +18,19 @@ echo "🔄 Updating code..."
 git pull
 
 echo "📦 Installing dependencies (root)..."
-if [ -f package-lock.json ]; then npm ci; else npm install; fi
+if [ -f package-lock.json ]; then 
+  npm ci || npm install
+else 
+  npm install
+fi
 
 echo "📦 Installing dependencies (client)..."
 pushd client >/dev/null
-if [ -f package-lock.json ]; then npm ci; else npm install; fi
+if [ -f package-lock.json ]; then 
+  npm ci || npm install
+else 
+  npm install
+fi
 # Ensure Vite envs are present for client build
 if [ -f "$PROJECT_ROOT/.env" ]; then
   echo "🔐 Syncing VITE_* vars to client/.env"
@@ -32,7 +40,11 @@ popd >/dev/null
 
 echo "📦 Installing dependencies (server) and applying DB changes..."
 pushd server >/dev/null
-if [ -f package-lock.json ]; then npm ci; else npm install; fi
+if [ -f package-lock.json ]; then 
+  npm ci || npm install
+else 
+  npm install
+fi
 if ! npx prisma migrate deploy; then
   npx prisma db push
 fi
