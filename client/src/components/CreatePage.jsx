@@ -106,8 +106,8 @@ function CreatePage() {
 
   const handlePayment = () => {
     if (formData.payment_network === 'thb') {
-      // Redirect to LINE for Thai Baht payment
-      window.location.href = `https://line.me/R/ti/p/@soipattaya?message=I want to list a property - Reference: ${formData.reference}`;
+      // Redirect to LINE for Thai Baht payment via ScanPay bank transfer
+      window.location.href = `https://line.me/R/ti/p/@soipattaya?message=I want to list a property - Reference: ${formData.reference} - Paying 35 Baht via ScanPay`;
     } else {
       setShowQRModal(true);
     }
@@ -131,7 +131,7 @@ function CreatePage() {
           <div className="mt-4 inline-block bg-white border-2 border-gray-200 rounded-lg px-6 py-3 shadow-sm">
             <p className="text-sm text-gray-700">
               <span className="font-semibold">💰 Crypto:</span> $1 USD per listing | 
-              <span className="font-semibold ml-2">🇹🇭 LINE Pay:</span> 35฿ per listing
+              <span className="font-semibold ml-2">🇹🇭 Thai Baht:</span> 35฿ per listing (ScanPay bank transfer)
             </p>
           </div>
         </div>
@@ -426,7 +426,7 @@ function CreatePage() {
                               <span className="text-white font-bold text-sm">฿</span>
                             </div>
                             <div className="font-medium text-gray-800">Thai Baht</div>
-                            <div className="text-xs text-gray-500">LINE Pay</div>
+                            <div className="text-xs text-gray-500">LINE Chat</div>
                           </div>
                         </div>
                       </label>
