@@ -409,26 +409,6 @@ function CreatePage() {
                       </label>
                       */}
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'thb' ? 'ring-2 ring-green-500' : ''}`}>
-                        <input
-                          type="radio"
-                          name="payment_network"
-                          value="thb"
-                          checked={formData.payment_network === 'thb'}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'thb' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
-                          <div className="text-center">
-                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">฿</span>
-                            </div>
-                            <div className="font-medium text-gray-800">Thai Baht</div>
-                            <div className="text-xs text-gray-500">LINE Chat</div>
-                          </div>
-                        </div>
-                      </label>
-
                       <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-blue-500' : ''}`}>
                         <input
                           type="radio"
@@ -445,6 +425,26 @@ function CreatePage() {
                             </div>
                             <div className="font-medium text-gray-800">Base</div>
                             <div className="text-xs text-gray-500">USDC</div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'thb' ? 'ring-2 ring-green-500' : ''}`}>
+                        <input
+                          type="radio"
+                          name="payment_network"
+                          value="thb"
+                          checked={formData.payment_network === 'thb'}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'thb' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                          <div className="text-center">
+                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">฿</span>
+                            </div>
+                            <div className="font-medium text-gray-800">Thai Baht</div>
+                            <div className="text-xs text-gray-500">LINE Chat</div>
                           </div>
                         </div>
                       </label>
