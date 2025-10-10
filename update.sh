@@ -21,6 +21,9 @@ git checkout -- server/package-lock.json 2>/dev/null || true
 git checkout -- package-lock.json 2>/dev/null || true
 git pull
 
+echo "🧹 Cleaning old node_modules..."
+rm -rf node_modules client/node_modules server/node_modules 2>/dev/null || true
+
 echo "📦 Installing dependencies (root)..."
 if [ -f package-lock.json ]; then 
   if ! npm ci 2>/dev/null; then
