@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { encodeURL, createQR } from '@solana/pay';
-import { PublicKey } from '@solana/web3.js';
 import axios from 'axios';
 
 function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess }) {
