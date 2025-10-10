@@ -87,37 +87,17 @@ function CreatePage() {
   };
 
   const handlePayWithSolana = async () => {
-    // Check if mobile device
-    if (isMobile()) {
-      // On mobile, guide user to open their wallet app
-      const walletOptions = [
-        { name: 'Phantom', deepLink: 'https://phantom.app/ul/browse/' + encodeURIComponent(window.location.href) + '?ref=soipattaya' },
-        { name: 'Solflare', deepLink: 'https://solflare.com/ul/v1/browse/' + encodeURIComponent(window.location.href) },
-      ];
-      
-      const choice = confirm(
-        '📱 Mobile Wallet Detection:\n\n' +
-        'To pay with Solana on mobile:\n' +
-        '1. Open your Phantom or Solflare wallet app\n' +
-        '2. Use the in-app browser\n' +
-        '3. Navigate to this page\n' +
-        '4. Click the payment button\n\n' +
-        'Click OK to open in Phantom wallet, or Cancel to try another wallet.'
-      );
-      
-      if (choice) {
-        window.location.href = walletOptions[0].deepLink;
+    // Check if wallet is available (works on both desktop and mobile)
+    if (!window.solana) {
+      if (isMobile()) {
+        // Open in Phantom mobile app
+        window.location.href = 'https://phantom.app/ul/browse/' + encodeURIComponent(window.location.href);
       } else {
-        alert('Please open this page in your wallet\'s browser (e.g., Phantom, Solflare)');
+        alert('Phantom wallet not detected. Please install Phantom browser extension.');
       }
       return;
     }
 
-    // Desktop browser extension check
-    if (!window.solana || !window.solana.isPhantom) {
-      alert('Phantom wallet not detected. Please install Phantom browser extension or use mobile wallet app.');
-      return;
-    }
     try {
       const response = await window.solana.connect();
       const payer = response.publicKey.toString();
@@ -138,32 +118,19 @@ function CreatePage() {
   };
 
   const handlePayWithAptos = async () => {
-    // Check if mobile device
-    if (isMobile()) {
-      const choice = confirm(
-        '📱 Mobile Wallet Detection:\n\n' +
-        'To pay with Aptos on mobile:\n' +
-        '1. Open your Petra or Pontem wallet app\n' +
-        '2. Use the in-app browser (DApp browser)\n' +
-        '3. Navigate to this page\n' +
-        '4. Click the payment button\n\n' +
-        'Supported: Petra, Pontem, Martian, Fewcha\n\n' +
-        'Click OK to continue or Cancel to dismiss.'
-      );
-      
-      if (choice) {
-        alert('Please open this page in your Aptos wallet\'s DApp browser (Petra, Pontem, etc.)');
+    // Try all Aptos wallet providers
+    const wallet = window.aptos || window.pontem || window.martian || window.fewcha;
+    
+    if (!wallet) {
+      if (isMobile()) {
+        // Open in Petra mobile app (most popular)
+        window.location.href = 'https://petra.app/explore';
+      } else {
+        alert('Aptos wallet not detected. Please install Petra, Pontem, Martian, or Fewcha wallet.');
       }
       return;
     }
 
-    // Desktop browser extension check - Try Petra first (window.aptos), then Pontem (window.pontem)
-    const wallet = window.aptos || window.pontem;
-    
-    if (!wallet) {
-      alert('Aptos wallet not detected. Please install Petra or Pontem wallet browser extension, or use mobile wallet app.');
-      return;
-    }
     try {
       const response = await wallet.connect();
       const account = await wallet.account();
@@ -182,35 +149,19 @@ function CreatePage() {
   };
 
   const handlePayWithSui = async () => {
-    // Check if mobile device
-    if (isMobile()) {
-      const choice = confirm(
-        '📱 Mobile Wallet Detection:\n\n' +
-        'To pay with Sui on mobile:\n' +
-        '1. Open your Sui Wallet app\n' +
-        '2. Use the in-app browser (DApp browser)\n' +
-        '3. Navigate to this page\n' +
-        '4. Click the payment button\n\n' +
-        'Supported: Sui Wallet (official), Suiet, Ethos, Martian\n\n' +
-        'Click OK to continue or Cancel to dismiss.'
-      );
-      
-      if (choice) {
-        alert('Please open this page in your Sui wallet\'s DApp browser.');
+    // Try all Sui wallet providers
+    const wallet = window.suiWallet || window.suiet || window.ethos || window.martian?.sui;
+    
+    if (!wallet) {
+      if (isMobile()) {
+        // Open in Sui Wallet mobile app
+        window.location.href = 'https://suiwallet.com';
+      } else {
+        alert('Sui wallet not detected. Please install Sui Wallet, Suiet, Ethos, or Martian wallet.');
       }
       return;
     }
 
-    // Desktop browser extension check - Try multiple Sui wallets
-    // Official Sui Wallet uses window.suiWallet
-    // Suiet uses window.suiet
-    // Ethos uses window.ethos
-    const wallet = window.suiWallet || window.suiet || window.ethos;
-    
-    if (!wallet) {
-      alert('Sui wallet not detected. Please install Sui Wallet (official), Suiet, or Ethos browser extension, or use mobile wallet app.');
-      return;
-    }
     try {
       const response = await wallet.connect();
       const payer = response.accounts[0].address;
@@ -231,37 +182,17 @@ function CreatePage() {
   };
 
   const handlePayWithBase = async () => {
-    // Check if mobile device
-    if (isMobile()) {
-      const walletOptions = [
-        { name: 'MetaMask', deepLink: 'https://metamask.app.link/dapp/' + encodeURIComponent(window.location.href.replace(/^https?:\/\//, '')) },
-        { name: 'Coinbase Wallet', deepLink: 'https://go.cb-w.com/dapp?cb_url=' + encodeURIComponent(window.location.href) },
-        { name: 'Rainbow', deepLink: 'https://rnbwapp.com/open?url=' + encodeURIComponent(window.location.href) },
-      ];
-      
-      const choice = confirm(
-        '📱 Mobile Wallet Detection:\n\n' +
-        'To pay with Base (Ethereum) on mobile:\n' +
-        '1. Open your MetaMask, Coinbase Wallet, or Rainbow app\n' +
-        '2. Use the in-app browser (DApp browser)\n' +
-        '3. Navigate to this page\n' +
-        '4. Click the payment button\n\n' +
-        'Click OK to open in MetaMask, or Cancel for other wallets.'
-      );
-      
-      if (choice) {
-        window.location.href = walletOptions[0].deepLink;
+    if (!window.ethereum) {
+      if (isMobile()) {
+        // Open in MetaMask mobile app
+        const url = window.location.href.replace(/^https?:\/\//, '');
+        window.location.href = 'https://metamask.app.link/dapp/' + encodeURIComponent(url);
       } else {
-        alert('Please open this page in your wallet\'s DApp browser (MetaMask, Coinbase Wallet, Rainbow, etc.)');
+        alert('Ethereum wallet not detected. Please install MetaMask or similar wallet.');
       }
       return;
     }
 
-    // Desktop browser extension check
-    if (!window.ethereum) {
-      alert('Ethereum wallet not detected. Please install MetaMask or similar wallet browser extension, or use mobile wallet app.');
-      return;
-    }
     try {
       // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -627,7 +558,7 @@ function CreatePage() {
                         onClick={handlePayWithSolana}
                         className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                       >
-                        💳 Pay with Phantom Wallet
+                        💳 Pay with Solana Wallet
                       </button>
                     )}
 
@@ -637,7 +568,7 @@ function CreatePage() {
                         onClick={handlePayWithAptos}
                         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                       >
-                        💳 Pay with Petra Wallet
+                        💳 Pay with Aptos Wallet
                       </button>
                     )}
 
@@ -657,7 +588,7 @@ function CreatePage() {
                         onClick={handlePayWithBase}
                         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                       >
-                        💳 Pay with MetaMask (Base)
+                        💳 Pay with Ethereum Wallet
                       </button>
                     )}
                   </div>
