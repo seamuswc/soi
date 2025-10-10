@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { encodeURL, createQR } from '@solana/pay';
-import { PublicKey } from '@solana/web3.js';
 import axios from 'axios';
 
 function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess }) {
@@ -29,30 +27,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   }, [checkInterval]);
 
   const generatePaymentUrl = () => {
-    if (network === 'solana') {
-      // Use Solana Pay standard
-      const recipient = new PublicKey(merchantAddress);
-      const splToken = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // USDC
-      const referenceKey = new PublicKey(reference);
-      
-      const url = encodeURL({
-        recipient,
-        amount,
-        splToken,
-        reference: referenceKey,
-        label: 'SOI Pattaya',
-        message: 'Property listing payment',
-      });
-      
-      setPaymentUrl(url.toString());
-    } else if (network === 'base') {
-      // Ethereum payment request URL
-      const url = `ethereum:${merchantAddress}@8453/transfer?address=${merchantAddress}&uint256=${amount * 1e6}&reference=${reference}`;
-      setPaymentUrl(url);
-    } else {
-      // For Aptos/Sui, create a generic payment URL
-      setPaymentUrl(`${window.location.origin}/pay?network=${network}&to=${merchantAddress}&amount=${amount}&ref=${reference}`);
-    }
+    // Use simple HTTP URLs for all networks (no deep links)
+    const url = `${window.location.origin}/pay?network=${network}&to=${merchantAddress}&amount=${amount}&ref=${reference}`;
+    setPaymentUrl(url);
   };
 
   const startPaymentCheck = async () => {
