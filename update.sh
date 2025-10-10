@@ -15,6 +15,10 @@ fi
 npm install -g npm pm2@latest || true
 
 echo "🔄 Updating code..."
+# Discard any local changes to package-lock.json files
+git checkout -- client/package-lock.json 2>/dev/null || true
+git checkout -- server/package-lock.json 2>/dev/null || true
+git checkout -- package-lock.json 2>/dev/null || true
 git pull
 
 echo "📦 Installing dependencies (root)..."
