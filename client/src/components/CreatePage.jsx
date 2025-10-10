@@ -90,10 +90,9 @@ function CreatePage() {
     // Check if wallet is available (works on both desktop and mobile)
     if (!window.solana) {
       if (isMobile()) {
-        // Open in Phantom mobile app
-        window.location.href = 'https://phantom.app/ul/browse/' + encodeURIComponent(window.location.href);
+        alert('Solana wallet not detected.\n\nPlease open this page in your Phantom or Solflare wallet app\'s browser to make payments.');
       } else {
-        alert('Phantom wallet not detected. Please install Phantom browser extension.');
+        alert('Solana wallet not detected. Please install Phantom or Solflare browser extension.');
       }
       return;
     }
@@ -123,8 +122,7 @@ function CreatePage() {
     
     if (!wallet) {
       if (isMobile()) {
-        // Open in Petra mobile app (most popular)
-        window.location.href = 'https://petra.app/explore';
+        alert('Aptos wallet not detected.\n\nPlease open this page in your Petra, Pontem, or Martian wallet app\'s browser to make payments.');
       } else {
         alert('Aptos wallet not detected. Please install Petra, Pontem, Martian, or Fewcha wallet.');
       }
@@ -154,8 +152,7 @@ function CreatePage() {
     
     if (!wallet) {
       if (isMobile()) {
-        // Open in Sui Wallet mobile app
-        window.location.href = 'https://suiwallet.com';
+        alert('Sui wallet not detected.\n\nPlease open this page in your Sui Wallet, Suiet, or Ethos wallet app\'s browser to make payments.');
       } else {
         alert('Sui wallet not detected. Please install Sui Wallet, Suiet, Ethos, or Martian wallet.');
       }
@@ -184,11 +181,9 @@ function CreatePage() {
   const handlePayWithBase = async () => {
     if (!window.ethereum) {
       if (isMobile()) {
-        // Open in MetaMask mobile app
-        const url = window.location.href.replace(/^https?:\/\//, '');
-        window.location.href = 'https://metamask.app.link/dapp/' + encodeURIComponent(url);
+        alert('Ethereum wallet not detected.\n\nPlease open this page in your MetaMask, Coinbase Wallet, or Rainbow wallet app\'s browser to make payments.');
       } else {
-        alert('Ethereum wallet not detected. Please install MetaMask or similar wallet.');
+        alert('Ethereum wallet not detected. Please install MetaMask, Coinbase Wallet, or similar wallet.');
       }
       return;
     }
