@@ -186,9 +186,17 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           </div>
         )}
 
-        {/* Reference ID */}
+        {/* Reference ID - Copyable */}
         <div className="mt-4 text-center">
-          <p className="text-xs text-gray-400">Reference: {reference.substring(0, 16)}...</p>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(reference);
+              alert('Reference copied to clipboard!');
+            }}
+            className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer"
+          >
+            📋 Copy Reference: {reference.substring(0, 16)}...
+          </button>
         </div>
       </div>
     </div>
