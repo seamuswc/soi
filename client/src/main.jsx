@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createWeb3Modal } from '@web3modal/wagmi/react'
+import { createAppKit } from '@reown/appkit/react'
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { mainnet, base, arbitrum } from '@reown/appkit/networks'
 import { config } from './wagmiConfig'
 import './index.css'
 import MapPage from './components/MapPage'
@@ -13,11 +15,21 @@ import DashboardPage from './components/DashboardPage'
 
 const queryClient = new QueryClient()
 
-// Create Web3Modal for Ethereum/Base
-createWeb3Modal({
-  wagmiConfig: config,
-  projectId: '06866621556efc2fe61f94f0034eec42',
-  enableAnalytics: false
+const projectId = '06866621556efc2fe61f94f0034eec42'
+
+// Create Reown AppKit
+const wagmiAdapter = new WagmiAdapter({
+  networks: [mainnet, base, arbitrum],
+  projectId
+})
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks: [mainnet, base, arbitrum],
+  projectId,
+  features: {
+    analytics: false
+  }
 })
 
 ReactDOM.createRoot(document.getElementById('root')).render(
