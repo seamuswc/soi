@@ -27,38 +27,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   }, [checkInterval]);
 
   const generatePaymentUrl = () => {
-    // Generate proper wallet deep links with all payment info pre-filled
-    let paymentUrl = '';
-    
-    switch(network) {
-      case 'solana':
-        // Solana Pay standard URL format
-        paymentUrl = `solana:${merchantAddress}?amount=${amount}&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&reference=${reference}&label=SoiPattaya&message=Property%20Listing%20Payment`;
-        break;
-        
-      case 'aptos':
-        // Aptos wallet URL format (Petra/Pontem compatible)
-        paymentUrl = `https://aptoslabs.com/wallet/send?to=${merchantAddress}&amount=${amount}&coin=0x5e156f1207d0ebfa19a9eeff00d62a282278fb8719f4fab3a586a0a2c0fffbea::coin::T&memo=${reference}`;
-        break;
-        
-      case 'sui':
-        // Sui wallet URL format
-        paymentUrl = `https://sui.io/wallet/send?recipient=${merchantAddress}&amount=${amount * 1000000}&coin=0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN&memo=${reference}`;
-        break;
-        
-      case 'base':
-        // Base/Ethereum wallet URL format (EIP-681)
-        // USDC on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
-        const usdcBase = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-        const amountInSmallestUnit = (amount * 1000000).toString(16); // USDC has 6 decimals
-        paymentUrl = `ethereum:${usdcBase}@8453/transfer?address=${merchantAddress}&uint256=${amountInSmallestUnit}`;
-        break;
-        
-      default:
-        paymentUrl = `Network: ${network.toUpperCase()}\nTo: ${merchantAddress}\nAmount: ${amount} USDC\nReference: ${reference}`;
-    }
-    
-    setPaymentUrl(paymentUrl);
+    // Simple approach: QR code contains just the merchant address
+    // Most wallets can scan addresses but not complex deep links
+    setPaymentUrl(merchantAddress);
   };
 
   const startPaymentCheck = async () => {
@@ -144,18 +115,40 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         {/* Payment Details */}
         {status === 'pending' && merchantAddress && (
           <div className="bg-blue-50 rounded-lg p-4 mb-6 text-sm">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div>
-                <span className="font-semibold text-gray-700">Send to:</span>
-                <p className="text-xs font-mono text-gray-600 break-all mt-1">{merchantAddress}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-gray-700">Send to:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(merchantAddress);
+                      alert('Address copied!');
+                    }}
+                    className="text-blue-600 hover:text-blue-800 text-xs underline"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+                <p className="text-xs font-mono text-gray-600 break-all">{merchantAddress}</p>
               </div>
               <div>
                 <span className="font-semibold text-gray-700">Amount:</span>
-                <p className="text-gray-600">{amount} USDC</p>
+                <p className="text-gray-600 font-bold">{amount} USDC</p>
               </div>
               <div>
-                <span className="font-semibold text-gray-700">Memo/Reference:</span>
-                <p className="text-xs font-mono text-gray-600 break-all mt-1">{reference}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-gray-700">Memo/Reference:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(reference);
+                      alert('Reference copied!');
+                    }}
+                    className="text-blue-600 hover:text-blue-800 text-xs underline"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+                <p className="text-xs font-mono text-gray-600 break-all">{reference}</p>
               </div>
             </div>
           </div>
@@ -204,32 +197,16 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
             <p className="font-medium mb-2">📱 How to pay:</p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Scan the QR code with your {getNetworkName()} wallet app</li>
-              <li>Review the pre-filled payment details</li>
-              <li>Confirm the transaction in your wallet</li>
-              <li>Payment will be detected automatically</li>
+              <li>Scan the QR code to get the address (or copy it above)</li>
+              <li>Open your {getNetworkName()} wallet and send <strong>{amount} USDC</strong></li>
+              <li>Add the reference ID in the memo/message field</li>
+              <li>Confirm the transaction</li>
             </ol>
-            <p className="text-xs text-gray-500 mt-3 font-semibold">
-              ✨ Everything is pre-filled - just scan and confirm!
-            </p>
-            <p className="text-xs text-gray-400 mt-2">
-              Or manually send to the address above if your wallet doesn't support QR scanning
+            <p className="text-xs text-orange-600 mt-3 font-semibold">
+              ⚠️ Important: Include the reference ID in the memo to track your payment!
             </p>
           </div>
         )}
-
-        {/* Reference ID - Copyable */}
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(reference);
-              alert('Reference copied to clipboard!');
-            }}
-            className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer"
-          >
-            📋 Copy Reference: {reference.substring(0, 16)}...
-          </button>
-        </div>
       </div>
     </div>
   );
