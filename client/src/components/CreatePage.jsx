@@ -498,21 +498,23 @@ function CreatePage() {
         </div>
 
         {/* Bulk Purchase Info */}
-        <div className="mt-6 bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+        <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-center">
+          <h3 className="text-lg font-semibold text-green-900 mb-3">
             💼 Bulk Listings / รายการจำนวนมาก
           </h3>
           <p className="text-gray-700 mb-2">
-            <strong>English:</strong> To buy listings in bulk and pay with ScanPay in Thai Baht, please email us:
+            <strong>English:</strong> To buy listings in bulk and pay with ScanPay in Thai Baht, please send us a message on LINE:
           </p>
           <p className="text-gray-700 mb-4">
-            <strong>ไทย:</strong> หากต้องการซื้อรายการจำนวนมากและชำระด้วย ScanPay ในสกุลเงินบาท กรุณาอีเมลมาที่:
+            <strong>ไทย:</strong> หากต้องการซื้อรายการจำนวนมากและชำระด้วย ScanPay ในสกุลเงินบาท กรุณาส่งข้อความหาเราทาง LINE:
           </p>
           <a 
-            href="mailto:paysoipattaya@gmail.com" 
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            href="https://line.me/ti/p/~660997358205" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
-            📧 paysoipattaya@gmail.com
+            💬 Message us on LINE
           </a>
         </div>
       </div>
