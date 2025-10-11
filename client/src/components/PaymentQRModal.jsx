@@ -9,15 +9,23 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [checkInterval, setCheckInterval] = useState(null);
 
   useEffect(() => {
-    generatePaymentUrl();
-    
-    // Start checking for payment after 3 seconds
-    const checkTimer = setTimeout(() => {
-      startPaymentCheck();
-    }, 3000);
+    if (merchantAddress) {
+      // Simple approach: QR code contains just the merchant address
+      setPaymentUrl(merchantAddress);
+      
+      // Start checking for payment after 3 seconds
+      const checkTimer = setTimeout(() => {
+        startPaymentCheck();
+      }, 3000);
 
+      return () => {
+        clearTimeout(checkTimer);
+      };
+    }
+  }, [merchantAddress]);
+
+  useEffect(() => {
     return () => {
-      clearTimeout(checkTimer);
       // Clean up payment checking when modal closes
       if (checkInterval) {
         clearInterval(checkInterval);
@@ -25,12 +33,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       setChecking(false);
     };
   }, [checkInterval]);
-
-  const generatePaymentUrl = () => {
-    // Simple approach: QR code contains just the merchant address
-    // Most wallets can scan addresses but not complex deep links
-    setPaymentUrl(merchantAddress);
-  };
 
   const startPaymentCheck = async () => {
     setChecking(true);
