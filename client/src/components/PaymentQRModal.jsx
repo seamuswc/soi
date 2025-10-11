@@ -1,113 +1,107 @@
 import React, { useEffect, useState } from 'react';
-import { useAccount, useConnect, useDisconnect, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSendTransaction, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
 import { parseUnits } from 'viem';
-import { useWallet as useSolanaWallet, useConnection } from '@solana/wallet-adapter-react';
-import { useWalletModal as useSolanaWalletModal } from '@solana/wallet-adapter-react-ui';
-import { Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
+import { mainnet, base, arbitrum } from 'wagmi/chains';
 
 // USDC contract addresses
+const USDC_MAINNET = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const USDC_SOLANA = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const USDC_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
 
 function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess }) {
   const [status, setStatus] = useState('connect'); // connect, pending, sending, checking, confirmed, failed
   const [txHash, setTxHash] = useState(null);
   
-  // Base/EVM hooks
-  const { address: baseAddress, isConnected: isBaseConnected } = useAccount();
-  const { connectors, connect: connectBase } = useConnect();
-  const { disconnect: disconnectBase } = useDisconnect();
-  const { sendTransaction: sendBaseTransaction, data: baseTxData, error: baseTxError } = useSendTransaction();
-  const { isSuccess: isBaseTxConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
-
-  // Solana hooks
-  const { publicKey: solanaPublicKey, sendTransaction: sendSolanaTransaction, connected: isSolanaConnected } = useSolanaWallet();
-  const { connection } = useConnection();
-  const { setVisible: setSolanaModalVisible } = useSolanaWalletModal();
+  // Wagmi hooks for Ethereum/Base
+  const { address, isConnected, chain } = useAccount();
+  const { connectors, connect } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { switchChain } = useSwitchChain();
+  const { sendTransaction, data: txData, error: txError } = useSendTransaction();
+  const { isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
 
   useEffect(() => {
-    const isConnected = 
-      (network === 'base' && isBaseConnected) ||
-      (network === 'solana' && isSolanaConnected);
-    
     if (isConnected && status === 'connect') {
       setStatus('pending');
     }
-  }, [isBaseConnected, isSolanaConnected, status, network]);
+  }, [isConnected, status]);
 
   useEffect(() => {
-    if (baseTxData && network === 'base') {
-      setTxHash(baseTxData);
+    if (txData) {
+      setTxHash(txData);
       setStatus('checking');
     }
-  }, [baseTxData, network]);
+  }, [txData]);
 
   useEffect(() => {
-    if (isBaseTxConfirmed && txHash && network === 'base') {
+    if (isTxConfirmed && txHash) {
       setStatus('confirmed');
       setTimeout(() => {
         onSuccess();
       }, 2000);
     }
-  }, [isBaseTxConfirmed, txHash, network]);
+  }, [isTxConfirmed, txHash, onSuccess]);
 
   useEffect(() => {
-    if (baseTxError) {
-      console.error('Transaction error:', baseTxError);
+    if (txError) {
+      console.error('Transaction error:', txError);
       setStatus('failed');
     }
-  }, [baseTxError]);
+  }, [txError]);
+
+  const getChainId = () => {
+    const chainIds = {
+      ethereum: mainnet.id,
+      arbitrum: arbitrum.id,
+      base: base.id
+    };
+    return chainIds[network];
+  };
+
+  const getUSDCAddress = () => {
+    const usdcAddresses = {
+      ethereum: USDC_MAINNET,
+      arbitrum: USDC_ARBITRUM,
+      base: USDC_BASE
+    };
+    return usdcAddresses[network];
+  };
 
   const handleConnectWallet = () => {
-    if (network === 'base') {
-      const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
-      if (walletConnectConnector) {
-        connectBase({ connector: walletConnectConnector });
-      }
-    } else if (network === 'solana') {
-      setSolanaModalVisible(true);
+    const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
+    if (walletConnectConnector) {
+      connect({ connector: walletConnectConnector });
     }
   };
 
   const handleSendPayment = async () => {
     if (!merchantAddress) return;
     
+    const targetChainId = getChainId();
+    
+    // Switch chain if needed
+    if (chain?.id !== targetChainId) {
+      try {
+        await switchChain({ chainId: targetChainId });
+      } catch (error) {
+        console.error('Chain switch error:', error);
+        setStatus('failed');
+        return;
+      }
+    }
+    
     setStatus('sending');
     
     try {
-      if (network === 'base' && isBaseConnected) {
-        // Send USDC on Base
-        const amountInSmallestUnit = parseUnits(amount.toString(), 6);
-        const transferFunctionData = `0xa9059cbb${merchantAddress.slice(2).padStart(64, '0')}${amountInSmallestUnit.toString(16).padStart(64, '0')}`;
-        
-        await sendBaseTransaction({
-          to: USDC_BASE,
-          data: transferFunctionData,
-          chainId: 8453
-        });
-      } else if (network === 'solana' && isSolanaConnected && solanaPublicKey) {
-        // Send USDC on Solana
-        const transaction = new Transaction();
-        // Note: This is simplified - real USDC transfer requires SPL token transfer
-        // For now, just send SOL as proof of concept
-        transaction.add(
-          SystemProgram.transfer({
-            fromPubkey: solanaPublicKey,
-            toPubkey: new PublicKey(merchantAddress),
-            lamports: amount * 1000000000 // SOL amount
-          })
-        );
-        
-        const signature = await sendSolanaTransaction(transaction, connection);
-        setTxHash(signature);
-        setStatus('checking');
-        
-        // Wait for confirmation
-        setTimeout(() => {
-          setStatus('confirmed');
-          setTimeout(() => onSuccess(), 2000);
-        }, 3000);
-      }
+      // Send USDC (ERC-20 transfer)
+      const amountInSmallestUnit = parseUnits(amount.toString(), 6);
+      const transferFunctionData = `0xa9059cbb${merchantAddress.slice(2).padStart(64, '0')}${amountInSmallestUnit.toString(16).padStart(64, '0')}`;
+      
+      await sendTransaction({
+        to: getUSDCAddress(),
+        data: transferFunctionData,
+        chainId: targetChainId
+      });
     } catch (error) {
       console.error('Send payment error:', error);
       setStatus('failed');
@@ -116,9 +110,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const getNetworkName = () => {
     const names = {
-      solana: 'Solana',
-      aptos: 'Aptos',
+      ethereum: 'Ethereum',
+      arbitrum: 'Arbitrum',
       base: 'Base',
+      aptos: 'Aptos',
       thb: 'Thai Baht'
     };
     return names[network] || network;
@@ -126,26 +121,24 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const getNetworkColor = () => {
     const colors = {
-      solana: 'from-purple-600 to-purple-700',
-      aptos: 'from-cyan-600 to-cyan-700',
+      ethereum: 'from-purple-600 to-blue-600',
+      arbitrum: 'from-cyan-600 to-blue-700',
       base: 'from-blue-600 to-blue-700',
+      aptos: 'from-gray-600 to-cyan-700',
       thb: 'from-green-600 to-green-700'
     };
     return colors[network] || 'from-gray-600 to-gray-700';
   };
 
   const getConnectedAddress = () => {
-    if (network === 'base' && baseAddress) {
-      return `${baseAddress.slice(0, 6)}...${baseAddress.slice(-4)}`;
-    } else if (network === 'solana' && solanaPublicKey) {
-      return `${solanaPublicKey.toBase58().slice(0, 6)}...${solanaPublicKey.toBase58().slice(-4)}`;
+    if (address) {
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
     }
     return '';
   };
 
-  const isConnected = 
-    (network === 'base' && isBaseConnected) ||
-    (network === 'solana' && isSolanaConnected);
+  // For EVM chains (ethereum, arbitrum, base), we use the wagmi isConnected
+  const isWalletConnected = isConnected;
   
   // Aptos shows manual payment instructions (no wallet adapter due to dependency issues)
   if (network === 'aptos') {
@@ -235,7 +228,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       >
         <button
           onClick={() => {
-            if (isBaseConnected) disconnectBase();
+            if (isWalletConnected) disconnect();
             onClose();
           }}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
@@ -252,22 +245,21 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         {status === 'connect' && (
           <div className="text-center">
             <p className="text-gray-700 mb-4">
-              Scan QR code or click to connect your {getNetworkName()} wallet
+              Scan QR code or click to connect your wallet
             </p>
             <button
               onClick={handleConnectWallet}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              Connect {getNetworkName()} Wallet
+              Connect Wallet
             </button>
             <p className="text-xs text-gray-500 mt-3">
-              {network === 'base' && 'WalletConnect QR will appear'}
-              {network === 'solana' && 'Phantom, Solflare, and more supported'}
+              MetaMask, WalletConnect, Coinbase Wallet & more
             </p>
           </div>
         )}
 
-        {status === 'pending' && isConnected && (
+        {status === 'pending' && isWalletConnected && (
           <div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-green-800">

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Keypair } from '@solana/web3.js';
 import axios from 'axios';
 import PaymentQRModal from './PaymentQRModal';
 
@@ -41,19 +40,19 @@ function CreatePage() {
 
   useEffect(() => {
     // Generate references for all networks
-    const solanaKeypair = Keypair.generate();
-    const aptosRef = generateReference('aptos');
-    const suiRef = generateReference('sui');
+    const ethereumRef = generateReference('ethereum');
+    const arbitrumRef = generateReference('arbitrum');
     const baseRef = generateReference('base');
+    const aptosRef = generateReference('aptos');
     
     setReferences({
-      solana: solanaKeypair.publicKey.toBase58(),
-      aptos: aptosRef,
-      sui: suiRef,
-      base: baseRef
+      ethereum: ethereumRef,
+      arbitrum: arbitrumRef,
+      base: baseRef,
+      aptos: aptosRef
     });
 
-    setFormData(prev => ({ ...prev, reference: solanaKeypair.publicKey.toBase58() }));
+    setFormData(prev => ({ ...prev, reference: ethereumRef }));
 
     // Fetch merchant addresses from server
     fetchMerchantAddresses();
@@ -348,67 +347,45 @@ function CreatePage() {
                       Choose Payment Network / เลือกเครือข่ายการชำระเงิน *
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'ethereum' ? 'ring-2 ring-purple-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
-                          value="solana"
-                          checked={formData.payment_network === 'solana'}
+                          value="ethereum"
+                          checked={formData.payment_network === 'ethereum'}
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'solana' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'ethereum' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-teal-400 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">S</span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">Ξ</span>
                             </div>
-                            <div className="font-medium text-gray-800">Solana</div>
+                            <div className="font-medium text-gray-800">Ethereum</div>
                             <div className="text-xs text-gray-500">USDC</div>
                           </div>
                         </div>
                       </label>
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'aptos' ? 'ring-2 ring-gray-500' : ''}`}>
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'arbitrum' ? 'ring-2 ring-cyan-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
-                          value="aptos"
-                          checked={formData.payment_network === 'aptos'}
+                          value="arbitrum"
+                          checked={formData.payment_network === 'arbitrum'}
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'aptos' ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'arbitrum' ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-gray-900 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-cyan-400 font-bold text-sm">A</span>
+                            <div className="w-8 h-8 bg-cyan-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">A</span>
                             </div>
-                            <div className="font-medium text-gray-800">Aptos</div>
+                            <div className="font-medium text-gray-800">Arbitrum</div>
                             <div className="text-xs text-gray-500">USDC</div>
                           </div>
                         </div>
                       </label>
-
-                      {/* SUI - COMMENTED OUT FOR NOW
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'sui' ? 'ring-2 ring-sky-500' : ''}`}>
-                        <input
-                          type="radio"
-                          name="payment_network"
-                          value="sui"
-                          checked={formData.payment_network === 'sui'}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'sui' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                          <div className="text-center">
-                            <div className="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center" style={{backgroundColor: '#4DA2FF'}}>
-                              <span className="text-white font-bold text-sm">S</span>
-                            </div>
-                            <div className="font-medium text-gray-800">Sui</div>
-                            <div className="text-xs text-gray-500">USDC</div>
-                          </div>
-                        </div>
-                      </label>
-                      */}
 
                       <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-blue-500' : ''}`}>
                         <input
