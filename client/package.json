@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^5.1.1",
     "@react-google-maps/api": "^2.19.3",
     "@tanstack/react-query": "^5.90.2",
     "@vitejs/plugin-react": "^5.0.4",
