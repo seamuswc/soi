@@ -10,12 +10,9 @@
     "prisma:migrate": "prisma migrate deploy"
   },
   "dependencies": {
-    "@aptos-labs/ts-sdk": "^5.1.0",
     "@fastify/cors": "^9.0.1",
     "@fastify/static": "^6.12.0",
-    "@mysten/sui": "^1.38.0",
     "@prisma/client": "^6.14.0",
-    "@solana/web3.js": "^1.98.4",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
