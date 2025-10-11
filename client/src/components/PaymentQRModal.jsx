@@ -113,7 +113,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       ethereum: 'Ethereum',
       arbitrum: 'Arbitrum',
       base: 'Base',
-      aptos: 'Aptos',
       thb: 'Thai Baht'
     };
     return names[network] || network;
@@ -124,7 +123,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       ethereum: 'from-purple-600 to-blue-600',
       arbitrum: 'from-cyan-600 to-blue-700',
       base: 'from-blue-600 to-blue-700',
-      aptos: 'from-gray-600 to-cyan-700',
       thb: 'from-green-600 to-green-700'
     };
     return colors[network] || 'from-gray-600 to-gray-700';
@@ -137,85 +135,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     return '';
   };
 
-  // For EVM chains (ethereum, arbitrum, base), we use the wagmi isConnected
+  // All supported networks are EVM-based and use WalletConnect
   const isWalletConnected = isConnected;
-  
-  // Aptos shows manual payment instructions (no wallet adapter due to dependency issues)
-  if (network === 'aptos') {
-    return (
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        onClick={onClose}
-      >
-        <div 
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 relative"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-
-          <div className={`bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-xl p-6 mb-6 text-center`}>
-            <h2 className="text-2xl font-bold mb-2">Manual Payment</h2>
-            <p className="text-sm opacity-90">Aptos</p>
-            <p className="text-3xl font-bold mt-2">{amount} USDC</p>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg p-4 mb-6 text-sm">
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-gray-700">Send to:</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(merchantAddress);
-                      alert('Address copied!');
-                    }}
-                    className="text-blue-600 hover:text-blue-800 text-xs underline"
-                  >
-                    📋 Copy
-                  </button>
-                </div>
-                <p className="text-xs font-mono text-gray-600 break-all">{merchantAddress}</p>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Amount:</span>
-                <p className="text-gray-600 font-bold">{amount} USDC</p>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-gray-700">Memo/Reference:</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(reference);
-                      alert('Reference copied!');
-                    }}
-                    className="text-blue-600 hover:text-blue-800 text-xs underline"
-                  >
-                    📋 Copy
-                  </button>
-                </div>
-                <p className="text-xs font-mono text-gray-600 break-all">{reference}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
-            <p className="font-medium mb-2">📱 How to pay:</p>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Open your Petra wallet</li>
-              <li>Send {amount} USDC to the address above</li>
-              <li>Include the reference in the message</li>
-              <li>Payment will be detected automatically</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div 

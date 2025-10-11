@@ -43,13 +43,11 @@ function CreatePage() {
     const ethereumRef = generateReference('ethereum');
     const arbitrumRef = generateReference('arbitrum');
     const baseRef = generateReference('base');
-    const aptosRef = generateReference('aptos');
     
     setReferences({
       ethereum: ethereumRef,
       arbitrum: arbitrumRef,
-      base: baseRef,
-      aptos: aptosRef
+      base: baseRef
     });
 
     setFormData(prev => ({ ...prev, reference: ethereumRef }));

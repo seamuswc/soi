@@ -15,7 +15,6 @@ dotenv.config();
 function validateEnvironment() {
   const required = {
     BASE_MERCHANT_ADDRESS: process.env.BASE_MERCHANT_ADDRESS,
-    APTOS_MERCHANT_ADDRESS: process.env.APTOS_MERCHANT_ADDRESS,
     ADMIN_USERNAME: process.env.ADMIN_USERNAME,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     ADMIN_TOKEN: process.env.ADMIN_TOKEN
@@ -88,7 +87,7 @@ const createListingSchema = z.object({
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
-  payment_network: z.enum(['ethereum', 'arbitrum', 'base', 'aptos']).default('ethereum'),
+  payment_network: z.enum(['ethereum', 'arbitrum', 'base']).default('ethereum'),
   thai_only: z.boolean().optional().default(false)
   , has_pool: z.boolean().optional().default(false)
   , has_parking: z.boolean().optional().default(false)
@@ -97,25 +96,13 @@ const createListingSchema = z.object({
   , promo_code: z.string().optional()
 });
 
-async function validatePayment(network: 'ethereum' | 'arbitrum' | 'base' | 'aptos', reference: string): Promise<boolean> {
+async function validatePayment(network: 'ethereum' | 'arbitrum' | 'base', reference: string): Promise<boolean> {
   try {
     // Basic reference validation for all networks
     if (!reference || reference.length === 0) return false;
 
-    // Network-specific validation
-    switch (network) {
-      case 'ethereum':
-        return await validateEVMPayment(reference, 'ethereum');
-      case 'arbitrum':
-        return await validateEVMPayment(reference, 'arbitrum');
-      case 'base':
-        return await validateEVMPayment(reference, 'base');
-      case 'aptos':
-        return await validateAptosPayment(reference);
-      default:
-        app.log.error(`Unknown payment network: ${network}`);
-        return false;
-    }
+    // All supported networks are EVM-based
+    return await validateEVMPayment(reference, network);
   } catch (error) {
     app.log.error(`Payment validation error for ${network}: ${error}`);
     return false;
@@ -172,20 +159,6 @@ async function validateEVMPayment(reference: string, network: 'ethereum' | 'arbi
   }
 }
 
-async function validateAptosPayment(reference: string): Promise<boolean> {
-  try {
-    // Aptos payments are manual - just check if reference exists
-    // In production, you'd want to implement proper Aptos blockchain validation
-    app.log.info(`Aptos payment validation for reference: ${reference}`);
-    
-    // For now, Aptos is manual payment so we don't auto-validate
-    // Admin will need to manually confirm these payments
-    return false;
-  } catch (error: any) {
-    app.log.error('Aptos validation error:', error);
-    return false;
-  }
-}
 
 
 // Routes
@@ -201,7 +174,6 @@ app.get('/api/config/merchant-addresses', async () => {
     ethereum: process.env.BASE_MERCHANT_ADDRESS || '', // Using same address for all EVM chains
     arbitrum: process.env.BASE_MERCHANT_ADDRESS || '',
     base: process.env.BASE_MERCHANT_ADDRESS || '',
-    aptos: process.env.APTOS_MERCHANT_ADDRESS || '',
     lineAccount: process.env.LINE_ACCOUNT || '@soipattaya'
   };
 });
@@ -212,10 +184,10 @@ app.get('/api/payment/check/:network/:reference', async (request) => {
   
   try {
     // Validate network type
-    if (!['ethereum', 'arbitrum', 'base', 'aptos'].includes(network)) {
+    if (!['ethereum', 'arbitrum', 'base'].includes(network)) {
       return { confirmed: false };
     }
-    const isValid = await validatePayment(network as 'ethereum' | 'arbitrum' | 'base' | 'aptos', reference);
+    const isValid = await validatePayment(network as 'ethereum' | 'arbitrum' | 'base', reference);
     return { confirmed: isValid };
   } catch (error: any) {
     app.log.error('Payment check error:', error);
