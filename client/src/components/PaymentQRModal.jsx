@@ -27,9 +27,38 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   }, [checkInterval]);
 
   const generatePaymentUrl = () => {
-    // Generate payment info string (not a URL, just info for the user)
-    const paymentInfo = `Network: ${network.toUpperCase()}\nTo: ${merchantAddress}\nAmount: ${amount} USDC\nReference: ${reference}`;
-    setPaymentUrl(paymentInfo);
+    // Generate proper wallet deep links with all payment info pre-filled
+    let paymentUrl = '';
+    
+    switch(network) {
+      case 'solana':
+        // Solana Pay standard URL format
+        paymentUrl = `solana:${merchantAddress}?amount=${amount}&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&reference=${reference}&label=SoiPattaya&message=Property%20Listing%20Payment`;
+        break;
+        
+      case 'aptos':
+        // Aptos wallet URL format (Petra/Pontem compatible)
+        paymentUrl = `https://aptoslabs.com/wallet/send?to=${merchantAddress}&amount=${amount}&coin=0x5e156f1207d0ebfa19a9eeff00d62a282278fb8719f4fab3a586a0a2c0fffbea::coin::T&memo=${reference}`;
+        break;
+        
+      case 'sui':
+        // Sui wallet URL format
+        paymentUrl = `https://sui.io/wallet/send?recipient=${merchantAddress}&amount=${amount * 1000000}&coin=0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN&memo=${reference}`;
+        break;
+        
+      case 'base':
+        // Base/Ethereum wallet URL format (EIP-681)
+        // USDC on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+        const usdcBase = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+        const amountInSmallestUnit = (amount * 1000000).toString(16); // USDC has 6 decimals
+        paymentUrl = `ethereum:${usdcBase}@8453/transfer?address=${merchantAddress}&uint256=${amountInSmallestUnit}`;
+        break;
+        
+      default:
+        paymentUrl = `Network: ${network.toUpperCase()}\nTo: ${merchantAddress}\nAmount: ${amount} USDC\nReference: ${reference}`;
+    }
+    
+    setPaymentUrl(paymentUrl);
   };
 
   const startPaymentCheck = async () => {
@@ -175,13 +204,16 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
             <p className="font-medium mb-2">📱 How to pay:</p>
             <ol className="list-decimal list-inside space-y-1">
-              <li>Open your {getNetworkName()} wallet app</li>
-              <li>Send {amount} USDC to the address shown above</li>
-              <li>Include the reference ID in the memo/message</li>
+              <li>Scan the QR code with your {getNetworkName()} wallet app</li>
+              <li>Review the pre-filled payment details</li>
+              <li>Confirm the transaction in your wallet</li>
               <li>Payment will be detected automatically</li>
             </ol>
-            <p className="text-xs text-gray-500 mt-3">
-              Or scan the QR code with your wallet if supported
+            <p className="text-xs text-gray-500 mt-3 font-semibold">
+              ✨ Everything is pre-filled - just scan and confirm!
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Or manually send to the address above if your wallet doesn't support QR scanning
             </p>
           </div>
         )}
