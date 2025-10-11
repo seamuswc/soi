@@ -5,6 +5,15 @@
 curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
 ```
 *Includes automatic SSL certificate setup with Let's Encrypt*
+*Automatically adds swap space if server has < 3GB RAM*
+
+## ⚡ Fast deployment (pre-built, no timeouts)
+If the build times out or your server is low on resources:
+```bash
+# Build locally, deploy pre-built files (much faster!)
+./deploy-prebuilt.sh
+```
+*Requires SSH access to your server*
 
 ## 🧰 Manual deploy on a fresh server
 ```bash
@@ -12,6 +21,12 @@ git clone https://github.com/seamuswc/soipattaya_JS.git
 cd soipattaya_JS
 sudo ./deploy.sh
 ```
+
+## ⚙️ System Requirements
+- **Minimum RAM**: 1GB (swap will be added automatically)
+- **Recommended RAM**: 2GB+
+- **Build Memory**: 4GB (uses swap if needed)
+- **Disk Space**: 2GB free
 
 
 ## After Setup

@@ -78,8 +78,27 @@ cd server
 npx prisma db push
 cd ..
 
+# Check available memory and add swap if needed
+echo "💾 Checking system memory..."
+TOTAL_MEM=$(free -m | awk '/^Mem:/{print $2}')
+if [ "$TOTAL_MEM" -lt 3000 ]; then
+    echo "⚠️  Low memory detected ($TOTAL_MEM MB). Adding swap space..."
+    if [ ! -f /swapfile ]; then
+        dd if=/dev/zero of=/swapfile bs=1M count=4096 status=progress
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        echo "✅ 4GB swap added"
+    else
+        echo "   Swap file already exists"
+        swapon /swapfile 2>/dev/null || true
+    fi
+fi
+
 # Build application
-echo "🔨 Building application..."
+echo "🔨 Building application (this may take 2-3 minutes)..."
+echo "   Tip: If this times out, use the pre-built deployment script instead"
 npm run build
 
 # Configure Nginx
