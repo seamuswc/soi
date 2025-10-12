@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useAccount, useConnect, useDisconnect, useSendTransaction, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
+import { useAccount, useDisconnect, useSendTransaction, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
+import { useAppKit } from '@reown/appkit/react';
 import { parseUnits } from 'viem';
 import { mainnet, base, arbitrum } from 'wagmi/chains';
 
@@ -14,7 +15,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   
   // Wagmi hooks for Ethereum/Base
   const { address, isConnected, chain } = useAccount();
-  const { connectors, connect } = useConnect();
+  const { open } = useAppKit();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const { sendTransaction, data: txData, error: txError } = useSendTransaction();
@@ -68,10 +69,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   };
 
   const handleConnectWallet = () => {
-    const walletConnectConnector = connectors.find(c => c.id === 'walletConnect');
-    if (walletConnectConnector) {
-      connect({ connector: walletConnectConnector });
-    }
+    // Open the Reown AppKit modal which shows QR code and wallet options
+    open();
   };
 
   const handleSendPayment = async () => {
