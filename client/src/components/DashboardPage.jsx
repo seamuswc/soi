@@ -108,12 +108,20 @@ function DashboardPage() {
       <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base"
-          >
-            Logout
-          </button>
+          <div className="flex gap-2">
+            <a href="/" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base">
+              Back to Map
+            </a>
+            <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base">
+              Create Listing
+            </a>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Promo Code Generator */}
@@ -311,16 +319,6 @@ function DashboardPage() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="mt-8 flex space-x-4">
-          <a href="/" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-            Back to Map
-          </a>
-          <a href="/create" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-            Create New Listing
-          </a>
         </div>
       </div>
     </div>
