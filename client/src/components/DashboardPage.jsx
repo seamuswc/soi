@@ -123,7 +123,7 @@ function DashboardPage() {
             For customers who paid via ScanPay (Thai Bank Transfer). Generate a promo code and send it via LINE.
           </p>
           
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div className="flex items-end gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Uses
@@ -137,7 +137,6 @@ function DashboardPage() {
                 className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 placeholder="10"
               />
-              <p className="text-xs text-gray-500 mt-1">How many times this code can be used</p>
             </div>
             <button
               onClick={generatePromoCode}
