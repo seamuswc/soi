@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import axios from 'axios';
 
@@ -14,6 +14,7 @@ const center = {
 };
 
 function MapPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [listings, setListings] = useState({});
   const [thaiOnly, setThaiOnly] = useState(false);
@@ -178,7 +179,7 @@ function MapPage() {
                   key={idx}
                   position={{ lat: l.latitude, lng: l.longitude }}
                   title={l.building_name}
-                  onClick={() => setSelectedBuilding(l)}
+                  onClick={() => navigate(`/${encodeURIComponent(l.building_name)}`)}
                 />
               ))}
           </GoogleMap>
