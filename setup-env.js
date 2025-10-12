@@ -13,10 +13,9 @@ ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="poop"
 ADMIN_TOKEN="admin_token_12345"
 VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
-SOLANA_MERCHANT_ADDRESS="your_solana_address_here"
-APTOS_MERCHANT_ADDRESS="your_aptos_address_here"
-SUI_MERCHANT_ADDRESS="your_sui_address_here"
-BASE_MERCHANT_ADDRESS="your_base_address_here"
+SOLANA_MERCHANT_ADDRESS="8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj"
+SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
+LINE_ACCOUNT="@soipattaya"
 NODE_ENV="production"
 PORT=3000
 SITE_DOMAIN="soipattaya.com"
@@ -28,7 +27,7 @@ PROMO_MAX_USES=""
 fs.writeFileSync('.env', envContent);
 
 // Create client/.env for Vite
-const clientEnvContent = `VITE_GOOGLE_MAPS_API_KEY="your_google_maps_api_key_here"
+const clientEnvContent = `VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
 `;
 
 fs.writeFileSync('client/.env', clientEnvContent);
@@ -38,8 +37,9 @@ console.log('📁 Files created:');
 console.log('   - .env (root)');
 console.log('   - client/.env');
 console.log('\n📝 Edit .env file with your actual values:');
-console.log('   - Google Maps API key');
-console.log('   - Blockchain addresses');
+console.log('   - SOLANA_MERCHANT_ADDRESS: Your Solana wallet address for receiving USDC');
+console.log('   - LINE_ACCOUNT: Your LINE account (e.g., @soipattaya)');
+console.log('   - VITE_GOOGLE_MAPS_API_KEY: Google Maps API key');
 console.log('   - Admin credentials');
 console.log('\n🚀 Then run:');
 console.log('   npm run dev    (for development)');

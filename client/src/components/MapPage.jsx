@@ -131,7 +131,7 @@ function MapPage() {
       {!apiKey || mapError ? (
         <div className="flex items-center justify-center h-full bg-gray-100 p-4">
           <div className="text-center max-w-md">
-            <h2 className="text-xl md:text-2xl mb-4">SOI Pattaya - Real Estate Map</h2>
+            <h2 className="text-xl md:text-2xl mb-4">soiPattaya - Real Estate Map</h2>
             <p className="mb-4 text-sm md:text-base">Google Maps integration requires an API key</p>
             <div className="bg-yellow-100 p-3 md:p-4 rounded">
               <p className="text-xs md:text-sm">To enable the map:</p>

@@ -7,6 +7,14 @@ curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-line
 *Includes automatic SSL certificate setup with Let's Encrypt*
 *Automatically adds swap space if server has < 3GB RAM*
 
+## 🖥️ Deploy from your local machine (full setup)
+Build on your fast local machine, deploy everything to a fresh server:
+```bash
+./deploy-local.sh root@your-server.com
+```
+*Builds locally (much faster!) + handles complete server setup + SSL + deployment*
+*Best for initial deployment or when you have a fast local machine*
+
 ## ⚡ Fast deployment (pre-built, no timeouts)
 If the build times out or your server is low on resources:
 ```bash
@@ -86,6 +94,16 @@ npm run line
 # Updates LINE_ACCOUNT in .env file
 # Used for ScanPay bank transfers via LINE chat
 ```
+
+### Thai Baht Payment Flow (ScanPay + Promo Code)
+
+1. **Customer clicks "Thai Baht" payment** → Opens LINE chat
+2. **Customer pays via ScanPay** (Thai bank transfer) and sends proof
+3. **Admin verifies payment** received in bank
+4. **Admin generates promo code** in dashboard (1-use, auto-generated)
+5. **Admin sends promo code** to customer via LINE
+6. **Customer enters promo code** on listing form
+7. **Listing created automatically** (no payment check needed)
 
 ## 🛠️ Available NPM Commands
 

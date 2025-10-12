@@ -7,6 +7,8 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('admin_token'));
+  const [generatedPromo, setGeneratedPromo] = useState(null);
+  const [generatingPromo, setGeneratingPromo] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -46,6 +48,26 @@ function DashboardPage() {
     setDashboardData(null);
   };
 
+  const generatePromoCode = async () => {
+    setGeneratingPromo(true);
+    try {
+      const response = await axios.post('/api/promo/generate', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGeneratedPromo(response.data.code);
+    } catch (error) {
+      console.error('Error generating promo code:', error);
+      alert('Failed to generate promo code');
+    } finally {
+      setGeneratingPromo(false);
+    }
+  };
+
+  const copyPromoCode = () => {
+    navigator.clipboard.writeText(generatedPromo);
+    alert('✅ Promo code copied to clipboard!');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -77,6 +99,45 @@ function DashboardPage() {
           >
             Logout
           </button>
+        </div>
+
+        {/* Promo Code Generator */}
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">🎟️ Generate Promo Code</h2>
+              <p className="text-sm text-gray-600">
+                For customers who paid via ScanPay (Thai Bank Transfer). Generate a single-use promo code and send it via LINE.
+              </p>
+            </div>
+            <button
+              onClick={generatePromoCode}
+              disabled={generatingPromo}
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg whitespace-nowrap"
+            >
+              {generatingPromo ? 'Generating...' : '+ Generate Code'}
+            </button>
+          </div>
+
+          {generatedPromo && (
+            <div className="mt-4 bg-white border-2 border-yellow-400 rounded-lg p-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-600 mb-1">New Promo Code (1 use):</p>
+                  <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo}</p>
+                </div>
+                <button
+                  onClick={copyPromoCode}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                >
+                  📋 Copy Code
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                💡 Send this code to the customer via LINE. They can use it on the listing form.
+              </p>
+            </div>
+          )}
         </div>
         
         {/* Stats Cards */}
@@ -117,7 +178,7 @@ function DashboardPage() {
                     Cost (THB)
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment Network
+                    Payment
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -145,10 +206,12 @@ function DashboardPage() {
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         listing.payment_network === 'solana' ? 'bg-purple-100 text-purple-800' :
-                        listing.payment_network === 'aptos' ? 'bg-blue-100 text-blue-800' :
-                        'bg-green-100 text-green-800'
+                        listing.payment_network === 'thb' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
-                        {listing.payment_network.toUpperCase()}
+                        {listing.payment_network === 'solana' ? 'Solana' : 
+                         listing.payment_network === 'thb' ? 'Thai Baht' : 
+                         listing.payment_network.toUpperCase()}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm">

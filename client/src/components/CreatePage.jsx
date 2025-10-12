@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PaymentQRModal from './PaymentQRModal';
+import { Keypair } from '@solana/web3.js';
 
 function CreatePage() {
   const [formData, setFormData] = useState({
@@ -21,36 +22,18 @@ function CreatePage() {
     promo_code: ''
   });
 
-  const [references, setReferences] = useState({
-    solana: '',
-    aptos: '',
-    sui: '',
-    base: ''
-  });
-
   const [merchantAddresses, setMerchantAddresses] = useState({
     solana: '',
-    aptos: '',
-    sui: '',
-    base: ''
+    lineAccount: '@soipattaya'
   });
 
   const [showQRModal, setShowQRModal] = useState(false);
-  const [paymentPaid, setPaymentPaid] = useState(false);
 
   useEffect(() => {
-    // Generate references for all networks
-    const ethereumRef = generateReference('ethereum');
-    const arbitrumRef = generateReference('arbitrum');
-    const baseRef = generateReference('base');
+    // Generate Solana reference as a valid PublicKey (base58 string)
+    const solanaRef = Keypair.generate().publicKey.toBase58();
     
-    setReferences({
-      ethereum: ethereumRef,
-      arbitrum: arbitrumRef,
-      base: baseRef
-    });
-
-    setFormData(prev => ({ ...prev, reference: ethereumRef }));
+    setFormData(prev => ({ ...prev, reference: solanaRef }));
 
     // Fetch merchant addresses from server
     fetchMerchantAddresses();
@@ -65,78 +48,48 @@ function CreatePage() {
     }
   };
 
-  const generateReference = (network) => {
-    // Generate a random 32-byte reference for any network
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    const hexString = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-    
-    // Add 0x prefix for Base (EVM-compatible) networks
-    return network === 'base' ? '0x' + hexString : hexString;
-  };
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ 
       ...prev, 
-      [name]: type === 'checkbox' ? checked : value,
-      reference: references[value] || prev.reference
+      [name]: type === 'checkbox' ? checked : value
     }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Convert string values to numbers for API
-      const submitData = {
-        ...formData,
-        sqm: parseInt(formData.sqm) || 0,
-        cost: parseInt(formData.cost) || 0
-      };
-      await axios.post('/api/listings', submitData);
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Submit error:', error);
-      alert('Failed to submit listing. Please try again.');
-    }
   };
 
   const handlePayment = () => {
     if (formData.payment_network === 'thb') {
-      // Redirect to LINE for Thai Baht payment via ScanPay bank transfer
+      // Just open LINE chat for discussion - no pre-filled message
       const lineAccount = merchantAddresses.lineAccount || '@soipattaya';
-      window.location.href = `https://line.me/R/ti/p/${lineAccount}?message=I want to list a property - Reference: ${formData.reference} - Paying 35 Baht via ScanPay`;
+      window.open(`https://line.me/R/ti/p/${lineAccount}`, '_blank');
     } else {
+      // Show Solana Pay QR modal
       setShowQRModal(true);
     }
   };
 
   const handlePaymentSuccess = () => {
-    setPaymentPaid(true);
     setShowQRModal(false);
-    alert('Payment confirmed! ✅ Now submit your listing.');
+    // Redirect to home after successful payment and listing creation
+    window.location.href = '/';
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-4xl mx-auto px-4 py-4 md:py-8">
-        {/* Header */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">Create New Listing / สร้างรายการใหม่</h1>
-          <p className="text-sm md:text-base text-gray-600">List your property on SoiPattaya / รายการอสังหาริมทรัพย์ของคุณใน SoiPattaya</p>
-          
-          {/* Pricing Info */}
-          <div className="mt-4 inline-block bg-white border-2 border-gray-200 rounded-lg px-6 py-3 shadow-sm">
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold">💰 Crypto:</span> $1 USD per listing | 
-              <span className="font-semibold ml-2">🇹🇭 Thai Baht:</span> 35฿ per listing (ScanPay bank transfer)
-            </p>
+      
+      {/* Header */}
+      <div className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <a href="/" className="text-2xl md:text-3xl font-bold text-blue-600 hover:text-blue-800">soiPattaya</a>
+            <a href="/" className="text-blue-600 hover:text-blue-800 font-medium">← Back to Map</a>
           </div>
         </div>
+      </div>
 
-        {/* Main Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-4 md:p-8">
+      {/* Main Content */}
+      <div className="max-w-3xl mx-auto px-4 py-6 md:py-12">
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          <form onSubmit={(e) => e.preventDefault()}>
             {/* Property Details Section */}
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
@@ -144,9 +97,9 @@ function CreatePage() {
                 Property Details / รายละเอียดอสังหาริมทรัพย์
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Building Name / ชื่ออาคาร *
                   </label>
                   <input
@@ -154,99 +107,107 @@ function CreatePage() {
                     name="building_name"
                     value={formData.building_name}
                     onChange={handleChange}
-                    placeholder="เช่น Central Pattaya"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., View Talay 1"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Floor / ชั้น *
-                  </label>
-                  <input
-                    type="text"
-                    name="floor"
-                    value={formData.floor}
-                    onChange={handleChange}
-                    placeholder="เช่น ชั้น 5"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Size (sqm) / ขนาด (ตร.ม.) *
-                  </label>
-                  <input
-                    type="number"
-                    name="sqm"
-                    value={formData.sqm}
-                    onChange={handleChange}
-                    placeholder="เช่น 120"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Cost (THB) / ราคา (บาท) *
-                  </label>
-                  <input
-                    type="number"
-                    name="cost"
-                    value={formData.cost}
-                    onChange={handleChange}
-                    placeholder="เช่น 50000"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Coordinates (lat,lng) / พิกัด *
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Coordinates (Latitude, Longitude) / พิกัด *
                   </label>
                   <input
                     type="text"
                     name="coordinates"
                     value={formData.coordinates}
                     onChange={handleChange}
-                    placeholder="12.934053,100.882455"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., 12.9236, 100.8825"
                     required
                   />
-                  <p className="text-xs text-gray-500">Get coordinates from Google Maps</p>
+                  <p className="text-xs text-gray-500 mt-1">Get coordinates from Google Maps</p>
                 </div>
-              </div>
-            </div>
 
-            {/* Description Section */}
-            <div className="mb-6 md:mb-8">
-              <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
-                <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">2</span>
-                Property Information / ข้อมูลอสังหาริมทรัพย์
-              </h2>
-              
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Floor / ชั้น *
+                    </label>
+                    <input
+                      type="text"
+                      name="floor"
+                      value={formData.floor}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 5"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Size (sqm) / ขนาด *
+                    </label>
+                    <input
+                      type="number"
+                      name="sqm"
+                      value={formData.sqm}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 45"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price (Baht) / ราคา *
+                    </label>
+                    <input
+                      type="number"
+                      name="cost"
+                      value={formData.cost}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., 8000"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Description / คำอธิบาย *
                   </label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    rows={4}
-                    placeholder="Describe your property, amenities, and key features..."
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-base"
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Describe your property..."
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    YouTube Video Link / ลิงก์วิดีโอ YouTube *
+                  </label>
+                  <input
+                    type="url"
+                    name="youtube_link"
+                    value={formData.youtube_link}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    required
+                  />
+                </div>
+
+                {/* Property Features */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -257,6 +218,7 @@ function CreatePage() {
                     />
                     <span>Pool / สระว่ายน้ำ</span>
                   </label>
+
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -267,6 +229,7 @@ function CreatePage() {
                     />
                     <span>Parking / ที่จอดรถ</span>
                   </label>
+
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -275,8 +238,9 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>Top Floor / ชั้นบนสุด</span>
+                    <span>Top floor / ชั้นบนสุด</span>
                   </label>
+
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -285,8 +249,9 @@ function CreatePage() {
                       onChange={handleChange}
                       className="h-4 w-4"
                     />
-                    <span>6-month rental / เช่า 6 เดือน</span>
+                    <span>6-month rental</span>
                   </label>
+
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
@@ -298,36 +263,28 @@ function CreatePage() {
                     <span>ไทยช่วยไทย</span>
                   </label>
                 </div>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    YouTube Video Link / ลิงก์วิดีโอ *
-                  </label>
-                  <input
-                    type="url"
-                    name="youtube_link"
-                    value={formData.youtube_link}
-                    onChange={handleChange}
-                    placeholder="https://youtube.com/watch?v=..."
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">อัปโหลดวิดีโอทัวร์อสังหาริมทรัพย์ไปยัง YouTube และวางลิงก์ที่นี่ / Upload a property tour video to YouTube and paste the link here</p>
-                </div>
-                
-                {/* Promo code */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Promo Code / รหัสโปรโมชั่น</label>
-                  <input
-                    type="text"
-                    name="promo_code"
-                    value={formData.promo_code}
-                    onChange={handleChange}
-                    placeholder="Enter promo code"
-                    className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                  />
-                  <p className="text-xs text-gray-500">หากถูกต้องและมีอยู่ รหัสโปรโมชั่นจะข้ามการชำระเงิน / If valid and available, promo skips payment.</p>
-                </div>
+            {/* Promo Code Section */}
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
+                <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">2</span>
+                Promo Code (Optional) / รหัสโปรโมชั่น
+              </h2>
+              
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 md:p-6 rounded-xl border border-yellow-200">
+                <input
+                  type="text"
+                  name="promo_code"
+                  value={formData.promo_code}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  placeholder="Enter promo code to list for free"
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  Have a promo code? Enter it to skip payment
+                </p>
               </div>
             </div>
 
@@ -344,67 +301,30 @@ function CreatePage() {
                     <label className="block text-sm font-medium text-gray-700">
                       Choose Payment Network / เลือกเครือข่ายการชำระเงิน *
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'ethereum' ? 'ring-2 ring-purple-500' : ''}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Solana Option */}
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
-                          value="ethereum"
-                          checked={formData.payment_network === 'ethereum'}
+                          value="solana"
+                          checked={formData.payment_network === 'solana'}
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'ethereum' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'solana' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
                           <div className="text-center">
                             <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">Ξ</span>
+                              <span className="text-white font-bold text-sm">◎</span>
                             </div>
-                            <div className="font-medium text-gray-800">Ethereum</div>
-                            <div className="text-xs text-gray-500">USDC</div>
+                            <div className="font-medium text-gray-800">Solana</div>
+                            <div className="text-xs text-gray-500">1 USDC</div>
                           </div>
                         </div>
                       </label>
 
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'arbitrum' ? 'ring-2 ring-cyan-500' : ''}`}>
-                        <input
-                          type="radio"
-                          name="payment_network"
-                          value="arbitrum"
-                          checked={formData.payment_network === 'arbitrum'}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'arbitrum' ? 'border-cyan-500 bg-cyan-50' : 'border-gray-200 hover:border-cyan-300'}`}>
-                          <div className="text-center">
-                            <div className="w-8 h-8 bg-cyan-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">A</span>
-                            </div>
-                            <div className="font-medium text-gray-800">Arbitrum</div>
-                            <div className="text-xs text-gray-500">USDC</div>
-                          </div>
-                        </div>
-                      </label>
-
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'base' ? 'ring-2 ring-blue-500' : ''}`}>
-                        <input
-                          type="radio"
-                          name="payment_network"
-                          value="base"
-                          checked={formData.payment_network === 'base'}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'base' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                          <div className="text-center">
-                            <div className="w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center" style={{backgroundColor: '#0052FF'}}>
-                              <span className="text-white font-bold text-sm">B</span>
-                            </div>
-                            <div className="font-medium text-gray-800">Base</div>
-                            <div className="text-xs text-gray-500">USDC</div>
-                          </div>
-                        </div>
-                      </label>
-
+                      {/* LINE/THB Option */}
                       <label className={`relative cursor-pointer ${formData.payment_network === 'thb' ? 'ring-2 ring-green-500' : ''}`}>
                         <input
                           type="radio"
@@ -419,8 +339,8 @@ function CreatePage() {
                             <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">฿</span>
                             </div>
-                            <div className="font-medium text-gray-800">Thai Baht</div>
-                            <div className="text-xs text-gray-500">LINE Chat</div>
+                            <div className="font-medium text-gray-800">Scan Pay</div>
+                            <div className="text-xs text-gray-500">35 ฿</div>
                           </div>
                         </div>
                       </label>
@@ -432,75 +352,36 @@ function CreatePage() {
                     <button
                       type="button"
                       onClick={handlePayment}
-                      disabled={paymentPaid}
-                      className={`w-full ${paymentPaid ? 'bg-green-600' : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'} text-white px-4 md:px-6 py-3 md:py-4 rounded-lg font-medium transition-all transform hover:scale-105 shadow-lg text-sm md:text-base flex items-center justify-center gap-2`}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
                     >
-                      {paymentPaid ? (
-                        <>
-                          ✅ Payment Confirmed
-                        </>
-                      ) : formData.payment_network === 'thb' ? (
-                        <>
-                          💬 Contact via LINE - 35฿
-                        </>
-                      ) : (
-                        <>
-                          📱 Scan QR to Pay - 1 USDC
-                        </>
-                      )}
+                      {formData.payment_network === 'thb' ? '💬 Open LINE Chat' : '💳 Pay with Solana'}
                     </button>
+                    {formData.payment_network === 'thb' && (
+                      <p className="text-xs text-gray-600 mt-2 text-center">
+                        Opens LINE chat to discuss payment details
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Submit Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-              <button
-                type="submit"
-                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-              >
-                🚀 Create Listing / สร้างรายการ
-              </button>
-              <a
-                href="/"
-                className="flex-1 bg-gray-100 text-gray-700 px-4 md:px-8 py-3 md:py-4 rounded-lg font-medium hover:bg-gray-200 transition-all text-center text-sm md:text-base"
-              >
-                Cancel / ยกเลิก
-              </a>
-            </div>
           </form>
-        </div>
-
-        {/* Bulk Purchase Info */}
-        <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">
-            💼 Bulk Listings / รายการจำนวนมาก
-          </h3>
-          <p className="text-gray-700 mb-2">
-            <strong>English:</strong> To buy listings in bulk and pay with ScanPay in Thai Baht, please send us a message on LINE:
-          </p>
-          <p className="text-gray-700 mb-4">
-            <strong>ไทย:</strong> หากต้องการซื้อรายการจำนวนมากและชำระด้วย ScanPay ในสกุลเงินบาท กรุณาส่งข้อความหาเราทาง LINE:
-          </p>
-          <a 
-            href="https://line.me/ti/p/~660997358205" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-          >
-            💬 Message us on LINE
-          </a>
         </div>
       </div>
 
-      {/* QR Code Payment Modal */}
-      {showQRModal && (
+      {/* Payment QR Modal */}
+      {showQRModal && formData.payment_network === 'solana' && (
         <PaymentQRModal
           network={formData.payment_network}
           amount={1}
           reference={formData.reference}
-          merchantAddress={merchantAddresses[formData.payment_network]}
+          merchantAddress={merchantAddresses.solana}
+          listingData={{
+            ...formData,
+            sqm: parseInt(formData.sqm) || 0,
+            cost: parseInt(formData.cost) || 0
+          }}
           onClose={() => setShowQRModal(false)}
           onSuccess={handlePaymentSuccess}
         />

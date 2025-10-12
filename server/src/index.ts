@@ -4,8 +4,8 @@ import { PrismaClient } from '@prisma/client';
 import cron from 'node-cron';
 import dotenv from 'dotenv';
 import { z } from 'zod';
-import axios from 'axios';
 import path from 'path';
+import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -14,7 +14,7 @@ dotenv.config();
 // Environment variable validation
 function validateEnvironment() {
   const required = {
-    BASE_MERCHANT_ADDRESS: process.env.BASE_MERCHANT_ADDRESS,
+    SOLANA_MERCHANT_ADDRESS: process.env.SOLANA_MERCHANT_ADDRESS,
     ADMIN_USERNAME: process.env.ADMIN_USERNAME,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
     ADMIN_TOKEN: process.env.ADMIN_TOKEN
@@ -40,16 +40,6 @@ try {
 }
 
 // TypeScript Interfaces
-interface PaymentRequest {
-  payer: string;
-  amount: number;
-  reference: string;
-}
-
-interface TransactionResponse {
-  transaction: any;
-}
-
 interface ListingData {
   building_name: string;
   coordinates: string;
@@ -59,7 +49,7 @@ interface ListingData {
   description: string;
   youtube_link: string;
   reference: string;
-  payment_network: 'solana' | 'aptos' | 'sui' | 'base';
+  payment_network: 'solana' | 'thb';
   thai_only: boolean;
   has_pool: boolean;
   has_parking: boolean;
@@ -69,13 +59,36 @@ interface ListingData {
 }
 
 // Constants
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // USDC on Solana
 const USDC_DECIMALS = 6;
-const USDC_AMOUNT_WEI = 1000000; // 1 USDC with 6 decimals
+const USDC_AMOUNT = 1000000; // 1 USDC with 6 decimals
+const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 const app = fastify({ logger: true });
 const prisma = new PrismaClient();
 
 app.register(cors, { origin: '*' });
+
+// Solana Connection
+const SOLANA_RPC = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const connection = new Connection(SOLANA_RPC, 'confirmed');
+
+// Helper function to get Associated Token Account address
+function getAssociatedTokenAddress(owner: PublicKey, mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  )[0];
+}
+
+// Helper function to convert number to u64 bytes (little-endian)
+function u64ToBytes(value: number): Buffer {
+  const buffer = Buffer.alloc(8);
+  buffer.writeBigUInt64LE(BigInt(value));
+  return buffer;
+}
 
 // Validation schemas
 const createListingSchema = z.object({
@@ -87,107 +100,138 @@ const createListingSchema = z.object({
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
-  payment_network: z.enum(['ethereum', 'arbitrum', 'base']).default('ethereum'),
-  thai_only: z.boolean().optional().default(false)
-  , has_pool: z.boolean().optional().default(false)
-  , has_parking: z.boolean().optional().default(false)
-  , is_top_floor: z.boolean().optional().default(false)
-  , six_months: z.boolean().optional().default(false)
-  , promo_code: z.string().optional()
+  payment_network: z.enum(['solana', 'thb']).default('solana'),
+  thai_only: z.boolean().optional().default(false),
+  has_pool: z.boolean().optional().default(false),
+  has_parking: z.boolean().optional().default(false),
+  is_top_floor: z.boolean().optional().default(false),
+  six_months: z.boolean().optional().default(false),
+  promo_code: z.string().optional()
 });
 
-async function validatePayment(network: 'ethereum' | 'arbitrum' | 'base', reference: string): Promise<boolean> {
+// Solana payment validation - simpler approach from working code
+async function validateSolanaPayment(reference: string): Promise<boolean> {
   try {
-    // Basic reference validation for all networks
-    if (!reference || reference.length === 0) return false;
-
-    // All supported networks are EVM-based
-    return await validateEVMPayment(reference, network);
-  } catch (error) {
-    app.log.error(`Payment validation error for ${network}: ${error}`);
-    return false;
-  }
-}
-
-async function validateEVMPayment(reference: string, network: 'ethereum' | 'arbitrum' | 'base'): Promise<boolean> {
-  try {
-    if (!process.env.BASE_MERCHANT_ADDRESS) return false;
+    if (!reference || reference.length < 32) return false;
     
-    // Get RPC URL based on network
-    const rpcUrls = {
-      ethereum: process.env.ETHEREUM_RPC_URL || 'https://eth.llamarpc.com',
-      arbitrum: process.env.ARBITRUM_RPC_URL || 'https://arb1.arbitrum.io/rpc',
-      base: process.env.BASE_RPC_URL || 'https://mainnet.base.org'
-    };
+    // Convert reference to PublicKey
+    const referencePublicKey = new PublicKey(reference);
     
-    const rpcUrl = rpcUrls[network];
+    // Get signatures for the reference address
+    // If the reference appears in any transaction, payment was made
+    const signatures = await connection.getSignaturesForAddress(referencePublicKey, { limit: 1 });
     
-    // USDC Transfer event signature: Transfer(address indexed from, address indexed to, uint256 value)
-    const transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-    
-    // Query blockchain for USDC transfer events to merchant address
-    const response = await axios.post(rpcUrl, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'eth_getLogs',
-      params: [{
-        topics: [
-          transferEventSignature,
-          null, // from address (any)
-          `0x000000000000000000000000${process.env.BASE_MERCHANT_ADDRESS.slice(2)}` // to address (merchant)
-        ],
-        fromBlock: 'latest',
-        toBlock: 'latest'
-      }]
-    });
-    
-    if (response.data.result && response.data.result.length > 0) {
-      // Check if any transaction matches the reference and amount
-      for (const log of response.data.result) {
-        const amount = parseInt(log.data, 16);
-        if (amount === USDC_AMOUNT_WEI) {
-          // Found a matching transfer - validate reference is in transaction
-          return true;
-        }
-      }
-    }
-    
-    return false;
+    return signatures && signatures.length > 0;
   } catch (error: any) {
-    app.log.error(`${network} validation error:`, error);
+    app.log.error('Solana payment validation error:', error);
     return false;
   }
 }
-
-
 
 // Routes
 app.get('/api/config', async () => {
   return {
-    recipient: process.env.BASE_MERCHANT_ADDRESS
+    recipient: process.env.SOLANA_MERCHANT_ADDRESS,
+    usdcMint: USDC_MINT.toBase58()
   };
 });
 
 // Get all merchant addresses
 app.get('/api/config/merchant-addresses', async () => {
   return {
-    ethereum: process.env.BASE_MERCHANT_ADDRESS || '', // Using same address for all EVM chains
-    arbitrum: process.env.BASE_MERCHANT_ADDRESS || '',
-    base: process.env.BASE_MERCHANT_ADDRESS || '',
+    solana: process.env.SOLANA_MERCHANT_ADDRESS || '',
     lineAccount: process.env.LINE_ACCOUNT || '@soipattaya'
   };
 });
 
-// Check if payment has been received
-app.get('/api/payment/check/:network/:reference', async (request) => {
-  const { network, reference } = request.params as { network: string; reference: string };
+// Build USDC transaction for Phantom wallet
+app.post('/api/transaction', async (request, reply) => {
+  try {
+    const { payer, recipient, amount, reference } = request.body as {
+      payer: string;
+      recipient: string;
+      amount: number;
+      reference: string;
+    };
+
+    if (!payer || !recipient || !amount || !reference) {
+      return reply.code(400).send({ error: 'Missing required parameters' });
+    }
+
+    const payerPk = new PublicKey(payer);
+    const recipientPk = new PublicKey(recipient);
+    const referencePk = new PublicKey(reference);
+
+    // Get Associated Token Accounts
+    const payerAta = getAssociatedTokenAddress(payerPk, USDC_MINT);
+    const recipientAta = getAssociatedTokenAddress(recipientPk, USDC_MINT);
+
+    // Convert amount to smallest unit (6 decimals for USDC)
+    const amountInSmallest = Math.floor(amount * 1_000_000);
+
+    // Create transaction
+    const tx = new Transaction();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = payerPk;
+
+    // 1. Create ATA for recipient if needed (instruction opcode: 1)
+    tx.add(
+      new TransactionInstruction({
+        programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+        keys: [
+          { pubkey: payerPk, isSigner: true, isWritable: true },
+          { pubkey: recipientAta, isSigner: false, isWritable: true },
+          { pubkey: recipientPk, isSigner: false, isWritable: false },
+          { pubkey: USDC_MINT, isSigner: false, isWritable: false },
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+          { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }
+        ],
+        data: Buffer.from([1])
+      })
+    );
+
+    // 2. Transfer USDC tokens (instruction opcode: 3)
+    tx.add(
+      new TransactionInstruction({
+        programId: TOKEN_PROGRAM_ID,
+        keys: [
+          { pubkey: payerAta, isSigner: false, isWritable: true },
+          { pubkey: recipientAta, isSigner: false, isWritable: true },
+          { pubkey: payerPk, isSigner: true, isWritable: false }
+        ],
+        data: Buffer.concat([Buffer.from([3]), u64ToBytes(amountInSmallest)])
+      })
+    );
+
+    // 3. Add memo with reference (this allows us to track the payment)
+    tx.add(
+      new TransactionInstruction({
+        programId: MEMO_PROGRAM_ID,
+        keys: [{ pubkey: referencePk, isSigner: false, isWritable: false }],
+        data: Buffer.from('soiPattaya Payment', 'utf8')
+      })
+    );
+
+    // Serialize transaction (without signatures)
+    const serialized = tx.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false
+    });
+
+    return { transaction: serialized.toString('base64') };
+  } catch (error: any) {
+    app.log.error('Transaction build error:', error);
+    return reply.code(500).send({ error: error.message || 'Failed to build transaction' });
+  }
+});
+
+// Check if payment has been received (for Solana)
+app.get('/api/payment/check/solana/:reference', async (request) => {
+  const { reference } = request.params as { reference: string };
   
   try {
-    // Validate network type
-    if (!['ethereum', 'arbitrum', 'base'].includes(network)) {
-      return { confirmed: false };
-    }
-    const isValid = await validatePayment(network as 'ethereum' | 'arbitrum' | 'base', reference);
+    const isValid = await validateSolanaPayment(reference);
     return { confirmed: isValid };
   } catch (error: any) {
     app.log.error('Payment check error:', error);
@@ -239,6 +283,34 @@ app.post('/api/auth/login', async (request, reply) => {
   }
 });
 
+// Generate promo code (admin only)
+app.post('/api/promo/generate', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    // Generate random promo code (8 characters, alphanumeric)
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let promoCode = '';
+    for (let i = 0; i < 8; i++) {
+      promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    // Create promo code with 1 use
+    const promo = await prisma.promo.create({
+      data: {
+        code: promoCode.toLowerCase(),
+        remaining_uses: 1
+      }
+    });
+    
+    return { 
+      code: promoCode,
+      remaining_uses: promo.remaining_uses
+    };
+  } catch (error: any) {
+    app.log.error('Error generating promo code:', error);
+    return reply.code(500).send({ error: 'Failed to generate promo code' });
+  }
+});
+
 // Add admin dashboard route (protected)
 app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () => {
   const listings = await prisma.listing.findMany({
@@ -273,61 +345,67 @@ app.post('/api/listings', async (request, reply) => {
     let isValid = false;
     
     // Validate payment based on network
-    isValid = await validatePayment(data.payment_network, data.reference);
+    if (data.payment_network === 'solana') {
+      isValid = await validateSolanaPayment(data.reference);
+    } else if (data.payment_network === 'thb') {
+      // THB payments are manual via LINE - skip validation
+      // In production, you might want admin approval for THB payments
+      isValid = true;
+    }
 
-    if (!isValid) {
+    if (!isValid && !data.promo_code) {
       return reply.code(400).send({ error: 'Invalid payment' });
     }
 
-  const months = data.six_months ? 6 : 1;
-  const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
+    const months = data.six_months ? 6 : 1;
+    const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
 
-  // Promo handling - check database for promo code
-  if (data.promo_code) {
-    const promo = await prisma.promo.findUnique({
-      where: { code: data.promo_code.toLowerCase() }
-    });
-    
-    if (!promo) {
-      return reply.code(400).send({ error: 'Invalid promo code' });
+    // Promo handling - check database for promo code
+    if (data.promo_code) {
+      const promo = await prisma.promo.findUnique({
+        where: { code: data.promo_code.toLowerCase() }
+      });
+      
+      if (!promo) {
+        return reply.code(400).send({ error: 'Invalid promo code' });
+      }
+      
+      if (promo.remaining_uses <= 0) {
+        return reply.code(400).send({ error: 'Promo code has been fully used' });
+      }
+      
+      // Decrement promo usage
+      await prisma.promo.update({ 
+        where: { code: data.promo_code.toLowerCase() }, 
+        data: { remaining_uses: { decrement: 1 } } 
+      });
+      
+      // Promo accepted: skip payment validation
+      isValid = true;
     }
-    
-    if (promo.remaining_uses <= 0) {
-      return reply.code(400).send({ error: 'Promo code has been fully used' });
-    }
-    
-    // Decrement promo usage
-    await prisma.promo.update({ 
-      where: { code: data.promo_code.toLowerCase() }, 
-      data: { remaining_uses: { decrement: 1 } } 
+
+    const listing = await prisma.listing.create({
+      data: {
+        building_name: data.building_name,
+        latitude: lat,
+        longitude: lng,
+        floor: data.floor,
+        sqm: data.sqm,
+        cost: data.cost,
+        description: data.description,
+        youtube_link: data.youtube_link,
+        reference: data.reference,
+        payment_network: data.payment_network,
+        thai_only: data.thai_only ?? false,
+        has_pool: data.has_pool ?? false,
+        has_parking: data.has_parking ?? false,
+        is_top_floor: data.is_top_floor ?? false,
+        six_months: data.six_months ?? false,
+        expires_at: expiresAt,
+      },
     });
-    
-    // Promo accepted: skip payment validation
-    isValid = true;
-  }
 
-  const listing = await prisma.listing.create({
-    data: {
-      building_name: data.building_name,
-      latitude: lat,
-      longitude: lng,
-      floor: data.floor,
-      sqm: data.sqm,
-      cost: data.cost,
-      description: data.description,
-      youtube_link: data.youtube_link,
-      reference: data.reference,
-      payment_network: data.payment_network,
-      thai_only: data.thai_only ?? false,
-      has_pool: data.has_pool ?? false,
-      has_parking: data.has_parking ?? false,
-      is_top_floor: data.is_top_floor ?? false,
-      six_months: data.six_months ?? false,
-      expires_at: expiresAt,
-    },
-  });
-
-  return listing;
+    return listing;
   } catch (error: any) {
     app.log.error('Error creating listing:', error);
     return reply.code(500).send({ error: 'Internal server error' });
@@ -339,9 +417,6 @@ app.get('/api/listings/:name', async (request) => {
   const listings = await prisma.listing.findMany({ where: { building_name: name } });
   return listings;
 });
-
-// Transaction creation is now handled client-side via WalletConnect
-// These endpoints are no longer needed
 
 // Cron job to delete expired listings
 cron.schedule('0 0 * * *', async () => {
@@ -372,7 +447,8 @@ if (process.env.NODE_ENV === 'production') {
 // Start server
 const start = async () => {
   try {
-    await app.listen({ port: 3000 });
+    const PORT = parseInt(process.env.PORT || '3000', 10);
+    await app.listen({ port: PORT, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);
     process.exit(1);

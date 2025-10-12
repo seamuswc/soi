@@ -1,117 +1,126 @@
 import React, { useEffect, useState } from 'react';
-import { useAccount, useDisconnect, useSendTransaction, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
-import { useAppKit } from '@reown/appkit/react';
-import { parseUnits } from 'viem';
-import { mainnet, base, arbitrum } from 'wagmi/chains';
+import { QRCodeSVG } from 'qrcode.react';
+import axios from 'axios';
+import * as solanaWeb3 from '@solana/web3.js';
 
-// USDC contract addresses
-const USDC_MAINNET = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const USDC_ARBITRUM = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
-function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess }) {
-  const [status, setStatus] = useState('connect'); // connect, pending, sending, checking, confirmed, failed
-  const [txHash, setTxHash] = useState(null);
-  
-  // Wagmi hooks for Ethereum/Base
-  const { address, isConnected, chain } = useAccount();
-  const { open } = useAppKit();
-  const { disconnect } = useDisconnect();
-  const { switchChain } = useSwitchChain();
-  const { sendTransaction, data: txData, error: txError } = useSendTransaction();
-  const { isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
+function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, onSuccess, listingData }) {
+  const [status, setStatus] = useState('connecting'); // connecting, qr, polling, confirmed, failed
+  const [pollCount, setPollCount] = useState(0);
+  const [qrUrl, setQrUrl] = useState('');
+  const maxPolls = 60; // 2 minutes (60 polls x 2 seconds)
+
+  // Detect Phantom wallet
+  const detectPhantom = () => {
+    const win = window;
+    if (win.solana?.isPhantom) return win.solana;
+    if (win.phantom?.solana?.isPhantom) return win.phantom.solana;
+    return null;
+  };
 
   useEffect(() => {
-    if (isConnected && status === 'connect') {
-      setStatus('pending');
+    if (network === 'solana') {
+      // Generate Solana Pay QR URL
+      const params = new URLSearchParams({
+        amount: amount.toString(),
+        'spl-token': USDC_MINT,
+        reference: reference,
+        label: 'soiPattaya Listing',
+        message: 'Property Listing Payment'
+      });
+      const solanaPayUrl = `solana:${merchantAddress}?${params.toString()}`;
+      setQrUrl(solanaPayUrl);
+
+      // Try to use Phantom wallet first
+      const tryPhantom = async () => {
+        const phantom = detectPhantom();
+        if (phantom) {
+          try {
+            // Connect to Phantom
+            await phantom.connect();
+            
+            // Fetch pre-built transaction from backend
+            const resp = await axios.post('/api/transaction', {
+              payer: phantom.publicKey.toBase58(),
+              recipient: merchantAddress,
+              amount: amount,
+              reference: reference
+            });
+
+            const { transaction } = resp.data;
+            
+            // Deserialize and sign transaction
+            const tx = solanaWeb3.Transaction.from(
+              Uint8Array.from(atob(transaction), c => c.charCodeAt(0))
+            );
+            
+            await phantom.signAndSendTransaction(tx);
+            
+            // Start polling for payment confirmation
+            setStatus('polling');
+          } catch (error) {
+            console.log('Phantom failed, showing QR:', error);
+            // Fall back to QR code
+            setStatus('qr');
+          }
+        } else {
+          // No Phantom detected, show QR
+          setStatus('qr');
+        }
+      };
+
+      tryPhantom();
     }
-  }, [isConnected, status]);
+  }, [network, amount, reference, merchantAddress]);
 
+  // Start polling when in QR or polling state
   useEffect(() => {
-    if (txData) {
-      setTxHash(txData);
-      setStatus('checking');
-    }
-  }, [txData]);
+    if ((status !== 'qr' && status !== 'polling') || network !== 'solana') return;
 
-  useEffect(() => {
-    if (isTxConfirmed && txHash) {
-      setStatus('confirmed');
+    const pollInterval = setInterval(async () => {
+      setPollCount(prev => {
+        const newCount = prev + 1;
+        if (newCount >= maxPolls) {
+          clearInterval(pollInterval);
+          setStatus('failed');
+          return newCount;
+        }
+        return newCount;
+      });
+
+      try {
+        const response = await axios.get(`/api/payment/check/solana/${reference}`);
+        if (response.data.confirmed) {
+          clearInterval(pollInterval);
+          setStatus('confirmed');
+          
+          // Auto-submit listing on successful payment
+          await submitListing();
+        }
+      } catch (error) {
+        console.error('Payment check error:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [status, reference, network]);
+
+  const submitListing = async () => {
+    try {
+      await axios.post('/api/listings', listingData);
       setTimeout(() => {
         onSuccess();
       }, 2000);
-    }
-  }, [isTxConfirmed, txHash, onSuccess]);
-
-  useEffect(() => {
-    if (txError) {
-      console.error('Transaction error:', txError);
-      setStatus('failed');
-    }
-  }, [txError]);
-
-  const getChainId = () => {
-    const chainIds = {
-      ethereum: mainnet.id,
-      arbitrum: arbitrum.id,
-      base: base.id
-    };
-    return chainIds[network];
-  };
-
-  const getUSDCAddress = () => {
-    const usdcAddresses = {
-      ethereum: USDC_MAINNET,
-      arbitrum: USDC_ARBITRUM,
-      base: USDC_BASE
-    };
-    return usdcAddresses[network];
-  };
-
-  const handleConnectWallet = () => {
-    // Open the Reown AppKit modal which shows QR code and wallet options
-    open();
-  };
-
-  const handleSendPayment = async () => {
-    if (!merchantAddress) return;
-    
-    const targetChainId = getChainId();
-    
-    // Switch chain if needed
-    if (chain?.id !== targetChainId) {
-      try {
-        await switchChain({ chainId: targetChainId });
-      } catch (error) {
-        console.error('Chain switch error:', error);
-        setStatus('failed');
-        return;
-      }
-    }
-    
-    setStatus('sending');
-    
-    try {
-      // Send USDC (ERC-20 transfer)
-      const amountInSmallestUnit = parseUnits(amount.toString(), 6);
-      const transferFunctionData = `0xa9059cbb${merchantAddress.slice(2).padStart(64, '0')}${amountInSmallestUnit.toString(16).padStart(64, '0')}`;
-      
-      await sendTransaction({
-        to: getUSDCAddress(),
-        data: transferFunctionData,
-        chainId: targetChainId
-      });
     } catch (error) {
-      console.error('Send payment error:', error);
+      console.error('Failed to create listing:', error);
       setStatus('failed');
     }
   };
 
   const getNetworkName = () => {
     const names = {
-      ethereum: 'Ethereum',
-      arbitrum: 'Arbitrum',
-      base: 'Base',
+      solana: 'Solana',
       thb: 'Thai Baht'
     };
     return names[network] || network;
@@ -119,23 +128,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const getNetworkColor = () => {
     const colors = {
-      ethereum: 'from-purple-600 to-blue-600',
-      arbitrum: 'from-cyan-600 to-blue-700',
-      base: 'from-blue-600 to-blue-700',
+      solana: 'from-purple-600 to-indigo-600',
       thb: 'from-green-600 to-green-700'
     };
     return colors[network] || 'from-gray-600 to-gray-700';
   };
 
-  const getConnectedAddress = () => {
-    if (address) {
-      return `${address.slice(0, 6)}...${address.slice(-4)}`;
-    }
-    return '';
-  };
-
-  // All supported networks are EVM-based and use WalletConnect
-  const isWalletConnected = isConnected;
+  const timeRemaining = Math.ceil((maxPolls - pollCount) * 2 / 60);
 
   return (
     <div 
@@ -147,75 +146,51 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={() => {
-            if (isWalletConnected) disconnect();
-            onClose();
-          }}
+          onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
         >
           ×
         </button>
 
         <div className={`bg-gradient-to-r ${getNetworkColor()} text-white rounded-xl p-6 mb-6 text-center`}>
-          <h2 className="text-2xl font-bold mb-2">Pay with Wallet</h2>
-          <p className="text-sm opacity-90">{getNetworkName()}</p>
+          <h2 className="text-2xl font-bold mb-2">Pay with {getNetworkName()}</h2>
           <p className="text-3xl font-bold mt-2">{amount} USDC</p>
         </div>
 
-        {status === 'connect' && (
+        {status === 'connecting' && (
           <div className="text-center">
-            <p className="text-gray-700 mb-4">
-              Scan QR code or click to connect your wallet
-            </p>
-            <button
-              onClick={handleConnectWallet}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Connect Wallet
-            </button>
-            <p className="text-xs text-gray-500 mt-3">
-              MetaMask, WalletConnect, Coinbase Wallet & more
+            <div className="text-6xl mb-4">🔗</div>
+            <p className="text-blue-600 font-bold text-xl">Connecting to Phantom...</p>
+            <p className="text-sm text-gray-500 mt-2">Please approve the connection</p>
+          </div>
+        )}
+
+        {status === 'polling' && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">⏳</div>
+            <p className="text-blue-600 font-bold text-xl">Waiting for Transaction...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Checking for payment confirmation... ({timeRemaining} min remaining)
             </p>
           </div>
         )}
 
-        {status === 'pending' && isWalletConnected && (
-          <div>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <p className="text-sm text-green-800">
-                ✅ Wallet connected: {getConnectedAddress()}
+        {status === 'qr' && network === 'solana' && (
+          <div className="text-center">
+            <div className="bg-white p-4 rounded-lg inline-block mb-4">
+              <QRCodeSVG value={qrUrl} size={256} />
+            </div>
+            <p className="text-gray-700 mb-2 font-medium">
+              Scan with Phantom, Solflare, or any Solana wallet
+            </p>
+            <p className="text-sm text-gray-500">
+              Checking for payment... ({timeRemaining} min remaining)
+            </p>
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">
+                💡 <strong>Desktop users:</strong> Click the QR with your mobile wallet app
               </p>
             </div>
-            <button
-              onClick={handleSendPayment}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-            >
-              Send {amount} USDC
-            </button>
-            <p className="text-xs text-gray-500 mt-3 text-center">
-              Reference: {reference.slice(0, 16)}...
-            </p>
-          </div>
-        )}
-
-        {status === 'sending' && (
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
-            <p className="text-blue-600 font-medium">Sending transaction...</p>
-            <p className="text-sm text-gray-500 mt-2">Confirm in your wallet</p>
-          </div>
-        )}
-
-        {status === 'checking' && (
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
-            <p className="text-blue-600 font-medium">Waiting for confirmation...</p>
-            <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
-            {txHash && (
-              <p className="text-xs text-gray-400 mt-3 break-all">
-                Tx: {typeof txHash === 'string' ? `${txHash.slice(0, 10)}...${txHash.slice(-8)}` : 'Processing...'}
-              </p>
-            )}
           </div>
         )}
 
@@ -223,20 +198,23 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           <div className="text-center">
             <div className="text-6xl mb-4">✅</div>
             <p className="text-green-600 font-bold text-xl">Payment Confirmed!</p>
-            <p className="text-sm text-gray-500 mt-2">Redirecting...</p>
+            <p className="text-sm text-gray-500 mt-2">Creating your listing...</p>
           </div>
         )}
 
         {status === 'failed' && (
           <div className="text-center">
-            <div className="text-6xl mb-4">❌</div>
-            <p className="text-red-600 font-medium">Payment Failed</p>
-            <p className="text-sm text-gray-500 mt-2">Please try again</p>
+            <div className="text-6xl mb-4">⏱️</div>
+            <p className="text-orange-600 font-medium text-lg">Payment Timeout</p>
+            <p className="text-sm text-gray-500 mt-2 mb-4">
+              No payment detected within 2 minutes.<br/>
+              Please try again or use a different payment method.
+            </p>
             <button
-              onClick={() => setStatus('pending')}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+              onClick={onClose}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
             >
-              Try Again
+              Close & Try Again
             </button>
           </div>
         )}
