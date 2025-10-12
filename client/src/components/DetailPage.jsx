@@ -35,12 +35,12 @@ function DetailPage() {
             onClick={() => navigate('/')}
             className="mb-6 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2"
           >
-            ← Back to Map
+            ← Back to Map / กลับไปที่แผนที่
           </button>
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="text-6xl mb-4">🏢</div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">No listings found</h1>
-            <p className="text-gray-600">This building doesn't have any available units.</p>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">No listings found / ไม่พบรายการ</h1>
+            <p className="text-gray-600">This building doesn't have any available units. / อาคารนี้ไม่มีห้องว่าง</p>
           </div>
         </div>
       </div>
@@ -56,11 +56,11 @@ function DetailPage() {
             onClick={() => navigate('/')}
             className="mb-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2 text-sm md:text-base"
           >
-            ← Back to Map
+            ← Back to Map / กลับไปที่แผนที่
           </button>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{name}</h1>
           <p className="text-gray-600 text-sm md:text-base">
-            {listings.length} available unit{listings.length > 1 ? 's' : ''}
+            {listings.length} available unit{listings.length > 1 ? 's' : ''} / {listings.length} ห้องว่าง
           </p>
         </div>
 
@@ -92,10 +92,10 @@ function DetailPage() {
                 <div className="p-6">
                   {/* Floor & Status */}
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800">Floor {listing.floor}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Floor {listing.floor} / ชั้น {listing.floor}</h2>
                     {isExpired && (
                       <span className="bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
-                        EXPIRED
+                        EXPIRED / หมดอายุ
                       </span>
                     )}
                   </div>
@@ -103,13 +103,13 @@ function DetailPage() {
                   {/* Price & Size */}
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500">Monthly Rent</p>
+                      <p className="text-sm text-gray-500">Monthly Rent / ค่าเช่ารายเดือน</p>
                       <p className="text-3xl font-bold text-blue-600">
                         {listing.cost.toLocaleString()}฿
                       </p>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500">Size</p>
+                      <p className="text-sm text-gray-500">Size / ขนาด</p>
                       <p className="text-2xl font-bold text-gray-800">{listing.sqm} sqm</p>
                     </div>
                   </div>
@@ -134,27 +134,27 @@ function DetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {listing.has_pool && (
                       <span className="bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                        🏊 Swimming Pool
+                        🏊 Pool / สระว่ายน้ำ
                       </span>
                     )}
                     {listing.has_parking && (
                       <span className="bg-green-50 text-green-700 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                        🚗 Parking
+                        🚗 Parking / ที่จอดรถ
                       </span>
                     )}
                     {listing.is_top_floor && (
                       <span className="bg-purple-50 text-purple-700 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                        🏔️ Top Floor
+                        🏔️ Top Floor / ชั้นบนสุด
                       </span>
                     )}
                     {listing.thai_only && (
                       <span className="bg-yellow-50 text-yellow-700 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                        🇹🇭 Thai Nationals Only
+                        🇹🇭 Thai Only / คนไทยเท่านั้น
                       </span>
                     )}
                     {listing.six_months && (
                       <span className="bg-orange-50 text-orange-700 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                        📅 6-Month Lease
+                        📅 6-Month / สัญญา 6 เดือน
                       </span>
                     )}
                   </div>
@@ -162,7 +162,7 @@ function DetailPage() {
                   {/* Footer Info */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <p className="text-xs text-gray-500">
-                      Listed on {new Date(listing.created_at).toLocaleDateString('en-US', { 
+                      Listed on / ลงประกาศ: {new Date(listing.created_at).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric' 
