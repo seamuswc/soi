@@ -174,5 +174,4 @@ echo "📊 Check status: ssh $SERVER 'pm2 status'"
 echo "📝 View logs: ssh $SERVER 'pm2 logs soipattaya'"
 echo ""
 echo "🎉 SOI Pattaya is live!"
-ENDSSH
 
