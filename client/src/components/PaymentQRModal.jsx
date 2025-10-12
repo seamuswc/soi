@@ -115,7 +115,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={showQR ? () => setShowQR(false) : undefined}
+      onClick={onClose}
     >
       <div 
         className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 relative"
@@ -143,19 +143,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         )}
 
         {/* Waiting for payment (Phantom used, no QR) */}
-        {!loading && !showQR && !paid && qrUrl && (
+        {!loading && !showQR && !paid && (
           <div className="text-center">
             <div className="text-6xl mb-4">⏳</div>
             <p className="text-blue-600 font-bold text-xl">Waiting for payment...</p>
-            <p className="text-sm text-gray-500 mt-2 mb-4">
+            <p className="text-sm text-gray-500 mt-2">
               Please complete the transaction in your wallet
             </p>
-            <button
-              onClick={() => setShowQR(true)}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Show QR Code
-            </button>
           </div>
         )}
 
@@ -177,10 +171,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               </p>
             </div>
             <button
-              onClick={() => setShowQR(false)}
+              onClick={onClose}
               className="mt-4 text-gray-500 text-sm hover:text-gray-700"
             >
-              Close QR Code
+              Close
             </button>
           </div>
         )}
