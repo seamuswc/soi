@@ -111,7 +111,7 @@ function createIdempotentATAInstruction(
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
     ],
-    data: new Uint8Array([1]) // CreateIdempotent
+    data: Buffer.from([1]) // CreateIdempotent
   });
 }
 
@@ -145,7 +145,7 @@ function transferCheckedInstruction(
   return new TransactionInstruction({
     programId: TOKEN_PROGRAM_ID,
     keys,
-    data
+    data: Buffer.from(data) // Convert to Buffer for TypeScript
   });
 }
 
