@@ -321,6 +321,9 @@ app.post('/api/auth/login', async (request, reply) => {
 // Generate promo code (admin only)
 app.post('/api/promo/generate', { preHandler: authenticateToken }, async (request, reply) => {
   try {
+    const { max_uses } = request.body as { max_uses?: number };
+    const maxUses = max_uses && max_uses > 0 ? max_uses : 1;
+
     // Generate random promo code (8 characters, alphanumeric)
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let promoCode = '';
@@ -328,21 +331,38 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
       promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     
-    // Create promo code with 1 use
+    // Create promo code with specified uses
     const promo = await prisma.promo.create({
       data: {
         code: promoCode.toLowerCase(),
-        remaining_uses: 1
+        remaining_uses: maxUses
       }
     });
     
     return { 
       code: promoCode,
-      remaining_uses: promo.remaining_uses
+      remaining_uses: promo.remaining_uses,
+      max_uses: maxUses
     };
   } catch (error: any) {
     app.log.error('Error generating promo code:', error);
     return reply.code(500).send({ error: 'Failed to generate promo code' });
+  }
+});
+
+// Get all promo codes with usage stats (admin only)
+app.get('/api/promo/list', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const promos = await prisma.promo.findMany({
+      orderBy: {
+        id: 'desc'
+      }
+    });
+    
+    return { promos };
+  } catch (error: any) {
+    app.log.error('Error fetching promo codes:', error);
+    return reply.code(500).send({ error: 'Failed to fetch promo codes' });
   }
 });
 

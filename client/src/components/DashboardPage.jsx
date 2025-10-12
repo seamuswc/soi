@@ -9,15 +9,23 @@ function DashboardPage() {
   const [token, setToken] = useState(localStorage.getItem('admin_token'));
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [generatingPromo, setGeneratingPromo] = useState(false);
+  const [maxUses, setMaxUses] = useState(1);
+  const [promoList, setPromoList] = useState([]);
 
   useEffect(() => {
     if (token) {
-      // Verify token is still valid
-      axios.get('/api/listings/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(response => {
-        setDashboardData(response.data);
+      // Verify token is still valid and fetch data
+      Promise.all([
+        axios.get('/api/listings/dashboard', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('/api/promo/list', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ])
+      .then(([dashboardResponse, promoResponse]) => {
+        setDashboardData(dashboardResponse.data);
+        setPromoList(promoResponse.data.promos);
         setIsAuthenticated(true);
         setLoading(false);
       })
@@ -51,10 +59,17 @@ function DashboardPage() {
   const generatePromoCode = async () => {
     setGeneratingPromo(true);
     try {
-      const response = await axios.post('/api/promo/generate', {}, {
+      const response = await axios.post('/api/promo/generate', 
+        { max_uses: maxUses },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      setGeneratedPromo(response.data);
+      
+      // Refresh promo list
+      const promoResponse = await axios.get('/api/promo/list', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setGeneratedPromo(response.data.code);
+      setPromoList(promoResponse.data.promos);
     } catch (error) {
       console.error('Error generating promo code:', error);
       alert('Failed to generate promo code');
@@ -64,7 +79,7 @@ function DashboardPage() {
   };
 
   const copyPromoCode = () => {
-    navigator.clipboard.writeText(generatedPromo);
+    navigator.clipboard.writeText(generatedPromo.code);
     alert('✅ Promo code copied to clipboard!');
   };
 
@@ -103,12 +118,26 @@ function DashboardPage() {
 
         {/* Promo Code Generator */}
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 mb-6 md:mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">🎟️ Generate Promo Code</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            For customers who paid via ScanPay (Thai Bank Transfer). Generate a promo code and send it via LINE.
+          </p>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-800 mb-2">🎟️ Generate Promo Code</h2>
-              <p className="text-sm text-gray-600">
-                For customers who paid via ScanPay (Thai Bank Transfer). Generate a single-use promo code and send it via LINE.
-              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Number of Uses
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={maxUses}
+                onChange={(e) => setMaxUses(parseInt(e.target.value) || 1)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                placeholder="Enter number of uses"
+              />
+              <p className="text-xs text-gray-500 mt-1">How many times this code can be used</p>
             </div>
             <button
               onClick={generatePromoCode}
@@ -123,8 +152,10 @@ function DashboardPage() {
             <div className="mt-4 bg-white border-2 border-yellow-400 rounded-lg p-4">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-1">New Promo Code (1 use):</p>
-                  <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    New Promo Code ({generatedPromo.max_uses} {generatedPromo.max_uses === 1 ? 'use' : 'uses'}):
+                  </p>
+                  <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo.code}</p>
                 </div>
                 <button
                   onClick={copyPromoCode}
@@ -139,6 +170,58 @@ function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Active Promo Codes */}
+        {promoList.length > 0 && (
+          <div className="bg-white rounded-lg shadow mb-6 md:mb-8">
+            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800">Active Promo Codes</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Remaining Uses
+                    </th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {promoList.map((promo) => (
+                    <tr key={promo.id} className={promo.remaining_uses === 0 ? 'bg-gray-50' : ''}>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-mono font-bold text-gray-900">{promo.code.toUpperCase()}</span>
+                      </td>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-bold text-blue-600">{promo.remaining_uses}</span>
+                          {promo.remaining_uses > 0 && (
+                            <span className="text-xs text-gray-500">remaining</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          promo.remaining_uses > 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {promo.remaining_uses > 0 ? 'Active' : 'Depleted'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
