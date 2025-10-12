@@ -58,7 +58,16 @@ function DetailPage() {
           >
             ← Back to Map / กลับไปที่แผนที่
           </button>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{name}</h1>
+          <a 
+            href={`https://www.google.com/maps/search/?api=1&query=${listings[0]?.latitude},${listings[0]?.longitude}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block hover:text-blue-600 transition-colors"
+          >
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 hover:underline cursor-pointer">
+              {name} 📍
+            </h1>
+          </a>
           <p className="text-gray-600 text-sm md:text-base">
             {listings.length} available unit{listings.length > 1 ? 's' : ''} / {listings.length} ห้องว่าง
           </p>
