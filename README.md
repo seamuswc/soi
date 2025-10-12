@@ -1,180 +1,35 @@
 # SOI Pattaya — Minimal Deploy
 
-## 🚀 One-command deploy (recommended)
+## 🚀 Deployment Options
+
+### 1. **Deploy Local** (Recommended - Fastest!)
+Build on your local machine, deploy to server:
+```bash
+./deploy-local.sh root@soipattaya.com
+```
+*Builds locally (fastest!) + complete server setup + SSL*
+
+### 2. **One-Liner Deploy** (Fresh Server)
 ```bash
 curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
 ```
-*Includes automatic SSL certificate setup with Let's Encrypt*
-*Automatically adds swap space if server has < 3GB RAM*
+*Complete automated setup on fresh server + SSL*
 
-## 🖥️ Deploy from your local machine (full setup)
-Build on your fast local machine, deploy everything to a fresh server:
+### 3. **Pre-Built Deploy** (Update Existing)
 ```bash
-./deploy-local.sh root@your-server.com
-```
-*Builds locally (much faster!) + handles complete server setup + SSL + deployment*
-*Best for initial deployment or when you have a fast local machine*
-
-## ⚡ Fast deployment (pre-built, no timeouts)
-If the build times out or your server is low on resources:
-```bash
-# Build locally, deploy pre-built files (much faster!)
 ./deploy-prebuilt.sh
 ```
-*Requires SSH access to your server*
+*Quick updates with pre-built files*
 
-## 🧰 Manual deploy on a fresh server
-```bash
-git clone https://github.com/seamuswc/soipattaya_JS.git
-cd soipattaya_JS
-sudo ./deploy.sh
-```
-
-## ⚙️ System Requirements
-- **Minimum RAM**: 1GB (swap will be added automatically)
-- **Recommended RAM**: 2GB+
-- **Build Memory**: 4GB (uses swap if needed)
-- **Disk Space**: 2GB free
-
-
-## After Setup
-```bash
-pm2 status              # Check if running
-pm2 logs soipattaya     # View logs
-pm2 restart soipattaya  # Restart app
-pm2 stop soipattaya     # Stop app
-pm2 start soipattaya    # Start app
-```
-
-## Update to latest code
-
-cd /var/www/soipattaya 
-git pull
-npm run update
-
-## 🛡️ Safe Updates (Recommended)
+## ⚙️ Management Tools
 
 ```bash
-# Safe update with maintenance mode (no user interruption)
-npm run safe-update
-
-# Manual maintenance control
-npm run maintenance on     # Enable maintenance mode
-npm run update            # Run update safely  
-npm run maintenance off   # Restore site
-npm run maintenance status # Check status
+npm run merchant     # Set crypto payment addresses (Solana)
+npm run line         # Set LINE account for Thai Baht payments
+npm run promo        # Generate promo codes
 ```
 
-## 🎟️ Promo Code Management
+---
 
-```bash
-# Set promo code and usage limit
-npm run promo "WELCOME20" 100
-
-# Check promo usage statistics
-npm run check-promo
-```
-
-## 💰 Crypto Merchant Address Management
-
-```bash
-# Interactive tool to set/update merchant addresses
-npm run merchant
-
-# Supports: Solana, Aptos, Sui, Base
-# Updates addresses in .env file for receiving payments
-```
-
-## 📱 LINE Account Management
-
-```bash
-# Set or update LINE account for Thai Baht payments
-npm run line
-
-# Updates LINE_ACCOUNT in .env file
-# Used for ScanPay bank transfers via LINE chat
-```
-
-### Thai Baht Payment Flow (ScanPay + Promo Code)
-
-1. **Customer clicks "Thai Baht" payment** → Opens LINE chat
-2. **Customer pays via ScanPay** (Thai bank transfer) and sends proof
-3. **Admin verifies payment** received in bank
-4. **Admin generates promo code** in dashboard (1-use, auto-generated)
-5. **Admin sends promo code** to customer via LINE
-6. **Customer enters promo code** on listing form
-7. **Listing created automatically** (no payment check needed)
-
-## 🛠️ Available NPM Commands
-
-```bash
-npm run setup           # Initial environment setup wizard
-npm run merchant        # Update crypto merchant addresses
-npm run line            # Set LINE account for THB payments
-npm run promo           # Set promo code and usage limit
-npm run check-promo     # Check promo code statistics
-npm run maintenance     # Toggle maintenance mode (on/off/status)
-npm run dev             # Start development servers (client + server)
-npm run dev:client      # Start only frontend dev server
-npm run dev:server      # Start only backend dev server
-npm run build           # Build both client and server for production
-npm run build:client    # Build only frontend
-npm run build:server    # Build only backend
-npm run start           # Start production server
-npm run deploy          # Deploy to production (requires sudo)
-npm run deploy:one-liner # One-command deploy from GitHub
-npm run update          # Update app with latest code
-npm run safe-update     # Update with automatic maintenance mode
-```
-
-## 🔄 Server Migration
-
-### Quick Migration (Automated)
-
-**On your OLD server:**
-```bash
-cd /var/www/soipattaya
-./migrate-server.sh backup
-```
-
-**Transfer the .tar.gz file to new server, then:**
-
-**On your NEW server:**
-```bash
-git clone https://github.com/seamuswc/soipattaya_JS.git
-cd soipattaya_JS
-./migrate-server.sh restore soipattaya-migration-*.tar.gz
-```
-
-### Manual Migration
-
-If you prefer manual control:
-
-```bash
-# 1. Backup database on old server
-node backup-database.js
-
-# 2. Copy backup files to new server
-scp backups/latest-backup.json user@new-server:/tmp/
-scp .env user@new-server:/tmp/
-
-# 3. On new server - restore everything
-git clone https://github.com/seamuswc/soipattaya_JS.git
-cd soipattaya_JS
-cp /tmp/latest-backup.json backups/
-cp /tmp/.env .env
-npm install && cd server && npm install && cd .. && cd client && npm install && cd ..
-npm run build
-node restore-database.js backups/latest-backup.json
-pm2 start ecosystem.config.js
-```
-
-### What Gets Migrated
-- ✅ All property listings and data
-- ✅ Promo codes and usage tracking  
-- ✅ Environment variables
-- ✅ Database schema and migrations
-- ✅ Application configuration
-
-See `MIGRATION.md` for detailed instructions and troubleshooting.
+**That's it!** Deploy with one command, manage with three. 🚀
 
