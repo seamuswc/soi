@@ -202,13 +202,18 @@ function MapPage() {
                         onCloseClick={() => setSelectedMarker(null)}
                       >
                         <div className="p-2 max-w-xs">
-                          <h3 className="font-bold text-lg mb-2">{buildingName}</h3>
+                          <h3 
+                            onClick={() => navigate(`/${encodeURIComponent(buildingName)}`)}
+                            className="font-bold text-lg mb-2 cursor-pointer hover:text-blue-600 transition"
+                          >
+                            {buildingName}
+                          </h3>
                           <p className="text-sm text-gray-600 mb-3">{buildingListings.length} available unit{buildingListings.length > 1 ? 's' : ''}</p>
                           <div className="space-y-2 max-h-64 overflow-y-auto">
                             {buildingListings.map((listing) => (
                               <div
                                 key={listing.id}
-                                onClick={() => navigate(`/${encodeURIComponent(buildingName)}`)}
+                                onClick={() => navigate(`/listing/${listing.id}`)}
                                 className="border border-gray-200 rounded p-2 hover:bg-blue-50 cursor-pointer transition"
                               >
                                 <p className="font-semibold text-sm">Floor {listing.floor}</p>
