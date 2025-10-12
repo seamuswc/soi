@@ -274,7 +274,13 @@ function DashboardPage() {
                     Status
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Expires In
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created
+                  </th>
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -312,7 +318,20 @@ function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className={listing.is_expired ? 'text-red-600 font-semibold' : ''}>
+                        {getTimeUntilExpiry(listing.expires_at)}
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(listing.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => deleteListing(listing.id)}
+                        className="text-red-600 hover:text-red-800 font-medium"
+                      >
+                        🗑️ Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

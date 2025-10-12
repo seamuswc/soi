@@ -467,6 +467,19 @@ app.post('/api/listings', async (request, reply) => {
   }
 });
 
+// Delete a listing (admin only)
+app.delete('/api/listings/:id', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { id } = request.params as { id: string };
+    await prisma.listing.delete({
+      where: { id: parseInt(id) }
+    });
+    return { success: true, message: 'Listing deleted successfully' };
+  } catch (error) {
+    return reply.code(500).send({ error: 'Failed to delete listing' });
+  }
+});
+
 app.get('/api/listings/:name', async (request) => {
   const { name } = request.params as { name: string };
   const listings = await prisma.listing.findMany({ where: { building_name: name } });

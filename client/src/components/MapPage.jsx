@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import axios from 'axios';
 
 const containerStyle = {
@@ -28,6 +28,7 @@ function MapPage() {
   const [filterTopFloor, setFilterTopFloor] = useState(false);
   const [filterSixMonths, setFilterSixMonths] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
   const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
@@ -164,24 +165,70 @@ function MapPage() {
             zoom={13}
             options={mapOptions}
           >
-            {Object.values(listings).flat()
-              .filter(l => (thaiOnly ? l.thai_only : true))
-              .filter(l => (minSqm ? l.sqm >= Number(minSqm) : true))
-              .filter(l => (maxSqm ? l.sqm <= Number(maxSqm) : true))
-              .filter(l => (minPrice ? l.cost >= Number(minPrice) : true))
-              .filter(l => (maxPrice ? l.cost <= Number(maxPrice) : true))
-              .filter(l => (filterPool ? l.has_pool : true))
-              .filter(l => (filterParking ? l.has_parking : true))
-              .filter(l => (filterTopFloor ? l.is_top_floor : true))
-              .filter(l => (filterSixMonths ? l.six_months : true))
-              .map((l, idx) => (
-                <Marker
-                  key={idx}
-                  position={{ lat: l.latitude, lng: l.longitude }}
-                  title={l.building_name}
-                  onClick={() => navigate(`/${encodeURIComponent(l.building_name)}`)}
-                />
-              ))}
+            {(() => {
+              // Filter listings
+              const filteredListings = Object.values(listings).flat()
+                .filter(l => (thaiOnly ? l.thai_only : true))
+                .filter(l => (minSqm ? l.sqm >= Number(minSqm) : true))
+                .filter(l => (maxSqm ? l.sqm <= Number(maxSqm) : true))
+                .filter(l => (minPrice ? l.cost >= Number(minPrice) : true))
+                .filter(l => (maxPrice ? l.cost <= Number(maxPrice) : true))
+                .filter(l => (filterPool ? l.has_pool : true))
+                .filter(l => (filterParking ? l.has_parking : true))
+                .filter(l => (filterTopFloor ? l.is_top_floor : true))
+                .filter(l => (filterSixMonths ? l.six_months : true));
+
+              // Group by building name
+              const grouped = filteredListings.reduce((acc, listing) => {
+                if (!acc[listing.building_name]) {
+                  acc[listing.building_name] = [];
+                }
+                acc[listing.building_name].push(listing);
+                return acc;
+              }, {});
+
+              return Object.entries(grouped).map(([buildingName, buildingListings]) => {
+                const firstListing = buildingListings[0];
+                return (
+                  <React.Fragment key={buildingName}>
+                    <Marker
+                      position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
+                      title={buildingName}
+                      onClick={() => setSelectedMarker(buildingName)}
+                    />
+                    {selectedMarker === buildingName && (
+                      <InfoWindow
+                        position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
+                        onCloseClick={() => setSelectedMarker(null)}
+                      >
+                        <div className="p-2 max-w-xs">
+                          <h3 className="font-bold text-lg mb-2">{buildingName}</h3>
+                          <p className="text-sm text-gray-600 mb-3">{buildingListings.length} available unit{buildingListings.length > 1 ? 's' : ''}</p>
+                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {buildingListings.map((listing) => (
+                              <div
+                                key={listing.id}
+                                onClick={() => navigate(`/${encodeURIComponent(buildingName)}`)}
+                                className="border border-gray-200 rounded p-2 hover:bg-blue-50 cursor-pointer transition"
+                              >
+                                <p className="font-semibold text-sm">Floor {listing.floor}</p>
+                                <p className="text-xs text-gray-600">{listing.sqm} sqm • {listing.cost.toLocaleString()}฿/mo</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {listing.has_pool && <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">🏊 Pool</span>}
+                                  {listing.has_parking && <span className="text-xs bg-green-100 text-green-700 px-1 rounded">🚗 Parking</span>}
+                                  {listing.is_top_floor && <span className="text-xs bg-purple-100 text-purple-700 px-1 rounded">🏔️ Top Floor</span>}
+                                  {listing.thai_only && <span className="text-xs bg-yellow-100 text-yellow-700 px-1 rounded">🇹🇭 Thai Only</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </React.Fragment>
+                );
+              });
+            })()}
           </GoogleMap>
         </LoadScript>
       )}
