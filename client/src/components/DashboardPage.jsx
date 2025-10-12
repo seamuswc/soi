@@ -124,7 +124,7 @@ function DashboardPage() {
           </p>
           
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-            <div className="flex-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Uses
               </label>
@@ -134,8 +134,8 @@ function DashboardPage() {
                 max="1000"
                 value={maxUses}
                 onChange={(e) => setMaxUses(parseInt(e.target.value) || 1)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                placeholder="Enter number of uses"
+                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                placeholder="10"
               />
               <p className="text-xs text-gray-500 mt-1">How many times this code can be used</p>
             </div>
