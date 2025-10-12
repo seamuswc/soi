@@ -64,7 +64,6 @@ const USDC_DECIMALS = 6;
 const USDC_AMOUNT = 1000000; // 1 USDC with 6 decimals
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
-const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 const app = fastify({ logger: true });
 const prisma = new PrismaClient();
@@ -84,10 +83,70 @@ function getAssociatedTokenAddress(owner: PublicKey, mint: PublicKey): PublicKey
 }
 
 // Helper function to convert number to u64 bytes (little-endian)
-function u64ToBytes(value: number): Buffer {
-  const buffer = Buffer.alloc(8);
-  buffer.writeBigUInt64LE(BigInt(value));
-  return buffer;
+function u64ToLeBytes(value: bigint): Uint8Array {
+  const out = new Uint8Array(8);
+  let n = value;
+  for (let i = 0; i < 8; i++) {
+    out[i] = Number(n & 0xffn);
+    n >>= 8n;
+  }
+  return out;
+}
+
+// Create idempotent ATA instruction (opcode 1)
+function createIdempotentATAInstruction(
+  payer: PublicKey,
+  ataPk: PublicKey,
+  owner: PublicKey,
+  mint: PublicKey
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: ataPk, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: false, isWritable: false },
+      { pubkey: mint, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
+    ],
+    data: new Uint8Array([1]) // CreateIdempotent
+  });
+}
+
+// Transfer checked instruction with reference (opcode 12)
+function transferCheckedInstruction(
+  src: PublicKey,
+  mint: PublicKey,
+  dst: PublicKey,
+  owner: PublicKey,
+  amountUnits: bigint,
+  decimals: number,
+  ref?: PublicKey
+): TransactionInstruction {
+  const data = new Uint8Array(1 + 8 + 1);
+  data[0] = 12; // TransferChecked opcode
+  data.set(u64ToLeBytes(amountUnits), 1);
+  data[9] = decimals;
+
+  const keys = [
+    { pubkey: src, isSigner: false, isWritable: true },
+    { pubkey: mint, isSigner: false, isWritable: false },
+    { pubkey: dst, isSigner: false, isWritable: true },
+    { pubkey: owner, isSigner: true, isWritable: false },
+  ];
+
+  // Add reference as a read-only key if provided
+  if (ref) {
+    keys.push({ pubkey: ref, isSigner: false, isWritable: false });
+  }
+
+  return new TransactionInstruction({
+    programId: TOKEN_PROGRAM_ID,
+    keys,
+    data
+  });
 }
 
 // Validation schemas
@@ -167,51 +226,27 @@ app.post('/api/transaction', async (request, reply) => {
     const recipientAta = getAssociatedTokenAddress(recipientPk, USDC_MINT);
 
     // Convert amount to smallest unit (6 decimals for USDC)
-    const amountInSmallest = Math.floor(amount * 1_000_000);
+    const amountUnits = BigInt(Math.round(amount * 1_000_000));
 
     // Create transaction
     const tx = new Transaction();
-    const { blockhash } = await connection.getLatestBlockhash();
+    const { blockhash } = await connection.getLatestBlockhash({ commitment: 'processed' });
     tx.recentBlockhash = blockhash;
     tx.feePayer = payerPk;
 
-    // 1. Create ATA for recipient if needed (instruction opcode: 1)
-    tx.add(
-      new TransactionInstruction({
-        programId: ASSOCIATED_TOKEN_PROGRAM_ID,
-        keys: [
-          { pubkey: payerPk, isSigner: true, isWritable: true },
-          { pubkey: recipientAta, isSigner: false, isWritable: true },
-          { pubkey: recipientPk, isSigner: false, isWritable: false },
-          { pubkey: USDC_MINT, isSigner: false, isWritable: false },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-          { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false }
-        ],
-        data: Buffer.from([1])
-      })
-    );
+    // 1. Create ATA for recipient if needed (idempotent)
+    tx.add(createIdempotentATAInstruction(payerPk, recipientAta, recipientPk, USDC_MINT));
 
-    // 2. Transfer USDC tokens (instruction opcode: 3)
-    tx.add(
-      new TransactionInstruction({
-        programId: TOKEN_PROGRAM_ID,
-        keys: [
-          { pubkey: payerAta, isSigner: false, isWritable: true },
-          { pubkey: recipientAta, isSigner: false, isWritable: true },
-          { pubkey: payerPk, isSigner: true, isWritable: false }
-        ],
-        data: Buffer.concat([Buffer.from([3]), u64ToBytes(amountInSmallest)])
-      })
-    );
-
-    // 3. Add memo with reference (this allows us to track the payment)
-    tx.add(
-      new TransactionInstruction({
-        programId: MEMO_PROGRAM_ID,
-        keys: [{ pubkey: referencePk, isSigner: false, isWritable: false }],
-        data: Buffer.from('soiPattaya Payment', 'utf8')
-      })
-    );
+    // 2. Transfer USDC with reference included as a key (this is how wallets detect payments!)
+    tx.add(transferCheckedInstruction(
+      payerAta,       // source
+      USDC_MINT,      // mint
+      recipientAta,   // destination
+      payerPk,        // owner
+      amountUnits,    // amount
+      6,              // USDC decimals
+      referencePk     // reference key (THIS is what makes QR scanning work!)
+    ));
 
     // Serialize transaction (without signatures)
     const serialized = tx.serialize({
