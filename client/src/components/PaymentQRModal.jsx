@@ -70,9 +70,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           setLoading(false);
         }
 
-        // Step 3: Poll for payment confirmation
-        for (let i = 0; i < 60; i++) {
-          await new Promise(r => setTimeout(r, 2000));
+        // Step 3: Poll for payment confirmation (5 second intervals to avoid rate limits)
+        for (let i = 0; i < 40; i++) {
+          await new Promise(r => setTimeout(r, 5000));
           try {
             const r = await axios.get(`/api/payment/check/solana/${reference}`);
             if (r.data?.confirmed) {
