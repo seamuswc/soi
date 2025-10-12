@@ -222,7 +222,7 @@ function MapPage() {
                                   {listing.has_pool && <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">🏊 Pool</span>}
                                   {listing.has_parking && <span className="text-xs bg-green-100 text-green-700 px-1 rounded">🚗 Parking</span>}
                                   {listing.is_top_floor && <span className="text-xs bg-purple-100 text-purple-700 px-1 rounded">🏔️ Top Floor</span>}
-                                  {listing.thai_only && <span className="text-xs bg-yellow-100 text-yellow-700 px-1 rounded">🇹🇭 Thai Only</span>}
+                                  {listing.thai_only && <span className="text-xs bg-yellow-100 text-yellow-700 px-1 rounded">🇹🇭</span>}
                                 </div>
                               </div>
                             ))}
