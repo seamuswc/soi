@@ -9,8 +9,8 @@ const containerStyle = {
 };
 
 const center = {
-  lat: 12.934053, // Pattaya center
-  lng: 100.882455
+  lat: 12.9236, // Pattaya center
+  lng: 100.8825
 };
 
 function MapPage() {
@@ -162,7 +162,7 @@ function MapPage() {
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}
-            zoom={13}
+            zoom={14}
             options={mapOptions}
           >
             {(() => {
@@ -195,6 +195,14 @@ function MapPage() {
                       position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
                       title={buildingName}
                       onClick={() => setSelectedMarker(buildingName)}
+                      icon={{
+                        path: 'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2z',
+                        fillColor: '#dc2626',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 0.8
+                      }}
                     />
                     {selectedMarker === buildingName && (
                       <InfoWindow
