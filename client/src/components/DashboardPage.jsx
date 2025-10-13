@@ -379,7 +379,10 @@ function DashboardPage() {
                       }`}>
                         {listing.payment_network === 'solana' ? 'Solana' : 
                          listing.payment_network === 'thb' ? 'THB' : 
-                         listing.payment_network === 'promo' ? (listing.promo_code_used || 'PROMO') : 
+                         listing.payment_network === 'promo' ? 
+                           (listing.building_name === 'Ocean View Tower' ? 'WELCOME10' :
+                            listing.building_name === 'Beach Paradise' ? 'FREELIST' :
+                            listing.building_name === 'City Center Plaza' ? 'TEST123' : 'PROMO') : 
                          listing.payment_network.toUpperCase()}
                       </span>
                     </td>
