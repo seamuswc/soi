@@ -206,7 +206,7 @@ function MapPage() {
                 .filter(l => (filterParking ? l.has_parking : true))
                 .filter(l => (filterTopFloor ? l.is_top_floor : true))
                 .filter(l => (filterSixMonths ? l.six_months : true))
-                .filter(l => (showBusiness ? l.rental_type === 'business' : l.rental_type !== 'business'));
+                .filter(l => (showBusiness ? l.rental_type === 'business' : l.rental_type === 'living'));
 
               // Group by building name
               const grouped = filteredListings.reduce((acc, listing) => {
