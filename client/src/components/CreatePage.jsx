@@ -68,23 +68,24 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
-    // Validate form first before any payment method
-    if (!validateForm()) {
-      return;
-    }
-    
-    // If promo code is provided, submit directly without payment
+    // If promo code is provided, validate and submit directly without payment
     if (formData.promo_code) {
+      if (!validateForm()) {
+        return;
+      }
       handleSubmit();
       return;
     }
     
     if (formData.payment_network === 'thb') {
-      // Just open LINE chat for discussion - no pre-filled message
+      // LINE payment - no validation needed, just open chat for discussion
       const lineAccount = merchantAddresses.lineAccount || '@soipattaya';
       window.open(`https://line.me/R/ti/p/${lineAccount}`, '_blank');
     } else {
-      // Show Solana Pay QR modal
+      // Solana payment - validate form first before showing QR
+      if (!validateForm()) {
+        return;
+      }
       setShowQRModal(true);
     }
   };
