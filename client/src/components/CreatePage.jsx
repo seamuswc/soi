@@ -138,7 +138,6 @@ function CreatePage() {
       });
 
       if (response.ok) {
-        alert('Listing created successfully!');
         window.location.href = '/';
       } else {
         const error = await response.json();
