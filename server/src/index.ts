@@ -440,7 +440,7 @@ app.post('/api/listings', async (request, reply) => {
         });
         
         // Promo accepted: skip payment validation
-        isValid = true;
+        // Note: isValid will be set to true after transaction
       }
 
       const listing = await tx.listing.create({
@@ -468,6 +468,11 @@ app.post('/api/listings', async (request, reply) => {
 
       return listing;
     });
+
+    // If promo code was used, mark as valid
+    if (data.promo_code) {
+      isValid = true;
+    }
 
     return result;
   } catch (error: any) {
