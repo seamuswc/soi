@@ -87,16 +87,28 @@ function DetailPage() {
                   isExpired ? 'opacity-60' : ''
                 }`}
               >
-                {/* Video */}
+                {/* Video or Business Photo */}
                 <div className="relative aspect-video bg-gray-900">
-                  <iframe 
-                    className="w-full h-full"
-                    src={listing.youtube_link.replace('watch?v=', 'embed/')} 
-                    title={`${name} - Floor ${listing.floor}`}
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  />
+                  {listing.rental_type === 'business' && listing.business_photo ? (
+                    <img 
+                      src={listing.business_photo} 
+                      alt={`${name} - Business Space`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : listing.youtube_link ? (
+                    <iframe 
+                      className="w-full h-full"
+                      src={listing.youtube_link.replace('watch?v=', 'embed/')} 
+                      title={`${name} - Floor ${listing.floor}`}
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <p className="text-gray-500">No media available</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}

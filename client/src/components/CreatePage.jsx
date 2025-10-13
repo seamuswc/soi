@@ -88,10 +88,10 @@ function CreatePage() {
           cost: parseInt(formData.cost) || 0,
           coordinates: `${formData.latitude}, ${formData.longitude}`,
           rental_type: rentalType,
-          // Set default values for business rentals
+          // Set appropriate values for business rentals
           building_name: rentalType === 'business' ? 'Business Space' : formData.building_name,
           floor: rentalType === 'business' ? 'N/A' : formData.floor,
-          youtube_link: rentalType === 'business' ? 'https://example.com' : formData.youtube_link,
+          youtube_link: rentalType === 'business' ? '' : formData.youtube_link,
         }),
       });
 
