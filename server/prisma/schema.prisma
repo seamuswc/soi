@@ -21,6 +21,7 @@ model Listing {
   payment_network String   @default("solana") // Allowed values: 'solana' or 'thb'
   rental_type     String   @default("living") // Allowed values: 'living' or 'business'
   business_photo  String?  // Base64 encoded image for business listings
+  promo_code_used String?  // The actual promo code used for this listing
   thai_only       Boolean  @default(false)
   has_pool        Boolean  @default(false)
   has_parking     Boolean  @default(false)

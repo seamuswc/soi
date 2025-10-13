@@ -378,8 +378,8 @@ function DashboardPage() {
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {listing.payment_network === 'solana' ? 'Solana' : 
-                         listing.payment_network === 'thb' ? 'Thai Baht' : 
-                         listing.payment_network === 'promo' ? 'Promo Code' : 
+                         listing.payment_network === 'thb' ? 'THB' : 
+                         listing.payment_network === 'promo' ? (listing.promo_code_used || 'PROMO') : 
                          listing.payment_network.toUpperCase()}
                       </span>
                     </td>
