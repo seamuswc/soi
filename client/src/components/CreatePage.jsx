@@ -59,6 +59,12 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
+    // If promo code is provided, submit directly without payment
+    if (formData.promo_code) {
+      handleSubmit();
+      return;
+    }
+    
     if (formData.payment_network === 'thb') {
       // Just open LINE chat for discussion - no pre-filled message
       const lineAccount = merchantAddresses.lineAccount || '@soipattaya';
@@ -371,14 +377,25 @@ function CreatePage() {
               </h2>
               
               <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 md:p-6 rounded-xl border border-yellow-200">
-                <input
-                  type="text"
-                  name="promo_code"
-                  value={formData.promo_code}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                  placeholder="Enter promo code to list for free"
-                />
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    name="promo_code"
+                    value={formData.promo_code}
+                    onChange={handleChange}
+                    className="flex-1 px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    placeholder="Enter promo code to list for free"
+                  />
+                  {formData.promo_code && (
+                    <button
+                      type="button"
+                      onClick={() => handlePayment()}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg whitespace-nowrap"
+                    >
+                      🎟️ Pay with Promo
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-gray-600 mt-2">
                   Have a promo code? Enter it to skip payment
                 </p>
@@ -445,19 +462,7 @@ function CreatePage() {
                   </div>
 
                   {/* Payment Button */}
-                  <div className="mt-6 space-y-3">
-                    {/* Promo Code Button */}
-                    {formData.promo_code && (
-                      <button
-                        type="button"
-                        onClick={handlePayment}
-                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
-                      >
-                        🎟️ Pay with Promo Code
-                      </button>
-                    )}
-                    
-                    {/* Regular Payment Button */}
+                  <div className="mt-6">
                     <button
                       type="button"
                       onClick={handlePayment}
