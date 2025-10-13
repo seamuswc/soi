@@ -27,6 +27,7 @@ function MapPage() {
   const [filterParking, setFilterParking] = useState(false);
   const [filterTopFloor, setFilterTopFloor] = useState(false);
   const [filterSixMonths, setFilterSixMonths] = useState(false);
+  const [showBusiness, setShowBusiness] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [mapError, setMapError] = useState(false);
@@ -42,6 +43,7 @@ function MapPage() {
     setFilterPool(searchParams.get('pool') === '1');
     setFilterParking(searchParams.get('parking') === '1');
     setFilterTopFloor(searchParams.get('top') === '1');
+    setShowBusiness(searchParams.get('business') === '1');
     setMinSqm(searchParams.get('minSqm') || '');
     setMaxSqm(searchParams.get('maxSqm') || '');
     setMinPrice(searchParams.get('min') || '');
@@ -56,12 +58,13 @@ function MapPage() {
     if (filterPool) params.set('pool', '1');
     if (filterParking) params.set('parking', '1');
     if (filterTopFloor) params.set('top', '1');
+    if (showBusiness) params.set('business', '1');
     if (minSqm) params.set('minSqm', String(minSqm));
     if (maxSqm) params.set('maxSqm', String(maxSqm));
     if (minPrice) params.set('min', String(minPrice));
     if (maxPrice) params.set('max', String(maxPrice));
     setSearchParams(params);
-  }, [thaiOnly, filterPool, filterParking, filterTopFloor, minSqm, maxSqm, minPrice, maxPrice, setSearchParams]);
+  }, [thaiOnly, filterPool, filterParking, filterTopFloor, showBusiness, minSqm, maxSqm, minPrice, maxPrice, setSearchParams]);
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -118,10 +121,11 @@ function MapPage() {
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterSixMonths} onChange={e => setFilterSixMonths(e.target.checked)} /> 6-month rental</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ไทยช่วยไทย</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={showBusiness} onChange={e => setShowBusiness(e.target.checked)} /> 🏢 Business / ธุรกิจ</label>
           </div>
           <button
             className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
-            onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); }}
+            onClick={() => { setMinSqm(''); setMaxSqm(''); setMinPrice(''); setMaxPrice(''); setFilterPool(false); setFilterParking(false); setFilterTopFloor(false); setThaiOnly(false); setShowBusiness(false); }}
           >
             Clear / ล้าง
           </button>

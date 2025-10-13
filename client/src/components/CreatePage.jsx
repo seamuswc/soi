@@ -4,6 +4,8 @@ import PaymentQRModal from './PaymentQRModal';
 import { Keypair } from '@solana/web3.js';
 
 function CreatePage() {
+  const [rentalType, setRentalType] = useState('living'); // 'living' or 'business'
+  
   const [formData, setFormData] = useState({
     building_name: '',
     coordinates: '',
@@ -89,6 +91,35 @@ function CreatePage() {
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-12">
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          {/* Rental Type Selector */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Rental Type / ประเภทการเช่า
+            </label>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setRentalType('living')}
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
+                  rentalType === 'living' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🏠 Living Rental / เช่าที่อยู่อาศัย
+              </button>
+              <button
+                onClick={() => setRentalType('business')}
+                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
+                  rentalType === 'business' 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                🏢 Business Rental / เช่าทำธุรกิจ
+              </button>
+            </div>
+          </div>
+          
           <form onSubmit={(e) => e.preventDefault()}>
             {/* Property Details Section */}
             <div className="mb-6 md:mb-8">
@@ -129,52 +160,86 @@ function CreatePage() {
                   <p className="text-xs text-gray-500 mt-1">Get coordinates from Google Maps</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Floor / ชั้น *
-                    </label>
-                    <input
-                      type="text"
-                      name="floor"
-                      value={formData.floor}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 5"
-                      required
-                    />
-                  </div>
+                {rentalType === 'living' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Floor / ชั้น *
+                      </label>
+                      <input
+                        type="text"
+                        name="floor"
+                        value={formData.floor}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 5"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Size (sqm) / ขนาด *
-                    </label>
-                    <input
-                      type="number"
-                      name="sqm"
-                      value={formData.sqm}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 45"
-                      required
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Size (sqm) / ขนาด *
+                      </label>
+                      <input
+                        type="number"
+                        name="sqm"
+                        value={formData.sqm}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 45"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price (Baht) / ราคา *
-                    </label>
-                    <input
-                      type="number"
-                      name="cost"
-                      value={formData.cost}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 8000"
-                      required
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Price (Baht) / ราคา *
+                      </label>
+                      <input
+                        type="number"
+                        name="cost"
+                        value={formData.cost}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 8000"
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Size (sqm) / ขนาด *
+                      </label>
+                      <input
+                        type="number"
+                        name="sqm"
+                        value={formData.sqm}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="e.g., 45"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Price (Baht) / ราคา *
+                      </label>
+                      <input
+                        type="number"
+                        name="cost"
+                        value={formData.cost}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="e.g., 8000"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -191,20 +256,48 @@ function CreatePage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    YouTube Video Link / ลิงก์วิดีโอ YouTube *
-                  </label>
-                  <input
-                    type="url"
-                    name="youtube_link"
-                    value={formData.youtube_link}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    required
-                  />
-                </div>
+                {rentalType === 'living' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      YouTube Video Link / ลิงก์วิดีโอ YouTube *
+                    </label>
+                    <input
+                      type="url"
+                      name="youtube_link"
+                      value={formData.youtube_link}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      required
+                    />
+                  </div>
+                )}
+
+                {rentalType === 'business' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Business Photo / รูปภาพธุรกิจ *
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          // Convert to base64 for now, in production you'd upload to server
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            setFormData(prev => ({ ...prev, business_photo: e.target.result }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Upload a photo of your business space</p>
+                  </div>
+                )}
 
                 {/* Property Features */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
