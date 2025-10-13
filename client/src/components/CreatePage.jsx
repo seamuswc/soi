@@ -301,63 +301,65 @@ function CreatePage() {
                   </div>
                 )}
 
-                {/* Property Features */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="has_pool"
-                      checked={formData.has_pool}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>Pool / สระว่ายน้ำ</span>
-                  </label>
+                {/* Property Features - Only for Living Rental */}
+                {rentalType === 'living' && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="has_pool"
+                        checked={formData.has_pool}
+                        onChange={handleChange}
+                        className="h-4 w-4"
+                      />
+                      <span>Pool / สระว่ายน้ำ</span>
+                    </label>
 
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="has_parking"
-                      checked={formData.has_parking}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>Parking / ที่จอดรถ</span>
-                  </label>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="has_parking"
+                        checked={formData.has_parking}
+                        onChange={handleChange}
+                        className="h-4 w-4"
+                      />
+                      <span>Parking / ที่จอดรถ</span>
+                    </label>
 
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="is_top_floor"
-                      checked={formData.is_top_floor}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>Top floor / ชั้นบนสุด</span>
-                  </label>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="is_top_floor"
+                        checked={formData.is_top_floor}
+                        onChange={handleChange}
+                        className="h-4 w-4"
+                      />
+                      <span>Top floor / ชั้นบนสุด</span>
+                    </label>
 
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="six_months"
-                      checked={formData.six_months}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>6-month rental</span>
-                  </label>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="six_months"
+                        checked={formData.six_months}
+                        onChange={handleChange}
+                        className="h-4 w-4"
+                      />
+                      <span>6-month rental</span>
+                    </label>
 
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="thai_only"
-                      checked={formData.thai_only}
-                      onChange={handleChange}
-                      className="h-4 w-4"
-                    />
-                    <span>ไทยช่วยไทย</span>
-                  </label>
-                </div>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="thai_only"
+                        checked={formData.thai_only}
+                        onChange={handleChange}
+                        className="h-4 w-4"
+                      />
+                      <span>ไทยช่วยไทย</span>
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
 
