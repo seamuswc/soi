@@ -75,6 +75,39 @@ function CreatePage() {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          sqm: parseInt(formData.sqm) || 0,
+          cost: parseInt(formData.cost) || 0,
+          coordinates: `${formData.latitude}, ${formData.longitude}`,
+          rental_type: rentalType,
+          // Set default values for business rentals
+          building_name: rentalType === 'business' ? 'Business Space' : formData.building_name,
+          floor: rentalType === 'business' ? 'N/A' : formData.floor,
+          youtube_link: rentalType === 'business' ? 'https://example.com' : formData.youtube_link,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Listing created successfully!');
+        window.location.href = '/';
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || 'Failed to create listing'}`);
+      }
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      alert('Error creating listing. Please try again.');
+    }
+  };
+
   const handlePaymentSuccess = () => {
     setShowQRModal(false);
     // Redirect to home after successful payment and listing creation
