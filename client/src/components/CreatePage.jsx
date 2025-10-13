@@ -130,6 +130,8 @@ function CreatePage() {
           building_name: rentalType === 'business' ? 'Business Space' : formData.building_name,
           floor: rentalType === 'business' ? 'N/A' : formData.floor,
           youtube_link: rentalType === 'business' ? '' : formData.youtube_link,
+          // Include promo code if provided
+          promo_code: formData.promo_code || undefined,
         }),
       });
 
