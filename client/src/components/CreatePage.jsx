@@ -30,6 +30,7 @@ function CreatePage() {
   });
 
   const [showQRModal, setShowQRModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -56,6 +57,14 @@ function CreatePage() {
       ...prev, 
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handlePayment = () => {
@@ -75,7 +84,36 @@ function CreatePage() {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+    
+    // Required fields for both rental types
+    if (!formData.coordinates.trim()) errors.coordinates = 'Coordinates are required';
+    if (!formData.sqm || formData.sqm <= 0) errors.sqm = 'Size is required';
+    if (!formData.cost || formData.cost <= 0) errors.cost = 'Price is required';
+    if (!formData.description.trim()) errors.description = 'Description is required';
+    
+    // Living rental specific requirements
+    if (rentalType === 'living') {
+      if (!formData.building_name.trim()) errors.building_name = 'Building name is required';
+      if (!formData.floor.trim()) errors.floor = 'Floor is required';
+      if (!formData.youtube_link.trim()) errors.youtube_link = 'YouTube link is required';
+    }
+    
+    // Business rental specific requirements
+    if (rentalType === 'business') {
+      if (!formData.business_photo) errors.business_photo = 'Business photo is required';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
       const response = await fetch('/api/listings', {
         method: 'POST',
@@ -178,10 +216,17 @@ function CreatePage() {
                       name="building_name"
                       value={formData.building_name}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        validationErrors.building_name 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
                       placeholder="e.g., View Talay 1"
                       required
                     />
+                    {validationErrors.building_name && (
+                      <p className="text-xs text-red-500 mt-1">{validationErrors.building_name}</p>
+                    )}
                   </div>
                 )}
 
@@ -194,11 +239,20 @@ function CreatePage() {
                     name="coordinates"
                     value={formData.coordinates}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                      validationErrors.coordinates 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                     placeholder="e.g., 12.9236, 100.8825"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">Get coordinates from Google Maps</p>
+                  {validationErrors.coordinates && (
+                    <p className="text-xs text-red-500 mt-1">{validationErrors.coordinates}</p>
+                  )}
+                  {!validationErrors.coordinates && (
+                    <p className="text-xs text-gray-500 mt-1">Get coordinates from Google Maps</p>
+                  )}
                 </div>
 
                 {rentalType === 'living' ? (
@@ -212,10 +266,17 @@ function CreatePage() {
                         name="floor"
                         value={formData.floor}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                          validationErrors.floor 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                         placeholder="e.g., 5"
                         required
                       />
+                      {validationErrors.floor && (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.floor}</p>
+                      )}
                     </div>
 
                     <div>
@@ -227,10 +288,17 @@ function CreatePage() {
                         name="sqm"
                         value={formData.sqm}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                          validationErrors.sqm 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                         placeholder="e.g., 45"
                         required
                       />
+                      {validationErrors.sqm && (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.sqm}</p>
+                      )}
                     </div>
 
                     <div>
@@ -242,10 +310,17 @@ function CreatePage() {
                         name="cost"
                         value={formData.cost}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                          validationErrors.cost 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                         placeholder="e.g., 8000"
                         required
                       />
+                      {validationErrors.cost && (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.cost}</p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -259,10 +334,17 @@ function CreatePage() {
                         name="sqm"
                         value={formData.sqm}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                          validationErrors.sqm 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 focus:ring-green-500'
+                        }`}
                         placeholder="e.g., 45"
                         required
                       />
+                      {validationErrors.sqm && (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.sqm}</p>
+                      )}
                     </div>
 
                     <div>
@@ -274,10 +356,17 @@ function CreatePage() {
                         name="cost"
                         value={formData.cost}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                          validationErrors.cost 
+                            ? 'border-red-500 focus:ring-red-500' 
+                            : 'border-gray-300 focus:ring-green-500'
+                        }`}
                         placeholder="e.g., 8000"
                         required
                       />
+                      {validationErrors.cost && (
+                        <p className="text-xs text-red-500 mt-1">{validationErrors.cost}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -291,10 +380,17 @@ function CreatePage() {
                     value={formData.description}
                     onChange={handleChange}
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                      validationErrors.description 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                     placeholder="Describe your property..."
                     required
                   />
+                  {validationErrors.description && (
+                    <p className="text-xs text-red-500 mt-1">{validationErrors.description}</p>
+                  )}
                 </div>
 
                 {rentalType === 'living' && (
@@ -307,10 +403,17 @@ function CreatePage() {
                       name="youtube_link"
                       value={formData.youtube_link}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        validationErrors.youtube_link 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
                       placeholder="https://www.youtube.com/watch?v=..."
                       required
                     />
+                    {validationErrors.youtube_link && (
+                      <p className="text-xs text-red-500 mt-1">{validationErrors.youtube_link}</p>
+                    )}
                   </div>
                 )}
 
@@ -333,10 +436,19 @@ function CreatePage() {
                           reader.readAsDataURL(file);
                         }
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        validationErrors.business_photo 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-green-500'
+                      }`}
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Upload a photo of your business space</p>
+                    {validationErrors.business_photo && (
+                      <p className="text-xs text-red-500 mt-1">{validationErrors.business_photo}</p>
+                    )}
+                    {!validationErrors.business_photo && (
+                      <p className="text-xs text-gray-500 mt-1">Upload a photo of your business space</p>
+                    )}
                   </div>
                 )}
 
