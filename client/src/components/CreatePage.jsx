@@ -68,6 +68,11 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
+    // Validate form first before any payment method
+    if (!validateForm()) {
+      return;
+    }
+    
     // If promo code is provided, submit directly without payment
     if (formData.promo_code) {
       handleSubmit();
@@ -110,10 +115,6 @@ function CreatePage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
     try {
       const response = await fetch('/api/listings', {
         method: 'POST',
