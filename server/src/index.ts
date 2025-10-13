@@ -472,6 +472,22 @@ app.post('/api/listings', async (request, reply) => {
   }
 });
 
+// Delete a promo code (admin only)
+app.delete('/api/promo/:id', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { id } = request.params as { id: string };
+    
+    await prisma.promo.delete({
+      where: { id: parseInt(id) }
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    app.log.error('Error deleting promo code:', error);
+    return reply.code(500).send({ error: 'Failed to delete promo code' });
+  }
+});
+
 // Delete a listing (admin only)
 app.delete('/api/listings/:id', { preHandler: authenticateToken }, async (request, reply) => {
   try {

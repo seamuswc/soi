@@ -83,6 +83,27 @@ function DashboardPage() {
     alert('✅ Promo code copied to clipboard!');
   };
 
+  const deletePromoCode = async (promoId) => {
+    if (!window.confirm('Are you sure you want to delete this promo code?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/promo/${promoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Refresh promo list
+      const response = await axios.get('/api/promo/list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPromoList(response.data.promos);
+    } catch (error) {
+      console.error('Error deleting promo code:', error);
+      alert('Failed to delete promo code');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -236,6 +257,9 @@ function DashboardPage() {
                     <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -260,6 +284,14 @@ function DashboardPage() {
                         }`}>
                           {promo.remaining_uses > 0 ? 'Active' : 'Depleted'}
                         </span>
+                      </td>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => deletePromoCode(promo.id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          🗑️ Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
