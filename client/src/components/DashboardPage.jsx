@@ -373,12 +373,10 @@ function DashboardPage() {
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         listing.payment_network === 'solana' ? 'bg-purple-100 text-purple-800' :
-                        listing.payment_network === 'thb' ? 'bg-green-100 text-green-800' :
                         listing.payment_network === 'promo' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {listing.payment_network === 'solana' ? 'Solana' : 
-                         listing.payment_network === 'thb' ? 'THB' : 
                          listing.payment_network === 'promo' ? 
                            (listing.building_name === 'Ocean View Tower' ? 'WELCOME10' :
                             listing.building_name === 'Beach Paradise' ? 'FREELIST' :
