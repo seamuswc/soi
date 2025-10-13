@@ -455,7 +455,6 @@ app.post('/api/listings', async (request, reply) => {
         payment_network: data.promo_code ? 'promo' : data.payment_network,
         rental_type: data.rental_type,
         business_photo: data.business_photo,
-        promo_code_used: data.promo_code || null,
         thai_only: data.thai_only ?? false,
         has_pool: data.has_pool ?? false,
         has_parking: data.has_parking ?? false,
