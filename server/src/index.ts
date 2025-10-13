@@ -452,7 +452,7 @@ app.post('/api/listings', async (request, reply) => {
         description: data.description,
         youtube_link: data.youtube_link,
         reference: data.reference,
-        payment_network: data.payment_network,
+        payment_network: data.promo_code ? 'promo' : data.payment_network,
         rental_type: data.rental_type,
         business_photo: data.business_photo,
         thai_only: data.thai_only ?? false,
