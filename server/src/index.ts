@@ -417,67 +417,58 @@ app.post('/api/listings', async (request, reply) => {
     const months = data.six_months ? 6 : 1;
     const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
 
-    // Use database transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx) => {
-      // Promo handling - check database for promo code
-      if (data.promo_code) {
-        const promo = await tx.promo.findUnique({
-          where: { code: data.promo_code.toLowerCase() }
-        });
-        
-        if (!promo) {
-          throw new Error('Invalid promo code');
-        }
-        
-        if (promo.remaining_uses <= 0) {
-          throw new Error('Promo code has been fully used');
-        }
-        
-        // Decrement promo usage
-        await tx.promo.update({ 
-          where: { code: data.promo_code.toLowerCase() }, 
-          data: { remaining_uses: { decrement: 1 } } 
-        });
-        
-        // Promo accepted: skip payment validation
-        // Note: isValid will be set to true after transaction
-      }
-
-      const listing = await tx.listing.create({
-        data: {
-          building_name: data.building_name,
-          latitude: lat,
-          longitude: lng,
-          floor: data.floor,
-          sqm: data.sqm,
-          cost: data.cost,
-          description: data.description,
-          youtube_link: data.youtube_link,
-          reference: data.reference,
-          payment_network: data.payment_network,
-          rental_type: data.rental_type,
-          business_photo: data.business_photo,
-          thai_only: data.thai_only ?? false,
-          has_pool: data.has_pool ?? false,
-          has_parking: data.has_parking ?? false,
-          is_top_floor: data.is_top_floor ?? false,
-          six_months: data.six_months ?? false,
-          expires_at: expiresAt,
-        },
-      });
-
-      return listing;
-    });
-
-    // If promo code was used, mark as valid
+    // Promo handling - check database for promo code
     if (data.promo_code) {
+      const promo = await prisma.promo.findUnique({
+        where: { code: data.promo_code.toLowerCase() }
+      });
+      
+      if (!promo) {
+        return reply.code(400).send({ error: 'Invalid promo code' });
+      }
+      
+      if (promo.remaining_uses <= 0) {
+        return reply.code(400).send({ error: 'Promo code has been fully used' });
+      }
+      
+      // Decrement promo usage
+      await prisma.promo.update({ 
+        where: { code: data.promo_code.toLowerCase() }, 
+        data: { remaining_uses: { decrement: 1 } } 
+      });
+      
+      // Promo accepted: skip payment validation
       isValid = true;
     }
 
-    return result;
+    const listing = await prisma.listing.create({
+      data: {
+        building_name: data.building_name,
+        latitude: lat,
+        longitude: lng,
+        floor: data.floor,
+        sqm: data.sqm,
+        cost: data.cost,
+        description: data.description,
+        youtube_link: data.youtube_link,
+        reference: data.reference,
+        payment_network: data.payment_network,
+        rental_type: data.rental_type,
+        business_photo: data.business_photo,
+        thai_only: data.thai_only ?? false,
+        has_pool: data.has_pool ?? false,
+        has_parking: data.has_parking ?? false,
+        is_top_floor: data.is_top_floor ?? false,
+        six_months: data.six_months ?? false,
+        expires_at: expiresAt,
+      },
+    });
+
+    return listing;
   } catch (error: any) {
     app.log.error('Error creating listing:', error);
-    return reply.code(500).send({ error: 'Internal server error' });
+    console.error('Full error details:', error);
+    return reply.code(500).send({ error: error.message || 'Internal server error' });
   }
 });
 
