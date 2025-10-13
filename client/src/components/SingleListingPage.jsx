@@ -122,18 +122,6 @@ function SingleListingPage() {
               </div>
             </div>
 
-            {/* Payment Network */}
-            <div className="mb-4">
-              <span className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full ${
-                listing.payment_network === 'solana' ? 'bg-purple-100 text-purple-800' :
-                listing.payment_network === 'thb' ? 'bg-green-100 text-green-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {listing.payment_network === 'solana' ? '◎ Solana Pay' : 
-                 listing.payment_network === 'thb' ? '฿ Thai Baht' : 
-                 listing.payment_network.toUpperCase()}
-              </span>
-            </div>
 
             {/* Description */}
             <p className="text-gray-700 mb-4 leading-relaxed">{listing.description}</p>
