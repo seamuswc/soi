@@ -116,12 +116,37 @@ function MapPage() {
             <input className="border rounded px-2 py-1" placeholder="Max THB" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
           </div>
           <div className="space-y-1 text-sm">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => setFilterPool(e.target.checked)} /> Pool / สระว่ายน้ำ</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => setFilterParking(e.target.checked)} /> Parking / ที่จอดรถ</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => setFilterTopFloor(e.target.checked)} /> Top floor / ชั้นบนสุด</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={filterSixMonths} onChange={e => setFilterSixMonths(e.target.checked)} /> 6-month rental</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => setThaiOnly(e.target.checked)} /> ไทยช่วยไทย</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={showBusiness} onChange={e => setShowBusiness(e.target.checked)} /> 🏢 Business / ธุรกิจ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => {
+              setFilterPool(e.target.checked);
+              if (e.target.checked) setShowBusiness(false);
+            }} /> Pool / สระว่ายน้ำ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterParking} onChange={e => {
+              setFilterParking(e.target.checked);
+              if (e.target.checked) setShowBusiness(false);
+            }} /> Parking / ที่จอดรถ</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterTopFloor} onChange={e => {
+              setFilterTopFloor(e.target.checked);
+              if (e.target.checked) setShowBusiness(false);
+            }} /> Top floor / ชั้นบนสุด</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={filterSixMonths} onChange={e => {
+              setFilterSixMonths(e.target.checked);
+              if (e.target.checked) setShowBusiness(false);
+            }} /> 6-month rental</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={thaiOnly} onChange={e => {
+              setThaiOnly(e.target.checked);
+              if (e.target.checked) setShowBusiness(false);
+            }} /> ไทยช่วยไทย</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={showBusiness} onChange={e => {
+              setShowBusiness(e.target.checked);
+              if (e.target.checked) {
+                // Clear all other filters except sqm/price when business is selected
+                setFilterPool(false);
+                setFilterParking(false);
+                setFilterTopFloor(false);
+                setFilterSixMonths(false);
+                setThaiOnly(false);
+              }
+            }} /> 🏢 Business / ธุรกิจ</label>
           </div>
           <button
             className="w-full text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1"
@@ -180,7 +205,8 @@ function MapPage() {
                 .filter(l => (filterPool ? l.has_pool : true))
                 .filter(l => (filterParking ? l.has_parking : true))
                 .filter(l => (filterTopFloor ? l.is_top_floor : true))
-                .filter(l => (filterSixMonths ? l.six_months : true));
+                .filter(l => (filterSixMonths ? l.six_months : true))
+                .filter(l => (showBusiness ? l.rental_type === 'business' : l.rental_type !== 'business'));
 
               // Group by building name
               const grouped = filteredListings.reduce((acc, listing) => {
