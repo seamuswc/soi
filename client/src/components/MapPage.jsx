@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import axios from 'axios';
+import { getDomainConfig } from '../utils/domainConfig';
 
 const containerStyle = {
   width: '100%',
   height: '100vh'
-};
-
-const center = {
-  lat: 12.9236, // Pattaya center
-  lng: 100.8825
 };
 
 function MapPage() {
@@ -31,6 +27,9 @@ function MapPage() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [mapError, setMapError] = useState(false);
+  
+  // Get domain-specific configuration
+  const domainConfig = getDomainConfig();
 
   useEffect(() => {
     axios.get('/api/listings')
@@ -162,7 +161,7 @@ function MapPage() {
       {!apiKey || mapError ? (
         <div className="flex items-center justify-center h-full bg-gray-100 p-4">
           <div className="text-center max-w-md">
-            <h2 className="text-xl md:text-2xl mb-4">soiPattaya - Real Estate Map</h2>
+            <h2 className="text-xl md:text-2xl mb-4">{domainConfig.siteName} - Real Estate Map</h2>
             <p className="mb-4 text-sm md:text-base">Google Maps integration requires an API key</p>
             <div className="bg-yellow-100 p-3 md:p-4 rounded">
               <p className="text-xs md:text-sm">To enable the map:</p>
@@ -190,7 +189,7 @@ function MapPage() {
         >
           <GoogleMap
             mapContainerStyle={containerStyle}
-            center={center}
+            center={domainConfig.center}
             zoom={14}
             options={mapOptions}
           >

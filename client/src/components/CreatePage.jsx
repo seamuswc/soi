@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PaymentQRModal from './PaymentQRModal';
 import { Keypair } from '@solana/web3.js';
+import { getDomainConfig } from '../utils/domainConfig';
 
 function CreatePage() {
   const [rentalType, setRentalType] = useState('living'); // 'living' or 'business'
+  
+  // Get domain-specific configuration
+  const domainConfig = getDomainConfig();
   
   const [formData, setFormData] = useState({
     building_name: '',
@@ -77,12 +81,11 @@ function CreatePage() {
       return;
     }
     
-    if (formData.payment_network === 'thb') {
-      // LINE payment - no validation needed, just open chat for discussion
-      const lineAccount = merchantAddresses.lineAccount || '@soipattaya';
-      window.open(`https://line.me/R/ti/p/${lineAccount}`, '_blank');
+    if (formData.payment_network === 'promo') {
+      // Buy Promo Code with Solana - no form validation needed
+      setShowQRModal(true);
     } else {
-      // Solana payment - validate form first before showing QR
+      // Regular Solana payment - validate form first before showing QR
       if (!validateForm()) {
         return;
       }
@@ -162,7 +165,7 @@ function CreatePage() {
       <div className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <a href="/" className="text-2xl md:text-3xl font-bold text-blue-600 hover:text-blue-800">soiPattaya</a>
+            <a href="/" className="text-2xl md:text-3xl font-bold text-blue-600 hover:text-blue-800">{domainConfig.siteName}</a>
             <a href="/" className="text-blue-600 hover:text-blue-800 font-medium">← Back to Map</a>
           </div>
         </div>
@@ -247,7 +250,7 @@ function CreatePage() {
                         ? 'border-red-500 focus:ring-red-500' 
                         : 'border-gray-300 focus:ring-blue-500'
                     }`}
-                    placeholder="e.g., 12.9236, 100.8825"
+                    placeholder={domainConfig.placeholder}
                     required
                   />
                   {validationErrors.coordinates && (
@@ -586,23 +589,23 @@ function CreatePage() {
                         </div>
                       </label>
 
-                      {/* LINE/THB Option */}
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'thb' ? 'ring-2 ring-green-500' : ''}`}>
+                      {/* Buy Promo Code with Solana Option */}
+                      <label className={`relative cursor-pointer ${formData.payment_network === 'promo' ? 'ring-2 ring-green-500' : ''}`}>
                         <input
                           type="radio"
                           name="payment_network"
-                          value="thb"
-                          checked={formData.payment_network === 'thb'}
+                          value="promo"
+                          checked={formData.payment_network === 'promo'}
                           onChange={handleChange}
                           className="sr-only"
                         />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'thb' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
+                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'promo' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}>
                           <div className="text-center">
-                            <div className="w-8 h-8 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">฿</span>
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">◎</span>
                             </div>
-                            <div className="font-medium text-gray-800">Scan Pay</div>
-                            <div className="text-xs text-gray-500">35 ฿</div>
+                            <div className="font-medium text-gray-800">Buy Promo Code</div>
+                            <div className="text-xs text-gray-500">1 USDC per code</div>
                           </div>
                         </div>
                       </label>
@@ -616,13 +619,8 @@ function CreatePage() {
                       onClick={handlePayment}
                       className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
                     >
-                      {formData.payment_network === 'thb' ? '💬 Open LINE Chat' : '💳 Pay with Solana'}
+                      {formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana'}
                     </button>
-                    {formData.payment_network === 'thb' && (
-                      <p className="text-xs text-gray-600 mt-2 text-center">
-                        Opens LINE chat to discuss payment details
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -633,7 +631,7 @@ function CreatePage() {
       </div>
 
       {/* Payment QR Modal */}
-      {showQRModal && formData.payment_network === 'solana' && (
+      {showQRModal && (formData.payment_network === 'solana' || formData.payment_network === 'promo') && (
         <PaymentQRModal
           network={formData.payment_network}
           amount={1}
