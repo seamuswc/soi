@@ -41,3 +41,13 @@ model Promo {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 }
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String   // Generated password for login
+  payment_reference String @unique // Solana payment reference
+  expires_at   DateTime // 365 days from creation
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}

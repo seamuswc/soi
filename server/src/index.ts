@@ -320,6 +320,154 @@ app.post('/api/auth/login', async (request, reply) => {
   }
 });
 
+// User authentication middleware
+const authenticateUser = async (request: any, reply: any, done: any) => {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return reply.code(401).send({ error: 'Access token required' });
+  }
+
+  try {
+    // Check if it's admin token
+    const adminToken = process.env.ADMIN_TOKEN || 'admin123';
+    if (token === adminToken) {
+      return done();
+    }
+
+    // Check if it's a user token (email:password base64 encoded)
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [email, password] = decoded.split(':');
+    
+    if (!email || !password) {
+      return reply.code(403).send({ error: 'Invalid token format' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user || user.password !== password) {
+      return reply.code(403).send({ error: 'Invalid credentials' });
+    }
+
+    if (user.expires_at < new Date()) {
+      return reply.code(403).send({ error: 'Account expired' });
+    }
+
+    request.user = user;
+    done();
+  } catch (error: any) {
+    return reply.code(403).send({ error: 'Invalid token' });
+  }
+};
+
+// User registration with Solana payment
+app.post('/api/auth/register', async (request, reply) => {
+  try {
+    const { email, reference } = request.body as { email: string, reference: string };
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return reply.code(400).send({ error: 'Invalid email format' });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return reply.code(400).send({ error: 'Email already registered' });
+    }
+
+    // Verify Solana payment (1 USDC)
+    const isValid = await validateSolanaPayment(reference);
+    if (!isValid) {
+      return reply.code(400).send({ error: 'Payment not verified' });
+    }
+
+    // Generate random password
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    // Create user with 365-day expiry
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 365);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password,
+        payment_reference: reference,
+        expires_at: expiresAt
+      }
+    });
+
+    return { 
+      success: true, 
+      email: user.email,
+      password: user.password,
+      expires_at: user.expires_at
+    };
+  } catch (error: any) {
+    app.log.error('Error registering user:', error);
+    return reply.code(500).send({ error: 'Failed to register user' });
+  }
+});
+
+// User login
+app.post('/api/auth/user-login', async (request, reply) => {
+  try {
+    const { email, password } = request.body as { email: string, password: string };
+
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user || user.password !== password) {
+      return reply.code(401).send({ error: 'Invalid credentials' });
+    }
+
+    if (user.expires_at < new Date()) {
+      return reply.code(401).send({ error: 'Account expired' });
+    }
+
+    // Return base64 encoded token (email:password)
+    const token = Buffer.from(`${email}:${password}`).toString('base64');
+    
+    return { 
+      success: true, 
+      token,
+      expires_at: user.expires_at
+    };
+  } catch (error: any) {
+    app.log.error('Error logging in user:', error);
+    return reply.code(500).send({ error: 'Failed to login' });
+  }
+});
+
+// Get city listings count
+app.get('/api/cities/listings', async (request, reply) => {
+  try {
+    const pattayaListings = await prisma.listing.count();
+    const bangkokListings = await prisma.listing.count(); // In real implementation, filter by city
+    
+    return {
+      pattaya: pattayaListings,
+      bangkok: bangkokListings
+    };
+  } catch (error: any) {
+    app.log.error('Error fetching city listings:', error);
+    return reply.code(500).send({ error: 'Failed to fetch city data' });
+  }
+});
+
 // Generate promo code (admin only)
 app.post('/api/promo/generate', { preHandler: authenticateToken }, async (request, reply) => {
   try {
@@ -555,7 +703,7 @@ app.get('/api/listings/:name', async (request) => {
 });
 
 // Analytics data endpoint
-app.get('/api/analytics/data', async (request, reply) => {
+app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request, reply) => {
   try {
     const { area = 'all', period = '6months' } = request.query as { area?: string; period?: string };
     
