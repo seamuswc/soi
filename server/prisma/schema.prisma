@@ -36,6 +36,8 @@ model Promo {
   id             Int      @id @default(autoincrement())
   code           String   @unique
   remaining_uses Int      @default(0)
+  max_listings   Int      @default(1)  // Number of listings this promo code allows
+  email          String?  // Optional email for promo code delivery
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 }

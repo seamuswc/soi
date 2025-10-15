@@ -10,6 +10,12 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [paid, setPaid] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [promoForm, setPromoForm] = useState({
+    max_listings: 1,
+    email: ''
+  });
+  const [generatedPromo, setGeneratedPromo] = useState(null);
 
   // Detect Phantom wallet
   const detectPhantom = () => {
@@ -78,7 +84,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
             if (r.data?.confirmed) {
               setPaid(true);
               setShowQR(false);
-              await submitListing();
+              setShowPromoForm(true);
               return;
             }
           } catch {}
@@ -110,6 +116,29 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       alert('Failed to create listing. Please try again.');
       onClose();
     }
+  };
+
+  const generatePromoCode = async () => {
+    try {
+      const response = await axios.post('/api/promo/generate-after-payment', {
+        reference: reference,
+        max_listings: promoForm.max_listings,
+        email: promoForm.email || null
+      });
+      
+      setGeneratedPromo(response.data);
+    } catch (error) {
+      console.error('Failed to generate promo code:', error);
+      alert('Failed to generate promo code. Please try again.');
+    }
+  };
+
+  const handlePromoFormChange = (e) => {
+    const { name, value } = e.target;
+    setPromoForm(prev => ({
+      ...prev,
+      [name]: name === 'max_listings' ? parseInt(value) || 1 : value
+    }));
   };
 
   return (
@@ -179,12 +208,86 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           </div>
         )}
 
-        {/* Payment confirmed */}
-        {paid && (
+        {/* Payment confirmed - Show promo form */}
+        {paid && showPromoForm && !generatedPromo && (
           <div className="text-center">
             <div className="text-6xl mb-4">✅</div>
-            <p className="text-green-600 font-bold text-xl">Payment Confirmed!</p>
-            <p className="text-sm text-gray-500 mt-2">Creating your listing...</p>
+            <p className="text-green-600 font-bold text-xl mb-4">Payment Confirmed!</p>
+            <p className="text-sm text-gray-500 mb-6">Now configure your promo code:</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Listings
+                </label>
+                <select
+                  name="max_listings"
+                  value={promoForm.max_listings}
+                  onChange={handlePromoFormChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={1}>1 Listing</option>
+                  <option value={2}>2 Listings</option>
+                  <option value={3}>3 Listings</option>
+                  <option value={5}>5 Listings</option>
+                  <option value={10}>10 Listings</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={promoForm.email}
+                  onChange={handlePromoFormChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="your@email.com"
+                />
+                <p className="text-xs text-gray-500 mt-1">We'll send the promo code here</p>
+              </div>
+              
+              <button
+                onClick={generatePromoCode}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+              >
+                🎟️ Generate Promo Code
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Generated promo code */}
+        {generatedPromo && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">🎟️</div>
+            <p className="text-green-600 font-bold text-xl mb-4">Promo Code Generated!</p>
+            
+            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-600 mb-2">Your Promo Code:</p>
+              <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo.code}</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Valid for {generatedPromo.max_listings} listing{generatedPromo.max_listings > 1 ? 's' : ''}
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => navigator.clipboard.writeText(generatedPromo.code)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                📋 Copy Code
+              </button>
+              
+              <button
+                onClick={onClose}
+                className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -10,7 +10,11 @@ function DashboardPage() {
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [generatingPromo, setGeneratingPromo] = useState(false);
   const [maxUses, setMaxUses] = useState(1);
+  const [maxListings, setMaxListings] = useState(1);
+  const [promoEmail, setPromoEmail] = useState('');
   const [promoList, setPromoList] = useState([]);
+  const [emailTestStatus, setEmailTestStatus] = useState(null);
+  const [testingEmail, setTestingEmail] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -60,7 +64,11 @@ function DashboardPage() {
     setGeneratingPromo(true);
     try {
       const response = await axios.post('/api/promo/generate', 
-        { max_uses: maxUses },
+        { 
+          max_uses: maxUses,
+          max_listings: maxListings,
+          email: promoEmail || null
+        },
         { headers: { Authorization: `Bearer ${token}` }}
       );
       setGeneratedPromo(response.data);
@@ -101,6 +109,21 @@ function DashboardPage() {
     } catch (error) {
       console.error('Error deleting promo code:', error);
       alert('Failed to delete promo code');
+    }
+  };
+
+  const testEmailConfiguration = async () => {
+    setTestingEmail(true);
+    try {
+      const response = await axios.get('/api/email/test', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEmailTestStatus(response.data);
+    } catch (error) {
+      console.error('Error testing email configuration:', error);
+      setEmailTestStatus({ valid: false, message: 'Failed to test email configuration' });
+    } finally {
+      setTestingEmail(false);
     }
   };
 
@@ -184,6 +207,43 @@ function DashboardPage() {
           </div>
         </div>
 
+        {/* Email Configuration Test */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl p-6 mb-6 md:mb-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">📧 Email Configuration</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Test your email configuration to ensure promo codes can be sent automatically.
+          </p>
+          
+          <div className="flex items-center gap-4">
+            <button
+              onClick={testEmailConfiguration}
+              disabled={testingEmail}
+              className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-semibold px-6 py-2 rounded-lg transition-colors"
+            >
+              {testingEmail ? 'Testing...' : '🔧 Test Email Config'}
+            </button>
+            
+            {emailTestStatus && (
+              <div className={`flex items-center gap-2 ${
+                emailTestStatus.valid ? 'text-green-600' : 'text-red-600'
+              }`}>
+                <span className="text-2xl">
+                  {emailTestStatus.valid ? '✅' : '❌'}
+                </span>
+                <span className="font-medium">
+                  {emailTestStatus.message}
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {!emailTestStatus && (
+            <p className="text-xs text-gray-500 mt-2">
+              💡 Make sure to configure EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASS in your .env file
+            </p>
+          )}
+        </div>
+
         {/* Promo Code Generator */}
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 mb-6 md:mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4">🎟️ Generate Promo Code</h2>
@@ -191,7 +251,7 @@ function DashboardPage() {
             For customers who paid via ScanPay (Thai Bank Transfer). Generate a promo code and send it via LINE.
           </p>
           
-          <div className="flex items-end gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Uses
@@ -202,14 +262,45 @@ function DashboardPage() {
                 max="1000"
                 value={maxUses}
                 onChange={(e) => setMaxUses(parseInt(e.target.value) || 1)}
-                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                placeholder="10"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                placeholder="1"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Listings per Code
+              </label>
+              <select
+                value={maxListings}
+                onChange={(e) => setMaxListings(parseInt(e.target.value))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              >
+                <option value={1}>1 Listing</option>
+                <option value={2}>2 Listings</option>
+                <option value={3}>3 Listings</option>
+                <option value={5}>5 Listings</option>
+                <option value={10}>10 Listings</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email (Optional)
+              </label>
+              <input
+                type="email"
+                value={promoEmail}
+                onChange={(e) => setPromoEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                placeholder="customer@email.com"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-center">
             <button
               onClick={generatePromoCode}
               disabled={generatingPromo}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg whitespace-nowrap"
+              className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
             >
               {generatingPromo ? 'Generating...' : '+ Generate Code'}
             </button>
@@ -220,9 +311,14 @@ function DashboardPage() {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
                   <p className="text-sm text-gray-600 mb-1">
-                    New Promo Code ({generatedPromo.max_uses} {generatedPromo.max_uses === 1 ? 'use' : 'uses'}):
+                    New Promo Code ({generatedPromo.max_uses} {generatedPromo.max_uses === 1 ? 'use' : 'uses'}, {generatedPromo.max_listings} {generatedPromo.max_listings === 1 ? 'listing' : 'listings'} per use):
                   </p>
                   <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo.code}</p>
+                  {generatedPromo.email && (
+                    <p className="text-xs text-blue-600 mt-1">
+                      📧 {generatedPromo.email_sent ? 'Sent to:' : 'Will be sent to:'} {generatedPromo.email}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={copyPromoCode}
@@ -255,6 +351,12 @@ function DashboardPage() {
                       Remaining Uses
                     </th>
                     <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Listings per Use
+                    </th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -275,6 +377,14 @@ function DashboardPage() {
                             <span className="text-xs text-gray-500">remaining</span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900">{promo.max_listings}</span>
+                      </td>
+                      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-500">
+                          {promo.email || 'No email'}
+                        </span>
                       </td>
                       <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

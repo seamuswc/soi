@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import path from 'path';
 import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
+import { sendPromoCodeEmail, testEmailConfiguration } from './emailService';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -323,8 +324,13 @@ app.post('/api/auth/login', async (request, reply) => {
 // Generate promo code (admin only)
 app.post('/api/promo/generate', { preHandler: authenticateToken }, async (request, reply) => {
   try {
-    const { max_uses } = request.body as { max_uses?: number };
+    const { max_uses, max_listings, email } = request.body as { 
+      max_uses?: number; 
+      max_listings?: number; 
+      email?: string; 
+    };
     const maxUses = max_uses && max_uses > 0 ? max_uses : 1;
+    const maxListings = max_listings && max_listings > 0 ? max_listings : 1;
 
     // Generate random promo code (8 characters, alphanumeric)
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -333,22 +339,138 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
       promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     
-    // Create promo code with specified uses
+    // Create promo code with specified uses and listing count
     const promo = await prisma.promo.create({
       data: {
         code: promoCode.toLowerCase(),
-        remaining_uses: maxUses
+        remaining_uses: maxUses,
+        max_listings: maxListings,
+        email: email || null
       }
     });
+    
+    // Send email if provided
+    if (email) {
+      try {
+        const siteDomain = process.env.SITE_DOMAIN || 'soipattaya.com';
+        await sendPromoCodeEmail(email, promoCode, maxListings, siteDomain);
+        app.log.info(`Promo code email sent to ${email} for code ${promoCode}`);
+      } catch (error: any) {
+        app.log.error('Failed to send promo code email:', error);
+        // Don't fail the request if email sending fails
+      }
+    }
     
     return { 
       code: promoCode,
       remaining_uses: promo.remaining_uses,
-      max_uses: maxUses
+      max_uses: maxUses,
+      max_listings: promo.max_listings,
+      email: promo.email,
+      email_sent: !!email
     };
   } catch (error: any) {
     app.log.error('Error generating promo code:', error);
     return reply.code(500).send({ error: 'Failed to generate promo code' });
+  }
+});
+
+// Generate promo code after Solana payment (public endpoint)
+app.post('/api/promo/generate-after-payment', async (request, reply) => {
+  try {
+    const { reference, max_listings, email } = request.body as { 
+      reference: string; 
+      max_listings?: number; 
+      email?: string; 
+    };
+
+    // Verify Solana payment was made
+    const isValid = await validateSolanaPayment(reference);
+    if (!isValid) {
+      return reply.code(400).send({ error: 'Payment not verified' });
+    }
+
+    const maxListings = max_listings && max_listings > 0 ? max_listings : 1;
+
+    // Generate random promo code (8 characters, alphanumeric)
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let promoCode = '';
+    for (let i = 0; i < 8; i++) {
+      promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    // Create promo code with specified listing count
+    const promo = await prisma.promo.create({
+      data: {
+        code: promoCode.toLowerCase(),
+        remaining_uses: 1, // Single use for payment-generated codes
+        max_listings: maxListings,
+        email: email || null
+      }
+    });
+    
+    // Send email if provided
+    if (email) {
+      try {
+        const siteDomain = process.env.SITE_DOMAIN || 'soipattaya.com';
+        await sendPromoCodeEmail(email, promoCode, maxListings, siteDomain);
+        app.log.info(`Payment promo code email sent to ${email} for code ${promoCode}`);
+      } catch (error: any) {
+        app.log.error('Failed to send payment promo code email:', error);
+        // Don't fail the request if email sending fails
+      }
+    }
+    
+    return { 
+      code: promoCode,
+      max_listings: promo.max_listings,
+      email: promo.email,
+      email_sent: !!email
+    };
+  } catch (error: any) {
+    app.log.error('Error generating promo code after payment:', error);
+    return reply.code(500).send({ error: 'Failed to generate promo code' });
+  }
+});
+
+// Test email configuration (admin only)
+app.get('/api/email/test', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const isValid = await testEmailConfiguration();
+    return { 
+      valid: isValid,
+      message: isValid ? 'Email configuration is working' : 'Email configuration failed'
+    };
+  } catch (error: any) {
+    app.log.error('Error testing email configuration:', error);
+    return reply.code(500).send({ error: 'Failed to test email configuration' });
+  }
+});
+
+// Send promo code email (admin only)
+app.post('/api/email/send-promo', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { email, code, max_listings } = request.body as { 
+      email: string; 
+      code: string; 
+      max_listings: number; 
+    };
+
+    if (!email || !code || !max_listings) {
+      return reply.code(400).send({ error: 'Missing required parameters' });
+    }
+
+    const siteDomain = process.env.SITE_DOMAIN || 'soipattaya.com';
+    const success = await sendPromoCodeEmail(email, code, max_listings, siteDomain);
+    
+    if (success) {
+      return { success: true, message: 'Promo code email sent successfully' };
+    } else {
+      return reply.code(500).send({ error: 'Failed to send email' });
+    }
+  } catch (error: any) {
+    app.log.error('Error sending promo code email:', error);
+    return reply.code(500).send({ error: 'Failed to send email' });
   }
 });
 
