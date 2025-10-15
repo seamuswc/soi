@@ -716,24 +716,46 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       orderBy: { created_at: 'desc' }
     });
 
-    // Calculate analytics
+    // Calculate analytics from real data
     const totalListings = listings.length;
     const averageRent = listings.length > 0 ? listings.reduce((sum, listing) => sum + listing.cost, 0) / listings.length : 0;
     const averageSqm = listings.length > 0 ? listings.reduce((sum, listing) => sum + listing.sqm, 0) / listings.length : 0;
     const pricePerSqm = averageSqm > 0 ? averageRent / averageSqm : 0;
 
-    // Mock trend data (in real implementation, you'd calculate from historical data)
-    const rentChange = Math.random() * 20 - 10; // -10% to +10%
-    const sqmChange = Math.random() * 15 - 7.5; // -7.5% to +7.5%
+    // Calculate real trends (compare with previous period)
+    const now = new Date();
+    const periodStart = new Date(now.getTime() - (period === '1month' ? 30 : period === '3months' ? 90 : period === '6months' ? 180 : period === '1year' ? 365 : 180) * 24 * 60 * 60 * 1000);
+    const previousPeriodStart = new Date(periodStart.getTime() - (period === '1month' ? 30 : period === '3months' ? 90 : period === '6months' ? 180 : period === '1year' ? 365 : 180) * 24 * 60 * 60 * 1000);
     
-    // Area analysis
+    const currentPeriodListings = listings.filter(l => new Date(l.created_at) >= periodStart);
+    const previousPeriodListings = listings.filter(l => new Date(l.created_at) >= previousPeriodStart && new Date(l.created_at) < periodStart);
+    
+    const currentAvgRent = currentPeriodListings.length > 0 ? currentPeriodListings.reduce((sum, l) => sum + l.cost, 0) / currentPeriodListings.length : 0;
+    const previousAvgRent = previousPeriodListings.length > 0 ? previousPeriodListings.reduce((sum, l) => sum + l.cost, 0) / previousPeriodListings.length : 0;
+    
+    const rentChange = previousAvgRent > 0 ? ((currentAvgRent - previousAvgRent) / previousAvgRent) * 100 : 0;
+    const sqmChange = 0; // Could calculate SQM trends if needed
+    
+    // Real area analysis based on actual listings
     const areaData = [
-      { name: 'Central', listings: Math.floor(totalListings * 0.3), avgPrice: averageRent * 1.2, change: Math.random() * 10 - 5 },
-      { name: 'North', listings: Math.floor(totalListings * 0.25), avgPrice: averageRent * 0.9, change: Math.random() * 10 - 5 },
-      { name: 'South', listings: Math.floor(totalListings * 0.2), avgPrice: averageRent * 1.1, change: Math.random() * 10 - 5 },
-      { name: 'East', listings: Math.floor(totalListings * 0.15), avgPrice: averageRent * 0.8, change: Math.random() * 10 - 5 },
-      { name: 'West', listings: Math.floor(totalListings * 0.1), avgPrice: averageRent * 0.95, change: Math.random() * 10 - 5 }
+      { name: 'Central', listings: 0, avgPrice: 0, change: 0, lat: 13.7563, lng: 100.5018 },
+      { name: 'North', listings: 0, avgPrice: 0, change: 0, lat: 13.8000, lng: 100.5500 },
+      { name: 'South', listings: 0, avgPrice: 0, change: 0, lat: 13.7000, lng: 100.4500 },
+      { name: 'East', listings: 0, avgPrice: 0, change: 0, lat: 13.7800, lng: 100.5800 },
+      { name: 'West', listings: 0, avgPrice: 0, change: 0, lat: 13.7300, lng: 100.4200 }
     ];
+    
+    // For now, show all listings as "Central" until we implement proper area detection
+    if (totalListings > 0) {
+      areaData[0] = {
+        name: 'Central',
+        listings: totalListings,
+        avgPrice: averageRent,
+        change: rentChange,
+        lat: 13.7563,
+        lng: 100.5018
+      };
+    }
 
     // Top performing areas
     const topAreas = areaData
@@ -741,30 +763,38 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       .slice(0, 3)
       .map(area => ({ name: area.name, growth: area.change }));
 
-    // Price ranges
+    // Real price ranges based on actual data
+    const under10k = listings.filter(l => l.cost < 10000).length;
+    const range10k20k = listings.filter(l => l.cost >= 10000 && l.cost < 20000).length;
+    const range20k30k = listings.filter(l => l.cost >= 20000 && l.cost < 30000).length;
+    const over30k = listings.filter(l => l.cost >= 30000).length;
+    
     const priceRanges = [
-      { label: 'Under 10k', count: Math.floor(totalListings * 0.2), percentage: 20 },
-      { label: '10k-20k', count: Math.floor(totalListings * 0.4), percentage: 40 },
-      { label: '20k-30k', count: Math.floor(totalListings * 0.25), percentage: 25 },
-      { label: '30k+', count: Math.floor(totalListings * 0.15), percentage: 15 }
+      { label: 'Under 10k', count: under10k, percentage: totalListings > 0 ? Math.round((under10k / totalListings) * 100) : 0 },
+      { label: '10k-20k', count: range10k20k, percentage: totalListings > 0 ? Math.round((range10k20k / totalListings) * 100) : 0 },
+      { label: '20k-30k', count: range20k30k, percentage: totalListings > 0 ? Math.round((range20k30k / totalListings) * 100) : 0 },
+      { label: '30k+', count: over30k, percentage: totalListings > 0 ? Math.round((over30k / totalListings) * 100) : 0 }
     ];
 
-    // Market predictions
+    // Market predictions based on actual trends
     const predictions = {
-      shortTerm: '+2.5%',
-      mediumTerm: '+5.2%',
-      longTerm: '+8.7%'
+      shortTerm: rentChange > 0 ? `+${rentChange.toFixed(1)}%` : `${rentChange.toFixed(1)}%`,
+      mediumTerm: rentChange > 0 ? `+${(rentChange * 1.2).toFixed(1)}%` : `${(rentChange * 1.2).toFixed(1)}%`,
+      longTerm: rentChange > 0 ? `+${(rentChange * 1.5).toFixed(1)}%` : `${(rentChange * 1.5).toFixed(1)}%`
     };
 
     return {
       averageRent: Math.round(averageRent),
       pricePerSqm: Math.round(pricePerSqm),
       totalListings,
-      newListings: Math.floor(totalListings * 0.1), // 10% new this period
+      newListings: currentPeriodListings.length, // Real new listings this period
       rentChange: Math.round(rentChange * 10) / 10,
       sqmChange: Math.round(sqmChange * 10) / 10,
       marketActivity: totalListings > 50 ? 'High' : totalListings > 20 ? 'Medium' : 'Low',
-      avgDaysOnMarket: Math.floor(Math.random() * 30) + 15,
+      avgDaysOnMarket: totalListings > 0 ? Math.floor(listings.reduce((sum, l) => {
+        const days = Math.floor((now.getTime() - new Date(l.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        return sum + days;
+      }, 0) / totalListings) : 0,
       areaData,
       topAreas,
       priceRanges,
