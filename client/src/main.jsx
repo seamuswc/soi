@@ -8,7 +8,7 @@ import DetailPage from './components/DetailPage'
 import SingleListingPage from './components/SingleListingPage'
 import DashboardPage from './components/DashboardPage'
 import LoginPage from './components/LoginPage'
-import DataPage from './components/DataPage'
+import DataPage from './components/AdvancedDataPage'
 import AuthPage from './components/AuthPage'
 
 ReactDOM.createRoot(document.getElementById('root')).render(

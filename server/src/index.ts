@@ -705,7 +705,7 @@ app.get('/api/listings/:name', async (request) => {
 // Analytics data endpoint
 app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request, reply) => {
   try {
-    const { area = 'all', period = '6months' } = request.query as { area?: string; period?: string };
+    const { area = 'all', period = '6months', city = 'pattaya' } = request.query as { area?: string; period?: string; city?: string };
     
     // Get all listings for analysis
     const listings = await prisma.listing.findMany({
