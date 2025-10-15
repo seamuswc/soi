@@ -154,10 +154,10 @@ if ! certbot certificates 2>/dev/null | grep -q "soipattaya.com"; then
     apt-get -o Dpkg::Options::="--force-confold" install -yq certbot python3-certbot-nginx
     
     echo "🔒 Obtaining SSL certificate..."
-    if certbot --nginx -d soipattaya.com -d www.soipattaya.com --non-interactive --agree-tos --email admin@soipattaya.com; then
+    if certbot --nginx -d soipattaya.com -d www.soipattaya.com -d soibkk.com -d www.soibkk.com --non-interactive --agree-tos --email admin@soipattaya.com; then
         echo "✅ SSL certificate installed"
     else
-        echo "⚠️  SSL setup skipped (run manually: sudo certbot --nginx -d soipattaya.com -d www.soipattaya.com)"
+        echo "⚠️  SSL setup skipped (run manually: sudo certbot --nginx -d soipattaya.com -d www.soipattaya.com -d soibkk.com -d www.soibkk.com)"
     fi
 else
     echo "✅ SSL certificate already exists"
