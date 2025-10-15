@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analytics Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">📊 Data Analytics</h1>
+                    <p class="text-sm text-gray-600" id="cityDescription">Real estate market insights for Pattaya</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="switchCity('pattaya')" id="pattayaBtn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                        🏖️ Pattaya
+                    </button>
+                    <button onclick="switchCity('bangkok')" id="bangkokBtn" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold">
+                        🏙️ Bangkok
+                    </button>
+                    <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="1month">1 Month</option>
+                        <option value="3months">3 Months</option>
+                        <option value="6months" selected>6 Months</option>
+                        <option value="1year">1 Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <span class="text-2xl">💰</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Average Rent</p>
+                        <p class="text-2xl font-bold text-gray-900">฿15,420</p>
+                        <p class="text-sm text-green-600">+8.2% vs last period</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <span class="text-2xl">📈</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Price per SQM</p>
+                        <p class="text-2xl font-bold text-gray-900">฿342</p>
+                        <p class="text-sm text-green-600">+5.7% vs last period</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <span class="text-2xl">🏠</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Listings</p>
+                        <p class="text-2xl font-bold text-gray-900">127</p>
+                        <p class="text-sm text-gray-600">23 new this period</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-orange-100 rounded-lg">
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Market Activity</p>
+                        <p class="text-2xl font-bold text-gray-900">High</p>
+                        <p class="text-sm text-gray-600">18 days avg</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Price Trend Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Price Trends</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="flex space-x-2">
+                            <button onclick="switchChart('price')" id="priceBtn" class="px-3 py-1 rounded text-sm bg-blue-100 text-blue-700">Price</button>
+                            <button onclick="switchChart('volume')" id="volumeBtn" class="px-3 py-1 rounded text-sm bg-gray-100 text-gray-600">Volume</button>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="filterChart('all')" id="allBtn" class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">ALL</button>
+                            <button onclick="filterChart('Central')" id="centralBtn" class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">Central</button>
+                            <button onclick="filterChart('North')" id="northBtn" class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">North</button>
+                            <button onclick="filterChart('South')" id="southBtn" class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">South</button>
+                            <button onclick="filterChart('East')" id="eastBtn" class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">East</button>
+                            <button onclick="filterChart('West')" id="westBtn" class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">West</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-64 bg-gray-50 rounded-lg p-4">
+                    <div class="text-center mb-2">
+                        <p class="text-sm text-gray-500">Price trends over 6 months</p>
+                    </div>
+                    <!-- Interactive Chart -->
+                    <div class="relative h-48">
+                        <canvas id="priceTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Map Analysis -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">🗺️ Interactive Area Map</h3>
+                <div class="relative">
+                    <!-- Real Map Container -->
+                    <div id="map" class="w-full h-96 rounded-lg border-2 border-gray-200 mb-4"></div>
+                    
+                    <!-- Map Controls -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="showArea('Central')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors">
+                            Central (38)
+                        </button>
+                        <button onclick="showArea('North')" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200 transition-colors">
+                            North (32)
+                        </button>
+                        <button onclick="showArea('South')" class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm hover:bg-orange-200 transition-colors">
+                            South (25)
+                        </button>
+                        <button onclick="showArea('East')" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm hover:bg-yellow-200 transition-colors">
+                            East (19)
+                        </button>
+                        <button onclick="showArea('West')" class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 transition-colors">
+                            West (13)
+                        </button>
+                    </div>
+                    
+                    <!-- Selected Area Details -->
+                    <div id="areaDetails" class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 mb-2" id="selectedAreaName">Central Area</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm mb-3">
+                            <div>
+                                <span class="text-gray-600">Listings:</span>
+                                <span class="font-medium" id="areaListings">38</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Avg Price:</span>
+                                <span class="font-medium" id="areaPrice">฿18,500</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Growth:</span>
+                                <span class="font-medium text-green-600" id="areaGrowth">+12.3%</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Market Share:</span>
+                                <span class="font-medium" id="areaShare">30%</span>
+                            </div>
+                        </div>
+                        <div id="neighborhoods">
+                            <div class="text-sm text-gray-600 mb-2">Neighborhoods:</div>
+                            <div class="flex flex-wrap">
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">Walking Street</span>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">Beach Road</span>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">Pattaya Klang</span>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">Soi Buakhao</span>
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">Pattaya Tai</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Insights -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Top Performing Areas -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">🔥 Top Performing Areas</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
+                            <span class="font-medium text-gray-900">Central</span>
+                        </div>
+                        <span class="text-green-600 font-semibold">+12.3%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
+                            <span class="font-medium text-gray-900">South</span>
+                        </div>
+                        <span class="text-green-600 font-semibold">+9.2%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
+                            <span class="font-medium text-gray-900">North</span>
+                        </div>
+                        <span class="text-green-600 font-semibold">+7.8%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Ranges -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">💰 Price Distribution</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Under 10k</span>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">25</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">10k-20k</span>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 40%"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">51</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">20k-30k</span>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 25%"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">32</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">30k+</span>
+                        <div class="flex items-center">
+                            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 15%"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">19</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Predictions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">🔮 Market Outlook</h3>
+                <div class="space-y-4">
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm font-medium text-blue-900">Short Term (3 months)</p>
+                        <p class="text-lg font-bold text-blue-700">+2.5% expected</p>
+                    </div>
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <p class="text-sm font-medium text-green-900">Medium Term (6 months)</p>
+                        <p class="text-lg font-bold text-green-700">+5.2% expected</p>
+                    </div>
+                    <div class="p-3 bg-purple-50 rounded-lg">
+                        <p class="text-sm font-medium text-purple-900">Long Term (1 year)</p>
+                        <p class="text-lg font-bold text-purple-700">+8.7% expected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Data -->
+        <div class="mt-8 bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">📥 Export Data</h3>
+                    <p class="text-sm text-gray-600">Download database data</p>
+                </div>
+                <div>
+                    <button onclick="downloadExcelData()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                        📊 Excel Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive map data with realistic Pattaya coordinates
+        const areaData = {
+            'Central': {
+                listings: 38,
+                avgPrice: '฿18,500',
+                growth: '+12.3%',
+                share: '30%',
+                neighborhoods: ['Walking Street', 'Beach Road', 'Pattaya Klang', 'Soi Buakhao', 'Pattaya Tai'],
+                center: [12.9236, 100.8825], // Central Pattaya (Beach Road area)
+                bounds: [[12.9136, 100.8725], [12.9336, 100.8925]]
+            },
+            'North': {
+                listings: 32,
+                avgPrice: '฿13,900',
+                growth: '+7.8%',
+                share: '25%',
+                neighborhoods: ['Naklua', 'Wong Amat', 'Pattaya Nua', 'Soi 6', 'Pattaya Beach'],
+                center: [12.9436, 100.8825], // North Pattaya (Naklua area)
+                bounds: [[12.9336, 100.8725], [12.9536, 100.8925]]
+            },
+            'South': {
+                listings: 25,
+                avgPrice: '฿16,950',
+                growth: '+9.2%',
+                share: '20%',
+                neighborhoods: ['Jomtien', 'Pratumnak', 'Dongtan Beach', 'Cosy Beach', 'Pattaya Hill'],
+                center: [12.9036, 100.8825], // South Pattaya (Jomtien area)
+                bounds: [[12.8936, 100.8725], [12.9136, 100.8925]]
+            },
+            'East': {
+                listings: 19,
+                avgPrice: '฿12,300',
+                growth: '+4.1%',
+                share: '15%',
+                neighborhoods: ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew', 'Soi Khao Talo'],
+                center: [12.9236, 100.9025], // East Pattaya (Soi Khao area)
+                bounds: [[12.9136, 100.8925], [12.9336, 100.9125]]
+            },
+            'West': {
+                listings: 13,
+                avgPrice: '฿14,200',
+                growth: '-2.3%',
+                share: '10%',
+                neighborhoods: ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew', 'Soi Khao Talo'],
+                center: [12.9236, 100.8625], // West Pattaya (Soi Khao area)
+                bounds: [[12.9136, 100.8525], [12.9336, 100.8725]]
+            }
+        };
+
+        let map;
+        let areaMarkers = {};
+        let currentArea = 'Central';
+        let priceChart;
+        let currentCity = 'pattaya';
+        let currentFilter = 'all';
+
+        // City-specific data
+        const cityData = {
+            pattaya: {
+                name: 'Pattaya',
+                description: 'Real estate market insights for Pattaya',
+                center: [12.9236, 100.8825],
+                metrics: {
+                    averageRent: 15750,
+                    pricePerSqm: 1250,
+                    totalListings: 127,
+                    newListings: 23,
+                    marketActivity: 'High',
+                    avgDaysOnMarket: 22
+                },
+                areaData: {
+                    'Central': {
+                        listings: 38,
+                        avgPrice: '฿18,500',
+                        growth: '+12.3%',
+                        share: '30%',
+                        neighborhoods: ['Walking Street', 'Beach Road', 'Pattaya Klang', 'Soi Buakhao', 'Pattaya Tai'],
+                        center: [12.9236, 100.8825]
+                    },
+                    'North': {
+                        listings: 32,
+                        avgPrice: '฿13,900',
+                        growth: '+7.8%',
+                        share: '25%',
+                        neighborhoods: ['Naklua', 'Wong Amat', 'Pattaya Nua', 'Soi 6', 'Pattaya Beach'],
+                        center: [12.9436, 100.8825]
+                    },
+                    'South': {
+                        listings: 25,
+                        avgPrice: '฿16,950',
+                        growth: '+9.2%',
+                        share: '20%',
+                        neighborhoods: ['Jomtien', 'Pratumnak', 'Dongtan Beach', 'Cosy Beach', 'Pattaya Hill'],
+                        center: [12.9036, 100.8825]
+                    },
+                    'East': {
+                        listings: 19,
+                        avgPrice: '฿12,300',
+                        growth: '+4.1%',
+                        share: '15%',
+                        neighborhoods: ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew', 'Soi Khao Talo'],
+                        center: [12.9236, 100.9025]
+                    },
+                    'West': {
+                        listings: 13,
+                        avgPrice: '฿14,200',
+                        growth: '-2.3%',
+                        share: '10%',
+                        neighborhoods: ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew', 'Soi Khao Talo'],
+                        center: [12.9236, 100.8625]
+                    }
+                },
+                priceTrends: [11500, 12000, 11800, 12500, 13000, 13500],
+                volumeTrends: [45, 52, 48, 61, 58, 67],
+                areaPriceTrends: {
+                    'Central': [18500, 19200, 18800, 19500, 20000, 20500],
+                    'North': [13900, 14500, 14200, 14800, 15200, 15600],
+                    'South': [16950, 17500, 17200, 17800, 18200, 18600],
+                    'East': [12300, 12800, 12500, 13100, 13400, 13700],
+                    'West': [14200, 14600, 14400, 14900, 15200, 15500]
+                },
+                areaVolumeTrends: {
+                    'Central': [12, 15, 13, 16, 18, 20],
+                    'North': [8, 10, 9, 11, 12, 14],
+                    'South': [6, 8, 7, 9, 10, 12],
+                    'East': [5, 6, 5, 7, 8, 9],
+                    'West': [3, 4, 3, 5, 5, 6]
+                }
+            },
+            bangkok: {
+                name: 'Bangkok',
+                description: 'Real estate market insights for Bangkok',
+                center: [13.7563, 100.5018],
+                metrics: {
+                    averageRent: 28500,
+                    pricePerSqm: 1850,
+                    totalListings: 342,
+                    newListings: 67,
+                    marketActivity: 'Very High',
+                    avgDaysOnMarket: 18
+                },
+                areaData: {
+                    'Central': {
+                        listings: 89,
+                        avgPrice: '฿35,500',
+                        growth: '+15.2%',
+                        share: '26%',
+                        neighborhoods: ['Sukhumvit', 'Silom', 'Sathorn', 'Lumpini', 'Ratchadamri'],
+                        center: [13.7563, 100.5018]
+                    },
+                    'North': {
+                        listings: 78,
+                        avgPrice: '฿28,900',
+                        growth: '+12.1%',
+                        share: '23%',
+                        neighborhoods: ['Chatuchak', 'Dusit', 'Bang Sue', 'Ladprao', 'Ratchayothin'],
+                        center: [13.8063, 100.5018]
+                    },
+                    'South': {
+                        listings: 65,
+                        avgPrice: '฿32,200',
+                        growth: '+8.7%',
+                        share: '19%',
+                        neighborhoods: ['Thonburi', 'Bang Khun Thian', 'Phra Pradaeng', 'Bang Na', 'Prawet'],
+                        center: [13.7063, 100.5018]
+                    },
+                    'East': {
+                        listings: 58,
+                        avgPrice: '฿24,800',
+                        growth: '+6.3%',
+                        share: '17%',
+                        neighborhoods: ['Lat Krabang', 'Min Buri', 'Nong Chok', 'Khlong Sam Wa', 'Saphan Sung'],
+                        center: [13.7563, 100.6018]
+                    },
+                    'West': {
+                        listings: 52,
+                        avgPrice: '฿26,400',
+                        growth: '+4.9%',
+                        share: '15%',
+                        neighborhoods: ['Taling Chan', 'Bangkok Noi', 'Bangkok Yai', 'Phasi Charoen', 'Bang Khae'],
+                        center: [13.7563, 100.4018]
+                    }
+                },
+                priceTrends: [26500, 27200, 26800, 27500, 28200, 28500],
+                volumeTrends: [89, 95, 91, 98, 102, 105],
+                areaPriceTrends: {
+                    'Central': [35500, 36500, 36000, 37000, 37500, 38000],
+                    'North': [28900, 29500, 29200, 29800, 30200, 30600],
+                    'South': [32200, 33000, 32600, 33400, 33800, 34200],
+                    'East': [24800, 25400, 25100, 25700, 26100, 26400],
+                    'West': [26400, 27000, 26700, 27300, 27600, 27900]
+                },
+                areaVolumeTrends: {
+                    'Central': [25, 28, 26, 30, 32, 35],
+                    'North': [18, 20, 19, 22, 24, 26],
+                    'South': [15, 17, 16, 19, 20, 22],
+                    'East': [12, 14, 13, 15, 16, 18],
+                    'West': [10, 12, 11, 13, 14, 15]
+                }
+            }
+        };
+
+        function initMap() {
+            // Initialize map with current city data
+            const cityInfo = cityData[currentCity];
+            map = L.map('map').setView(cityInfo.center, 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add area markers with size proportional to listings
+            Object.keys(cityInfo.areaData).forEach(areaName => {
+                const area = cityInfo.areaData[areaName];
+                const color = getAreaColor(areaName);
+                
+                // Calculate radius based on number of listings (8-25 pixel range)
+                const minRadius = 8;
+                const maxRadius = 25;
+                const maxListings = Math.max(...Object.values(cityInfo.areaData).map(a => a.listings));
+                const radius = minRadius + (area.listings / maxListings) * (maxRadius - minRadius);
+                
+                const marker = L.circleMarker(area.center, {
+                    radius: radius,
+                    fillColor: color,
+                    color: '#000',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <div class="p-2">
+                        <h3 class="font-bold text-lg">${areaName}</h3>
+                        <p class="text-sm"><strong>Listings:</strong> ${area.listings}</p>
+                        <p class="text-sm"><strong>Avg Price:</strong> ${area.avgPrice}</p>
+                        <p class="text-sm"><strong>Growth:</strong> <span class="${area.growth.startsWith('+') ? 'text-green-600' : 'text-red-600'}">${area.growth}</span></p>
+                        <p class="text-xs text-gray-500">Circle size = ${area.listings} listings</p>
+                        <button onclick="showArea('${areaName}')" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                            View Details
+                        </button>
+                    </div>
+                `);
+
+                areaMarkers[areaName] = marker;
+            });
+
+            // Initialize with Central selected
+            showArea('Central');
+        }
+
+        function getAreaColor(areaName) {
+            const colors = {
+                'Central': '#3B82F6',
+                'North': '#10B981',
+                'South': '#F59E0B',
+                'East': '#EAB308',
+                'West': '#8B5CF6'
+            };
+            return colors[areaName] || '#6B7280';
+        }
+
+        function showArea(areaName) {
+            // Get current city data
+            const cityInfo = cityData[currentCity];
+            const selectedArea = cityInfo.areaData[areaName];
+            if (!selectedArea) return;
+
+            currentArea = areaName;
+
+            // Update area details
+            document.getElementById('selectedAreaName').textContent = areaName + ' Area';
+            document.getElementById('areaListings').textContent = selectedArea.listings;
+            document.getElementById('areaPrice').textContent = selectedArea.avgPrice;
+            document.getElementById('areaGrowth').textContent = selectedArea.growth;
+            document.getElementById('areaGrowth').className = selectedArea.growth.startsWith('+') ? 'font-medium text-green-600' : 'font-medium text-red-600';
+            document.getElementById('areaShare').textContent = selectedArea.share;
+
+            // Update neighborhoods
+            const neighborhoodList = selectedArea.neighborhoods.map(neighborhood => 
+                `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">${neighborhood}</span>`
+            ).join('');
+
+            document.getElementById('neighborhoods').innerHTML = `
+                <div class="text-sm text-gray-600 mb-2">Neighborhoods:</div>
+                <div class="flex flex-wrap">${neighborhoodList}</div>
+            `;
+
+            // Update map view
+            if (map) {
+                map.setView(selectedArea.center, 14);
+                
+                // Highlight selected area while maintaining proportional sizing
+                Object.keys(areaMarkers).forEach(name => {
+                    const marker = areaMarkers[name];
+                    const areaInfo = cityInfo.areaData[name];
+                    const maxListings = Math.max(...Object.values(cityInfo.areaData).map(a => a.listings));
+                    const baseRadius = 8 + (areaInfo.listings / maxListings) * 17;
+                    
+                    if (name === areaName) {
+                        marker.setStyle({
+                            radius: baseRadius + 5, // Slightly larger when selected
+                            fillOpacity: 1,
+                            weight: 3
+                        });
+                    } else {
+                        marker.setStyle({
+                            radius: baseRadius,
+                            fillOpacity: 0.8,
+                            weight: 2
+                        });
+                    }
+                });
+            }
+        }
+
+        // Initialize map and chart when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            initPriceChart();
+        });
+
+        // Initialize price trend chart
+        function initPriceChart() {
+            const ctx = document.getElementById('priceTrendChart').getContext('2d');
+            
+            // Generate 6 months of price data
+            const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const priceData = [11500, 12000, 11800, 12500, 13000, 13500];
+            const volumeData = [45, 52, 48, 61, 58, 67];
+            
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Average Rent (฿)',
+                        data: priceData,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `฿${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6B7280',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(107, 114, 128, 0.1)'
+                            },
+                            ticks: {
+                                color: '#6B7280',
+                                font: {
+                                    size: 12
+                                },
+                                callback: function(value) {
+                                    return '฿' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    elements: {
+                        point: {
+                            hoverBackgroundColor: '#3B82F6'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Switch between price and volume charts
+        function switchChart(type) {
+            const priceBtn = document.getElementById('priceBtn');
+            const volumeBtn = document.getElementById('volumeBtn');
+            const chartTitle = document.querySelector('.h-64 .text-center p');
+            
+            if (type === 'price') {
+                // Switch to price chart
+                priceBtn.className = 'px-3 py-1 rounded text-sm bg-blue-100 text-blue-700';
+                volumeBtn.className = 'px-3 py-1 rounded text-sm bg-gray-100 text-gray-600';
+                chartTitle.textContent = 'Price trends over 6 months';
+                
+                // Update chart data
+                priceChart.data.datasets[0].label = 'Average Rent (฿)';
+                priceChart.data.datasets[0].data = [11500, 12000, 11800, 12500, 13000, 13500];
+                priceChart.data.datasets[0].borderColor = '#3B82F6';
+                priceChart.data.datasets[0].backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                priceChart.options.scales.y.ticks.callback = function(value) {
+                    return '฿' + value.toLocaleString();
+                };
+                priceChart.options.plugins.tooltip.callbacks.label = function(context) {
+                    return `฿${context.parsed.y.toLocaleString()}`;
+                };
+            } else {
+                // Switch to volume chart
+                priceBtn.className = 'px-3 py-1 rounded text-sm bg-gray-100 text-gray-600';
+                volumeBtn.className = 'px-3 py-1 rounded text-sm bg-green-100 text-green-700';
+                chartTitle.textContent = 'Listing volume over 6 months';
+                
+                // Update chart data
+                priceChart.data.datasets[0].label = 'New Listings';
+                priceChart.data.datasets[0].data = [45, 52, 48, 61, 58, 67];
+                priceChart.data.datasets[0].borderColor = '#10B981';
+                priceChart.data.datasets[0].backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                priceChart.options.scales.y.ticks.callback = function(value) {
+                    return value + ' listings';
+                };
+                priceChart.options.plugins.tooltip.callbacks.label = function(context) {
+                    return `${context.parsed.y} listings`;
+                };
+            }
+            
+            priceChart.update();
+        }
+
+        // Filter chart by area
+        function filterChart(area) {
+            currentFilter = area;
+            const cityInfo = cityData[currentCity];
+            
+            // Update button styles
+            const buttons = ['allBtn', 'centralBtn', 'northBtn', 'southBtn', 'eastBtn', 'westBtn'];
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btnId === area.toLowerCase() + 'Btn' || (area === 'all' && btnId === 'allBtn')) {
+                    btn.className = 'px-2 py-1 rounded text-xs bg-green-100 text-green-700';
+                } else {
+                    btn.className = 'px-2 py-1 rounded text-xs bg-gray-100 text-gray-600';
+                }
+            });
+            
+            // Update chart data
+            if (priceChart) {
+                if (area === 'all') {
+                    // Show overall city trends
+                    priceChart.data.datasets[0].data = cityInfo.priceTrends;
+                    priceChart.data.datasets[0].label = 'Average Rent (฿)';
+                } else {
+                    // Show specific area trends
+                    priceChart.data.datasets[0].data = cityInfo.areaPriceTrends[area];
+                    priceChart.data.datasets[0].label = `${area} Area Rent (฿)`;
+                }
+                priceChart.update();
+            }
+        }
+
+        // Switch between cities
+        function switchCity(city) {
+            currentCity = city;
+            const cityInfo = cityData[city];
+            
+            // Update button styles
+            const pattayaBtn = document.getElementById('pattayaBtn');
+            const bangkokBtn = document.getElementById('bangkokBtn');
+            const cityDescription = document.getElementById('cityDescription');
+            
+            if (city === 'pattaya') {
+                pattayaBtn.className = 'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold';
+                bangkokBtn.className = 'px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold';
+            } else {
+                pattayaBtn.className = 'px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold';
+                bangkokBtn.className = 'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold';
+            }
+            
+            // Update description
+            cityDescription.textContent = cityInfo.description;
+            
+            // Update metrics
+            updateMetrics(cityInfo.metrics);
+            
+            // Update map
+            updateMap(cityInfo);
+            
+            // Update chart
+            updateChart(cityInfo);
+            
+            // Reset filter to 'all' and update chart
+            currentFilter = 'all';
+            filterChart('all');
+        }
+
+        // Update metrics display
+        function updateMetrics(metrics) {
+            // Update key metrics cards
+            const rentElement = document.querySelector('.bg-white.rounded-lg.shadow.p-6 .text-2xl');
+            if (rentElement) {
+                rentElement.textContent = `฿${metrics.averageRent.toLocaleString()}`;
+            }
+            
+            // Update other metrics as needed
+            console.log('Updated metrics for:', metrics);
+        }
+
+        // Update map with new city data
+        function updateMap(cityInfo) {
+            if (map) {
+                // Clear existing markers
+                Object.values(areaMarkers).forEach(marker => {
+                    map.removeLayer(marker);
+                });
+                areaMarkers = {};
+                
+                // Update map center
+                map.setView(cityInfo.center, 13);
+                
+                // Add new markers for the city
+                Object.keys(cityInfo.areaData).forEach(areaName => {
+                    const area = cityInfo.areaData[areaName];
+                    const color = getAreaColor(areaName);
+                    
+                    const marker = L.circleMarker(area.center, {
+                        radius: 15,
+                        fillColor: color,
+                        color: '#000',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                        <div class="p-2">
+                            <h3 class="font-bold text-lg">${areaName}</h3>
+                            <p class="text-sm"><strong>Listings:</strong> ${area.listings}</p>
+                            <p class="text-sm"><strong>Avg Price:</strong> ${area.avgPrice}</p>
+                            <p class="text-sm"><strong>Growth:</strong> <span class="${area.growth.startsWith('+') ? 'text-green-600' : 'text-red-600'}">${area.growth}</span></p>
+                            <button onclick="showArea('${areaName}')" class="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                                View Details
+                            </button>
+                        </div>
+                    `);
+
+                    areaMarkers[areaName] = marker;
+                });
+            }
+        }
+
+        // Update chart with new city data
+        function updateChart(cityInfo) {
+            if (priceChart) {
+                // Update chart data
+                priceChart.data.datasets[0].data = cityInfo.priceTrends;
+                priceChart.update();
+            }
+        }
+
+        // Download Excel with database data
+        function downloadExcelData() {
+            const cityInfo = cityData[currentCity];
+            const cityName = cityInfo.name;
+            
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Database Listings Data
+            const listingsData = [
+                ['ID', 'Title', 'Coordinates', 'Cost', 'SQM', 'Location', 'Area', 'Created At', 'Updated At']
+            ];
+            
+            // Generate sample database entries for current city
+            const sampleListings = generateSampleListings(cityInfo);
+            sampleListings.forEach(listing => {
+                listingsData.push([
+                    listing.id,
+                    listing.title,
+                    listing.coordinates,
+                    listing.cost,
+                    listing.sqm,
+                    listing.location,
+                    listing.area,
+                    listing.createdAt,
+                    listing.updatedAt
+                ]);
+            });
+            
+            // Promo Codes Data
+            const promoData = [
+                ['ID', 'Code', 'Remaining Uses', 'Max Listings', 'Created At', 'Updated At']
+            ];
+            
+            // Generate sample promo codes
+            const samplePromos = generateSamplePromos();
+            samplePromos.forEach(promo => {
+                promoData.push([
+                    promo.id,
+                    promo.code,
+                    promo.remainingUses,
+                    promo.maxListings,
+                    promo.createdAt,
+                    promo.updatedAt
+                ]);
+            });
+            
+            // Area Analysis Data
+            const areaAnalysisData = [
+                ['Area', 'Listings', 'Avg Price', 'Growth', 'Market Share', 'Neighborhoods']
+            ];
+            
+            Object.keys(cityInfo.areaData).forEach(areaName => {
+                const area = cityInfo.areaData[areaName];
+                areaAnalysisData.push([
+                    areaName,
+                    area.listings,
+                    area.avgPrice,
+                    area.growth,
+                    area.share,
+                    area.neighborhoods.join(', ')
+                ]);
+            });
+            
+            // Create worksheets
+            const ws1 = XLSX.utils.aoa_to_sheet(listingsData);
+            const ws2 = XLSX.utils.aoa_to_sheet(promoData);
+            const ws3 = XLSX.utils.aoa_to_sheet(areaAnalysisData);
+            
+            // Add worksheets to workbook
+            XLSX.utils.book_append_sheet(wb, ws1, 'Listings');
+            XLSX.utils.book_append_sheet(wb, ws2, 'Promo Codes');
+            XLSX.utils.book_append_sheet(wb, ws3, 'Area Analysis');
+            
+            // Download file
+            XLSX.writeFile(wb, `${cityName.toLowerCase()}_database.xlsx`);
+        }
+
+        // Generate sample listings for database export
+        function generateSampleListings(cityInfo) {
+            const listings = [];
+            const areas = Object.keys(cityInfo.areaData);
+            const neighborhoods = {
+                'Central': ['Walking Street', 'Beach Road', 'Pattaya Klang', 'Soi Buakhao', 'Pattaya Tai'],
+                'North': ['Naklua', 'Wong Amat', 'Pattaya Nua', 'Soi 6', 'Pattaya Beach'],
+                'South': ['Jomtien', 'Pratumnak', 'Dongtan Beach', 'Cosy Beach', 'Pattaya Hill'],
+                'East': ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew'],
+                'West': ['Soi Khao Noi', 'Soi Khao Talo', 'Soi Khao Phra', 'Soi Khao Mai Kaew']
+            };
+            
+            let id = 1;
+            areas.forEach(area => {
+                const areaData = cityInfo.areaData[area];
+                const areaNeighborhoods = neighborhoods[area] || ['Unknown'];
+                
+                for (let i = 0; i < areaData.listings; i++) {
+                    const neighborhood = areaNeighborhoods[Math.floor(Math.random() * areaNeighborhoods.length)];
+                    const basePrice = parseInt(areaData.avgPrice.replace(/[฿,]/g, ''));
+                    const priceVariation = (Math.random() - 0.5) * 0.4; // ±20% variation
+                    const cost = Math.round(basePrice * (1 + priceVariation));
+                    
+                    // Generate coordinates based on area center with some variation
+                    const areaCenter = areaData.center;
+                    const lat = (areaCenter[0] + (Math.random() - 0.5) * 0.01).toFixed(6);
+                    const lng = (areaCenter[1] + (Math.random() - 0.5) * 0.01).toFixed(6);
+                    
+                    listings.push({
+                        id: id++,
+                        title: `${neighborhood} Property ${i + 1}`,
+                        coordinates: `${lat}, ${lng}`,
+                        cost: cost,
+                        sqm: Math.floor(Math.random() * 50) + 25, // 25-75 sqm
+                        location: `${neighborhood}, ${area}`,
+                        area: area,
+                        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        updatedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                    });
+                }
+            });
+            
+            return listings;
+        }
+
+        // Generate sample promo codes
+        function generateSamplePromos() {
+            const promos = [];
+            const codes = ['ABC12345', 'XYZ67890', 'DEF54321', 'GHI98765', 'JKL13579'];
+            
+            codes.forEach((code, index) => {
+                promos.push({
+                    id: index + 1,
+                    code: code,
+                    remainingUses: Math.floor(Math.random() * 10) + 1,
+                    maxListings: Math.floor(Math.random() * 5) + 1,
+                    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                });
+            });
+            
+            return promos;
+        }
+    </script>
+</body>
+</html>

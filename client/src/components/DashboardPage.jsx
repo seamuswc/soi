@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import LoginPage from './LoginPage';
+import { getDomainConfig } from '../utils/domainConfig';
 
 function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -11,6 +12,9 @@ function DashboardPage() {
   const [generatingPromo, setGeneratingPromo] = useState(false);
   const [maxUses, setMaxUses] = useState(1);
   const [promoList, setPromoList] = useState([]);
+  
+  // Get domain-specific configuration
+  const domainConfig = getDomainConfig();
 
   useEffect(() => {
     if (token) {
@@ -169,8 +173,11 @@ function DashboardPage() {
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{domainConfig.siteName} Admin Dashboard</h1>
           <div className="flex gap-2">
+            <a href="/data" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
+              📊 Data Analytics
+            </a>
             <a href="/" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base">
               Back to Map
             </a>
