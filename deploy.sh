@@ -99,7 +99,21 @@ fi
 # Build application
 echo "🔨 Building application (this may take 2-3 minutes)..."
 echo "   Tip: If this times out, use the pre-built deployment script instead"
+
+# Clean and rebuild server to ensure latest code
+echo "🧹 Cleaning server build..."
+rm -rf server/node_modules server/dist
+cd server
+npm install
+npx prisma generate
+npx prisma db push --force-reset
 npm run build
+cd ..
+
+# Build client
+cd client
+npm run build
+cd ..
 
 # Configure Nginx
 echo "🌐 Configuring Nginx..."
