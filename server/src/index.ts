@@ -50,7 +50,7 @@ interface ListingData {
   description: string;
   youtube_link: string;
   reference: string;
-  payment_network: 'solana' | 'thb';
+  payment_network: 'solana' | 'promo';
   thai_only: boolean;
   has_pool: boolean;
   has_parking: boolean;
@@ -184,7 +184,7 @@ const createListingSchema = z.object({
   description: z.string(),
   youtube_link: z.string().url(),
   reference: z.string(),
-  payment_network: z.enum(['solana', 'thb']).default('solana'),
+  payment_network: z.enum(['solana', 'promo']).default('solana'),
   rental_type: z.enum(['living', 'business']).default('living'),
   business_photo: z.string().optional(),
   thai_only: z.boolean().optional().default(false),
@@ -556,8 +556,9 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
 // Generate promo code after Solana payment (public endpoint)
 app.post('/api/promo/generate-after-payment', async (request, reply) => {
   try {
-    const { reference } = request.body as { 
-      reference: string; 
+    const { reference, uses = 1 } = request.body as { 
+      reference: string;
+      uses?: number;
     };
 
     console.log('🎟️ API: Generating promo code for reference:', reference);
@@ -573,11 +574,11 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     
-    // Create promo code (each use = 1 listing)
+    // Create promo code with the number of uses paid for
     const promo = await prisma.promo.create({
       data: {
         code: promoCode.toLowerCase(),
-        remaining_uses: 1, // Single use for payment-generated codes
+        remaining_uses: uses, // Use the number of uses paid for
         email: null
       }
     });
@@ -686,9 +687,8 @@ app.post('/api/listings', async (request, reply) => {
     // Validate payment based on network
     if (data.payment_network === 'solana') {
       isValid = await validateSolanaPayment(data.reference);
-    } else if (data.payment_network === 'thb') {
-      // THB payments are manual via LINE - skip validation
-      // In production, you might want admin approval for THB payments
+    } else if (data.payment_network === 'promo') {
+      // Promo code payments - skip validation as promo codes are validated separately
       isValid = true;
     }
 
