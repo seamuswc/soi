@@ -10,9 +10,13 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
-  css: {
-    postcss,
-  },
+    css: {
+      postcss,
+    },
+    define: {
+      // Expose environment variables to the client
+      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY || ''),
+    },
     server: {
       port: 5175,
       proxy: {
