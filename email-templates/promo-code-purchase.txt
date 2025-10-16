@@ -1,0 +1,45 @@
+🎟️ PROMO CODE PURCHASE CONFIRMED!
+
+Thank you for your purchase!
+
+PURCHASE DETAILS:
+================
+Email: {{email}}
+Purchase Date: {{purchaseDate}}
+Reference: {{reference}}
+
+YOUR PROMO CODE:
+===============
+{{promoCode}}
+
+Number of Uses: {{uses}}
+Remaining Uses: {{uses}}
+
+HOW TO USE YOUR PROMO CODE:
+===========================
+1. Go to the Create Listing page
+2. Fill in your property details
+3. In the payment section, click "Pay with Promo"
+4. Enter your promo code: {{promoCode}}
+5. Submit your listing - no payment required!
+
+IMPORTANT NOTES:
+===============
+- Each use of the promo code creates one listing
+- Your promo code expires when all uses are consumed
+- Keep this email safe - you'll need the promo code to use it
+- Promo codes cannot be transferred or refunded
+
+CREATE YOUR FIRST LISTING:
+==========================
+Visit: https://soipattaya.com/create
+
+NEED HELP?
+==========
+If you have any questions about using your promo code or creating listings, please contact our support team.
+
+Support: support@soipattaya.com
+
+---
+© 2024 SoiPattaya Real Estate Platform
+This is an automated email. Please do not reply to this message.

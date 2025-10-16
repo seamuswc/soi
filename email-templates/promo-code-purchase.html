@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Promo Code Purchase Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .info-box {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .promo-code {
+            background: #4CAF50;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎟️ Promo Code Purchase Confirmed!</h1>
+        <p>Your promo code has been generated successfully</p>
+    </div>
+    
+    <div class="content">
+        <h2>Thank you for your purchase!</h2>
+        
+        <div class="info-box">
+            <h3>📧 Purchase Details</h3>
+            <p><strong>Email:</strong> {{email}}</p>
+            <p><strong>Purchase Date:</strong> {{purchaseDate}}</p>
+            <p><strong>Reference:</strong> {{reference}}</p>
+        </div>
+        
+        <div class="highlight">
+            <h3>🎟️ Your Promo Code</h3>
+            <div class="promo-code">{{promoCode}}</div>
+            <p><strong>Number of Uses:</strong> {{uses}}</p>
+            <p><strong>Remaining Uses:</strong> {{uses}}</p>
+        </div>
+        
+        <div class="info-box">
+            <h3>📋 How to Use Your Promo Code</h3>
+            <ol>
+                <li>Go to the <strong>Create Listing</strong> page</li>
+                <li>Fill in your property details</li>
+                <li>In the payment section, click <strong>"Pay with Promo"</strong></li>
+                <li>Enter your promo code: <strong>{{promoCode}}</strong></li>
+                <li>Submit your listing - no payment required!</li>
+            </ol>
+        </div>
+        
+        <div class="warning">
+            <h4>⚠️ Important Notes</h4>
+            <ul>
+                <li>Each use of the promo code creates one listing</li>
+                <li>Your promo code expires when all uses are consumed</li>
+                <li>Keep this email safe - you'll need the promo code to use it</li>
+                <li>Promo codes cannot be transferred or refunded</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="https://soipattaya.com/create" class="button">Create Your First Listing</a>
+        </div>
+        
+        <div class="info-box">
+            <h3>💡 Need Help?</h3>
+            <p>If you have any questions about using your promo code or creating listings, please contact our support team.</p>
+            <p><strong>Support:</strong> <a href="mailto:support@soipattaya.com">support@soipattaya.com</a></p>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2024 SoiPattaya Real Estate Platform</p>
+        <p>This is an automated email. Please do not reply to this message.</p>
+    </div>
+</body>
+</html>
