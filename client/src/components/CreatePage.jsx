@@ -99,10 +99,8 @@ function CreatePage() {
     if (formData.payment_network === 'promo') {
       // Clear all validation errors immediately
       setValidationErrors({});
-      // Force a small delay to ensure state updates
-      setTimeout(() => {
-        setShowQRModal(true);
-      }, 0);
+      // Show modal immediately - no form validation needed for buying promo codes
+      setShowQRModal(true);
       return;
     }
     
@@ -226,7 +224,7 @@ function CreatePage() {
             </div>
           </div>
           
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => e.preventDefault()} noValidate>
             {/* Property Details Section */}
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
