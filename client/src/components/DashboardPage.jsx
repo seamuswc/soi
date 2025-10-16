@@ -424,7 +424,7 @@ function DashboardPage() {
                       }`}>
                         {listing.payment_network === 'solana' ? 'Solana' : 
                          listing.payment_network === 'promo' ? 
-                           (listing.promo_code_used || 'PROMO') : 
+                           (listing.promo_code_used || 'Unknown Code') : 
                          listing.payment_network.toUpperCase()}
                       </span>
                     </td>
