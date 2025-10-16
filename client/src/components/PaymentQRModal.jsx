@@ -12,7 +12,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [showQR, setShowQR] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
   const [promoForm, setPromoForm] = useState({
-    listings: 1
+    listings: 1,
+    email: ''
   });
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [showListingSelection, setShowListingSelection] = useState(false);
@@ -148,7 +149,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       setGeneratingPromo(true);
       const response = await axios.post('/api/promo/generate-after-payment', {
         reference: reference,
-        uses: paidAmount || 1
+        uses: paidAmount || 1,
+        email: promoForm.email || null
       });
       
       setGeneratedPromo(response.data);
@@ -273,6 +275,23 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
                   placeholder="Enter number of listings"
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email (Optional) 📧
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={promoForm.email}
+                  onChange={handlePromoFormChange}
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  We'll email you the promo code details after purchase
+                </p>
               </div>
               
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">

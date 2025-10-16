@@ -9,6 +9,156 @@ export interface SubscriptionEmailData {
   paymentReference: string;
 }
 
+export interface PromoCodeEmailData {
+  email: string;
+  promoCode: string;
+  uses: number;
+  reference: string;
+}
+
+export async function sendPromoCodeEmail(data: PromoCodeEmailData): Promise<boolean> {
+  try {
+    const secretId = process.env.TENCENT_SECRET_ID;
+    const secretKey = process.env.TENCENT_SECRET_KEY;
+    const region = process.env.TENCENT_SES_REGION || 'ap-singapore';
+    const sender = process.env.TENCENT_SES_SENDER || 'data@soipattaya.com';
+
+    if (!secretId || !secretKey) {
+      console.error('❌ Tencent SES credentials not configured');
+      return false;
+    }
+
+    // Initialize Tencent SES client
+    const client = new ses.v20201002.Client({
+      credential: {
+        secretId: secretId,
+        secretKey: secretKey,
+      },
+      region: region,
+      profile: {
+        httpProfile: {
+          endpoint: 'ses.tencentcloudapi.com',
+        },
+      },
+    });
+
+    // Prepare email content (HTML and Text versions)
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Promo Code Purchase Confirmation</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .info-box { background: white; border: 2px solid #e1e5e9; border-radius: 8px; padding: 20px; margin: 20px 0; }
+            .promo-code { background: #f0f8ff; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 24px; font-weight: bold; color: #2c5aa0; text-align: center; margin: 15px 0; border: 2px dashed #2c5aa0; }
+            .info-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #eee; }
+            .info-row:last-child { border-bottom: none; }
+            .label { font-weight: bold; color: #555; }
+            .value { color: #333; font-family: monospace; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🎟️ Promo Code Purchase Confirmed!</h1>
+            <p>Your promo code is ready to use</p>
+        </div>
+        <div class="content">
+            <h2>Your Promo Code Details</h2>
+            <div class="info-box">
+                <div class="promo-code">${data.promoCode}</div>
+                <div class="info-row"><span class="label">📧 Email:</span><span class="value">${data.email}</span></div>
+                <div class="info-row"><span class="label">🎯 Uses:</span><span class="value">${data.uses} listing${data.uses > 1 ? 's' : ''}</span></div>
+                <div class="info-row"><span class="label">💳 Payment Reference:</span><span class="value">${data.reference}</span></div>
+            </div>
+            <div class="info-box">
+                <h3>🚀 How to Use Your Promo Code</h3>
+                <ul>
+                    <li>Go to <strong>https://soipattaya.com/create</strong> or <strong>https://soibkk.com/create</strong></li>
+                    <li>Enter your promo code: <strong>${data.promoCode}</strong></li>
+                    <li>Create your property listing</li>
+                    <li>Each use creates 1 listing (you have ${data.uses} uses total)</li>
+                </ul>
+            </div>
+            <div class="info-box">
+                <h3>📝 Important Notes</h3>
+                <ul>
+                    <li>Your promo code is valid for ${data.uses} listing${data.uses > 1 ? 's' : ''}</li>
+                    <li>Each use creates 1 property listing</li>
+                    <li>Listings expire in 2 months</li>
+                    <li>Keep this email safe - it contains your promo code</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>`;
+
+    const textContent = `
+🎟️ PROMO CODE PURCHASE CONFIRMED!
+
+Your promo code is ready to use!
+
+YOUR PROMO CODE DETAILS:
+========================
+🎟️ Promo Code: ${data.promoCode}
+📧 Email: ${data.email}
+🎯 Uses: ${data.uses} listing${data.uses > 1 ? 's' : ''}
+💳 Payment Reference: ${data.reference}
+
+HOW TO USE YOUR PROMO CODE:
+===========================
+1. Go to https://soipattaya.com/create or https://soibkk.com/create
+2. Enter your promo code: ${data.promoCode}
+3. Create your property listing
+4. Each use creates 1 listing (you have ${data.uses} uses total)
+
+IMPORTANT NOTES:
+===============
+• Your promo code is valid for ${data.uses} listing${data.uses > 1 ? 's' : ''}
+• Each use creates 1 property listing
+• Listings expire in 2 months
+• Keep this email safe - it contains your promo code
+
+Thank you for your purchase!
+This email was sent automatically.`;
+
+    // Create email request
+    const request = {
+      FromEmailAddress: sender,
+      Destination: [data.email],
+      Subject: '🎟️ Promo Code Purchase Confirmed - Your Code is Ready!',
+      Template: {
+        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908'),
+        TemplateData: JSON.stringify({
+          email: data.email,
+          promoCode: data.promoCode,
+          uses: data.uses,
+          reference: data.reference,
+        })
+      }
+    };
+
+    console.log('🔐 Sending promo code email via Tencent SES SDK...');
+    console.log('📧 Sending to:', data.email);
+    console.log('📤 From:', sender);
+
+    // Send email using SDK
+    const response = await client.SendEmail(request);
+
+    console.log('📊 Response:', response);
+    console.log(`✅ Promo code email sent to ${data.email}`);
+    console.log(`📧 Please check spam folder if email not received within 5 minutes`);
+    return true;
+
+  } catch (error) {
+    console.error('❌ Error sending promo code email:', error);
+    return false;
+  }
+}
+
 export async function sendSubscriptionEmail(data: SubscriptionEmailData): Promise<boolean> {
   try {
     const secretId = process.env.TENCENT_SECRET_ID;

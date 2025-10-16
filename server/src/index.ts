@@ -559,17 +559,18 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
 // Generate promo code after Solana payment (public endpoint)
 app.post('/api/promo/generate-after-payment', async (request, reply) => {
   try {
-    const { reference, uses = 1 } = request.body as { 
+    const { reference, uses = 1, email } = request.body as { 
       reference: string;
       uses?: number;
+      email?: string;
     };
 
-    console.log('🎟️ API: Generating promo code for reference:', reference);
+    console.log('🎟️ API: Generating promo code for reference:', reference, 'email:', email);
 
     // Skip payment validation for promo code generation since payment was already confirmed
     // in the payment flow. The reference is only generated after successful payment.
     console.log('🎟️ API: Skipping payment validation - payment already confirmed in payment flow');
-
+    
     // Generate random promo code (8 characters, alphanumeric)
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let promoCode = '';
@@ -582,9 +583,25 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       data: {
         code: promoCode.toLowerCase(),
         remaining_uses: uses, // Use the number of uses paid for
-        email: null
+        email: email || null
       }
     });
+    
+    // Send email if email is provided
+    if (email) {
+      try {
+        await sendPromoCodeEmail({
+          email: email,
+          promoCode: promoCode,
+          uses: uses,
+          reference: reference
+        });
+        console.log('📧 Promo code email sent to:', email);
+      } catch (emailError) {
+        console.error('Failed to send promo code email:', emailError);
+        // Don't fail the promo generation if email fails
+      }
+    }
     
     const response = { 
       code: promoCode,

@@ -315,8 +315,8 @@ function MapPage() {
                         fillColor: getMarkerColor(avgPrice),
                         fillOpacity: 1,
                         strokeColor: '#ffffff',
-                        strokeWeight: 2,
-                        scale: 0.8
+                        strokeWeight: 3,
+                        scale: 1.4
                       }}
                     />
                     {selectedMarker === buildingName && (
