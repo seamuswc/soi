@@ -118,25 +118,21 @@ This email was sent automatically. Please keep your login credentials safe.`;
 
     // Create email request
     const request = {
-      Source: sender,
+      FromEmailAddress: sender,
       Destination: {
         ToAddresses: [data.email],
       },
-      Message: {
-        Subject: {
-          Data: '🎉 Data Subscription Confirmed - Welcome!',
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Html: {
-            Data: htmlContent,
-            Charset: 'UTF-8'
-          },
-          Text: {
-            Data: textContent,
-            Charset: 'UTF-8'
-          }
-        }
+      Subject: '🎉 Data Subscription Confirmed - Welcome!',
+      ReplyToAddresses: [sender],
+      Template: {
+        TemplateID: process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908',
+        TemplateData: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          subscriptionDate: data.subscriptionDate,
+          expiryDate: data.expiryDate,
+          paymentReference: data.paymentReference,
+        })
       }
     };
 
