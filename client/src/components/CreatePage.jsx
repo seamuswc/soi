@@ -87,6 +87,12 @@ function CreatePage() {
 
   const handlePayWithPromo = (e) => {
     // PAY WITH PROMO: Use existing promo code to create listing
+    // Clear any other payment method selections and ensure promo code is set
+    setFormData(prev => ({
+      ...prev,
+      payment_network: 'promo' // Set to promo since we're using a promo code
+    }));
+    
     if (!validateForm()) {
       return;
     }
