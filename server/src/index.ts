@@ -470,8 +470,21 @@ app.post('/api/auth/user-login', async (request, reply) => {
 // Get city listings count
 app.get('/api/cities/listings', async (request, reply) => {
   try {
-    const pattayaListings = await prisma.listing.count();
-    const bangkokListings = await prisma.listing.count(); // In real implementation, filter by city
+    // Count Pattaya listings (latitude 12.0-13.0)
+    const pattayaListings = await prisma.listing.count({
+      where: {
+        latitude: { gte: 12.0, lte: 13.0 },
+        longitude: { gte: 100.0, lte: 101.0 }
+      }
+    });
+    
+    // Count Bangkok listings (latitude 13.0-14.0)
+    const bangkokListings = await prisma.listing.count({
+      where: {
+        latitude: { gte: 13.0, lte: 14.0 },
+        longitude: { gte: 100.0, lte: 101.0 }
+      }
+    });
     
     return {
       pattaya: pattayaListings,
