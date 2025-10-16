@@ -17,6 +17,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [showListingSelection, setShowListingSelection] = useState(false);
   const [paidAmount, setPaidAmount] = useState(null); // Store the amount actually paid
+  const [generatingPromo, setGeneratingPromo] = useState(false); // Loading state for promo generation
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -99,13 +100,14 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
             const r = await axios.get(`/api/payment/check/solana/${reference}`);
             if (r.data?.confirmed) {
               setPaid(true);
-              setShowQR(false);
               
               // Handle different payment types
               if (network === 'promo') {
                 console.log('🎟️ Payment confirmed for promo code purchase');
+                setShowQR(false); // Hide QR code for promo codes
                 await generatePromoCode();
               } else {
+                setShowQR(false); // Hide QR code for Solana payments
                 await submitListing();
               }
               return;
@@ -146,6 +148,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const generatePromoCode = async () => {
     try {
+      setGeneratingPromo(true);
       // Use paidAmount if available, otherwise fall back to promoForm.max_listings
       const maxListings = paidAmount || promoForm.max_listings;
       console.log('🎟️ Generating promo code with max_listings:', maxListings, 'paidAmount:', paidAmount);
@@ -157,9 +160,11 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       
       console.log('🎟️ Promo code generated:', response.data);
       setGeneratedPromo(response.data);
+      setGeneratingPromo(false);
       console.log('🎟️ generatedPromo state set to:', response.data);
     } catch (error) {
       console.error('Failed to generate promo code:', error);
+      setGeneratingPromo(false);
       alert('Failed to generate promo code. Please try again.');
     }
   };
@@ -356,6 +361,16 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               </p>
             </div>
             <p className="text-sm text-gray-500">Redirecting to homepage...</p>
+          </div>
+        )}
+
+        {/* Loading state for promo code generation */}
+        {generatingPromo && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">⏳</div>
+            <p className="text-blue-600 font-bold text-xl mb-4">Generating Promo Code...</p>
+            <p className="text-gray-600 mb-4">Please wait while we create your promo code.</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           </div>
         )}
 
