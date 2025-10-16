@@ -17,6 +17,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   });
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [showListingSelection, setShowListingSelection] = useState(false);
+  const [paidAmount, setPaidAmount] = useState(null); // Store the amount actually paid
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -157,10 +158,23 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     }));
   };
 
+  // Set the form to the paid amount when payment is successful
+  useEffect(() => {
+    if (paid && paidAmount) {
+      setPromoForm(prev => ({
+        ...prev,
+        max_listings: paidAmount
+      }));
+    }
+  }, [paid, paidAmount]);
+
   const proceedToPayment = async () => {
     try {
       // Calculate total amount based on selected listings
       const totalAmount = promoForm.max_listings;
+      
+      // Store the paid amount to limit future selections
+      setPaidAmount(totalAmount);
       
       // Create Solana Pay URL for promo code purchase
       const params = new URLSearchParams({
@@ -327,11 +341,11 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                   onChange={handlePromoFormChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value={1}>1 Listing</option>
-                  <option value={2}>2 Listings</option>
-                  <option value={3}>3 Listings</option>
-                  <option value={5}>5 Listings</option>
-                  <option value={10}>10 Listings</option>
+                  {Array.from({ length: paidAmount || 1 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>
+                      {num} Listing{num > 1 ? 's' : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
               
