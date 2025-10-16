@@ -234,14 +234,47 @@ function MapPage() {
                 .filter(l => (filterSixMonths ? l.six_months : true))
                 .filter(l => (showBusiness ? l.rental_type === 'business' : l.rental_type === 'living'));
 
-              // Group by building name
-              const grouped = filteredListings.reduce((acc, listing) => {
-                if (!acc[listing.building_name]) {
-                  acc[listing.building_name] = [];
+              // Group by coordinates first, then by building name
+              const coordinateGroups = filteredListings.reduce((acc, listing) => {
+                const coordKey = `${listing.latitude.toFixed(6)},${listing.longitude.toFixed(6)}`;
+                if (!acc[coordKey]) {
+                  acc[coordKey] = [];
                 }
-                acc[listing.building_name].push(listing);
+                acc[coordKey].push(listing);
                 return acc;
               }, {});
+
+              // Process each coordinate group
+              const grouped = {};
+              Object.entries(coordinateGroups).forEach(([coordKey, listingsAtCoord]) => {
+                if (listingsAtCoord.length === 1) {
+                  // Single listing at this coordinate
+                  const listing = listingsAtCoord[0];
+                  grouped[listing.building_name] = [listing];
+                } else {
+                  // Multiple listings at same coordinate
+                  const buildingNames = [...new Set(listingsAtCoord.map(l => l.building_name))];
+                  
+                  if (buildingNames.length === 1) {
+                    // Same building name, use as is
+                    const buildingName = buildingNames[0];
+                    grouped[buildingName] = listingsAtCoord;
+                  } else {
+                    // Different building names at same coordinate
+                    // Use the most common name or create a more specific name
+                    const nameCounts = buildingNames.reduce((acc, name) => {
+                      acc[name] = listingsAtCoord.filter(l => l.building_name === name).length;
+                      return acc;
+                    }, {});
+                    
+                    const mostCommonName = Object.entries(nameCounts)
+                      .sort(([,a], [,b]) => b - a)[0][0];
+                    
+                    // Group by the most common name
+                    grouped[mostCommonName] = listingsAtCoord;
+                  }
+                }
+              });
 
               return Object.entries(grouped).map(([buildingName, buildingListings], index) => {
                 const firstListing = buildingListings[0];
@@ -267,24 +300,14 @@ function MapPage() {
                   return '#ef4444'; // Red - most expensive
                 };
                 
-                // Add very small offset to prevent marker overlap at same coordinates
-                const baseLat = firstListing.latitude;
-                const baseLng = firstListing.longitude;
-                
-                // Create consistent offset based on building name hash
-                const hash = buildingName.split('').reduce((a, b) => {
-                  a = ((a << 5) - a) + b.charCodeAt(0);
-                  return a & a;
-                }, 0);
-                
-                // Much smaller offset (~2-5 meters) to keep markers very close
-                const offsetLat = baseLat + ((hash % 20) - 10) * 0.00001;
-                const offsetLng = baseLng + (((hash >> 8) % 20) - 10) * 0.00001;
+                // Use exact coordinates since we're now properly grouping by coordinates
+                const markerLat = firstListing.latitude;
+                const markerLng = firstListing.longitude;
                 
                 return (
                   <React.Fragment key={buildingName}>
                     <Marker
-                      position={{ lat: offsetLat, lng: offsetLng }}
+                      position={{ lat: markerLat, lng: markerLng }}
                       title={`${buildingName} - Avg: ${Math.round(avgPrice)} USDC`}
                       onClick={() => setSelectedMarker(buildingName)}
                       icon={{
@@ -298,7 +321,7 @@ function MapPage() {
                     />
                     {selectedMarker === buildingName && (
                       <InfoWindow
-                        position={{ lat: offsetLat, lng: offsetLng }}
+                        position={{ lat: markerLat, lng: markerLng }}
                         onCloseClick={() => setSelectedMarker(null)}
                       >
                         <div className="p-2 max-w-xs">
