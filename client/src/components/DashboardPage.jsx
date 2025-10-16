@@ -54,6 +54,9 @@ function DashboardPage() {
         }
         setLoading(false);
       });
+      
+      // Fetch current settings
+      fetchCurrentSettings();
     } else {
       setLoading(false);
     }
@@ -566,6 +569,50 @@ function DashboardPage() {
             <p className="text-sm text-gray-600 mb-6">
               Update API keys and settings. Changes will be applied to the server's .env file.
             </p>
+            
+            {/* Current Settings Display */}
+            {currentSettings && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">📋 Current Settings</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="font-medium text-gray-600">DeepSeek API:</span>
+                    <span className="ml-2 text-gray-800">
+                      {currentSettings.deepseekApiKey ? 
+                        `${currentSettings.deepseekApiKey.substring(0, 8)}...` : 
+                        'Not set'
+                      }
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Email Secret ID:</span>
+                    <span className="ml-2 text-gray-800">
+                      {currentSettings.emailSecretId ? 
+                        `${currentSettings.emailSecretId.substring(0, 8)}...` : 
+                        'Not set'
+                      }
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Email Region:</span>
+                    <span className="ml-2 text-gray-800">{currentSettings.emailRegion}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Email Sender:</span>
+                    <span className="ml-2 text-gray-800">{currentSettings.emailSender}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Google Maps API:</span>
+                    <span className="ml-2 text-gray-800">
+                      {currentSettings.googleMapsApiKey ? 
+                        `${currentSettings.googleMapsApiKey.substring(0, 8)}...` : 
+                        'Not set'
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className="space-y-4">
               <div>
