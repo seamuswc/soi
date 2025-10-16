@@ -78,8 +78,8 @@ export async function sendPromoCodeEmail(data: PromoCodeEmailData): Promise<bool
       Destination: [data.email],
       Subject: '🎟️ Promo Code Purchase Confirmed - Your Code is Ready!',
       Simple: {
-        Html: htmlContent,
-        Text: textContent
+        Html: Buffer.from(htmlContent, 'utf8').toString('base64'),
+        Text: Buffer.from(textContent, 'utf8').toString('base64')
       }
     };
 
