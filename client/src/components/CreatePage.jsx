@@ -86,6 +86,9 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
+    console.log('Payment network:', formData.payment_network);
+    console.log('Promo code:', formData.promo_code);
+    
     // If using an existing promo code (not the auto-filled 'free'), validate and submit directly
     if (formData.promo_code && formData.promo_code !== 'free') {
       if (!validateForm()) {
@@ -97,6 +100,7 @@ function CreatePage() {
     
     // If buying a new promo code, show promo selection modal
     if (formData.payment_network === 'promo') {
+      console.log('Opening promo code purchase modal');
       setValidationErrors({}); // Clear any existing validation errors
       setShowQRModal(true);
       return;
@@ -104,6 +108,7 @@ function CreatePage() {
     
     // Regular Solana payment for listing creation
     if (formData.payment_network === 'solana') {
+      console.log('Opening regular Solana payment modal');
       if (!validateForm()) {
         return;
       }
