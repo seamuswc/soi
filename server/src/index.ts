@@ -799,6 +799,80 @@ app.get('/api/listings/:name', async (request) => {
 });
 
 // Analytics data endpoint
+// Translation endpoint using DeepSeek API
+app.post('/api/translate', async (request, reply) => {
+  try {
+    const { text, target_language } = request.body as { text: string; target_language: string };
+    
+    if (!text || !target_language) {
+      return reply.code(400).send({ error: 'Text and target language are required' });
+    }
+
+    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    if (!deepseekApiKey) {
+      return reply.code(500).send({ error: 'Translation service not configured' });
+    }
+
+    // Map language codes to proper names
+    const languageMap: { [key: string]: string } = {
+      'thai': 'Thai',
+      'english': 'English', 
+      'chinese': 'Chinese (Simplified)',
+      'russian': 'Russian',
+      'korean': 'Korean'
+    };
+
+    const targetLang = languageMap[target_language] || target_language;
+
+    // Check text length before making API call
+    if (text.length > 2000) {
+      return reply.code(413).send({ error: 'Text too long for translation' });
+    }
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${deepseekApiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'user',
+            content: `Translate the following text to ${targetLang}. Only return the translation, no explanations: ${text}`
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      }),
+      signal: AbortSignal.timeout(25000) // 25 second timeout
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return reply.code(429).send({ error: 'Too many requests. Please try again later.' });
+      } else if (response.status === 413) {
+        return reply.code(413).send({ error: 'Text too long for translation' });
+      } else {
+        throw new Error(`DeepSeek API error: ${response.status}`);
+      }
+    }
+
+    const data = await response.json();
+    const translatedText = data.choices?.[0]?.message?.content?.trim();
+
+    if (!translatedText) {
+      throw new Error('No translation received from DeepSeek API');
+    }
+
+    return { translated_text: translatedText };
+  } catch (error: any) {
+    app.log.error('Translation error:', error);
+    return reply.code(500).send({ error: 'Translation failed' });
+  }
+});
+
 app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request, reply) => {
   try {
     const { area = 'all', period = '6months', city = 'pattaya' } = request.query as { area?: string; period?: string; city?: string };

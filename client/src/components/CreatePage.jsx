@@ -38,6 +38,8 @@ function CreatePage() {
   const [showCoordinateModal, setShowCoordinateModal] = useState(false);
   const [existingBuildings, setExistingBuildings] = useState([]);
   const [selectedBuildingName, setSelectedBuildingName] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationResults, setTranslationResults] = useState({});
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -134,6 +136,79 @@ function CreatePage() {
   const handleUseNewBuildingName = () => {
     setShowCoordinateModal(false);
     setSelectedBuildingName('');
+  };
+
+  const translateDescription = async (targetLanguage) => {
+    if (!formData.description.trim()) {
+      // Show a subtle notification instead of alert
+      setTranslationResults(prev => ({
+        ...prev,
+        [targetLanguage]: 'Please enter a description first'
+      }));
+      return;
+    }
+
+    // Check if description is too long (over 1000 characters)
+    if (formData.description.length > 1000) {
+      setTranslationResults(prev => ({
+        ...prev,
+        [targetLanguage]: 'Description too long (max 1000 characters)'
+      }));
+      return;
+    }
+
+    setIsTranslating(true);
+    
+    // Show loading state for this specific language
+    setTranslationResults(prev => ({
+      ...prev,
+      [targetLanguage]: '🔄 Translating...'
+    }));
+
+    try {
+      // Set a timeout for the translation request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await axios.post('/api/translate', {
+        text: formData.description,
+        target_language: targetLanguage
+      }, {
+        signal: controller.signal,
+        timeout: 30000 // 30 second timeout
+      });
+      
+      clearTimeout(timeoutId);
+      
+      setTranslationResults(prev => ({
+        ...prev,
+        [targetLanguage]: response.data.translated_text
+      }));
+    } catch (error) {
+      console.error('Translation error:', error);
+      
+      // Handle different types of errors with user-friendly messages
+      let errorMessage = 'Translation failed';
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        errorMessage = '⏰ Timeout - try again or shorter text';
+      } else if (error.response?.status === 413) {
+        errorMessage = '📝 Text too long - please shorten';
+      } else if (error.response?.status === 429) {
+        errorMessage = '🚫 Too many requests - wait a moment';
+      } else if (error.response?.status >= 500) {
+        errorMessage = '🔧 Service unavailable - try later';
+      } else {
+        errorMessage = '❌ Failed - try again';
+      }
+      
+      setTranslationResults(prev => ({
+        ...prev,
+        [targetLanguage]: errorMessage
+      }));
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handlePayWithPromo = (e) => {
@@ -488,6 +563,80 @@ function CreatePage() {
                   {validationErrors.description && (
                     <p className="text-xs text-red-500 mt-1">{validationErrors.description}</p>
                   )}
+                  
+                  {/* Translation Buttons */}
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => translateDescription('thai')}
+                        disabled={isTranslating}
+                        className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
+                      >
+                        🇹🇭 Thai
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => translateDescription('english')}
+                        disabled={isTranslating}
+                        className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                      >
+                        🇺🇸 English
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => translateDescription('chinese')}
+                        disabled={isTranslating}
+                        className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
+                      >
+                        🇨🇳 Chinese
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => translateDescription('russian')}
+                        disabled={isTranslating}
+                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                      >
+                        🇷🇺 Russian
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => translateDescription('korean')}
+                        disabled={isTranslating}
+                        className="px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
+                      >
+                        🇰🇷 Korean
+                      </button>
+                    </div>
+                    
+                    {isTranslating && (
+                      <div className="text-sm text-gray-600 mb-2">
+                        🔄 Translating...
+                      </div>
+                    )}
+                    
+                    {/* Display Translation Results */}
+                    {Object.keys(translationResults).length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium text-gray-700">Translations:</h4>
+                          <button
+                            type="button"
+                            onClick={() => setTranslationResults({})}
+                            className="text-xs text-gray-500 hover:text-gray-700 underline"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                        {Object.entries(translationResults).map(([lang, text]) => (
+                          <div key={lang} className="p-2 bg-gray-50 rounded text-sm border-l-2 border-blue-200">
+                            <span className="font-medium capitalize text-blue-700">{lang}:</span> 
+                            <span className="ml-2">{text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {rentalType === 'living' && (
