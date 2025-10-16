@@ -217,13 +217,28 @@ function MapPage() {
               }, {});
 
               console.log('🗺️ Rendering markers for grouped listings:', grouped);
-              return Object.entries(grouped).map(([buildingName, buildingListings]) => {
+              return Object.entries(grouped).map(([buildingName, buildingListings], index) => {
                 const firstListing = buildingListings[0];
-                console.log('📍 Rendering marker for:', buildingName, 'at', firstListing.latitude, firstListing.longitude);
+                
+                // Add small random offset to prevent marker overlap at same coordinates
+                const baseLat = firstListing.latitude;
+                const baseLng = firstListing.longitude;
+                
+                // Create a consistent offset based on building name hash to avoid random repositioning on re-renders
+                const hash = buildingName.split('').reduce((a, b) => {
+                  a = ((a << 5) - a) + b.charCodeAt(0);
+                  return a & a;
+                }, 0);
+                
+                // Small offset (~10-20 meters) to prevent exact overlap
+                const offsetLat = baseLat + ((hash % 100) - 50) * 0.0001;
+                const offsetLng = baseLng + (((hash >> 8) % 100) - 50) * 0.0001;
+                
+                console.log('📍 Rendering marker for:', buildingName, 'at', offsetLat, offsetLng, '(offset from', baseLat, baseLng, ')');
                 return (
                   <React.Fragment key={buildingName}>
                     <Marker
-                      position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
+                      position={{ lat: offsetLat, lng: offsetLng }}
                       title={buildingName}
                       onClick={() => setSelectedMarker(buildingName)}
                       icon={{
@@ -237,7 +252,7 @@ function MapPage() {
                     />
                     {selectedMarker === buildingName && (
                       <InfoWindow
-                        position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
+                        position={{ lat: offsetLat, lng: offsetLng }}
                         onCloseClick={() => setSelectedMarker(null)}
                       >
                         <div className="p-2 max-w-xs">
