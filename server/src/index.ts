@@ -514,7 +514,6 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
       data: {
         code: promoCode.toLowerCase(),
         remaining_uses: maxUses,
-        max_listings: 1, // Default to 1 listing per use
         email: null
       }
     });
@@ -533,18 +532,15 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
 // Generate promo code after Solana payment (public endpoint)
 app.post('/api/promo/generate-after-payment', async (request, reply) => {
   try {
-    const { reference, max_listings } = request.body as { 
+    const { reference } = request.body as { 
       reference: string; 
-      max_listings?: number; 
     };
 
-    console.log('🎟️ API: Generating promo code for reference:', reference, 'max_listings:', max_listings);
+    console.log('🎟️ API: Generating promo code for reference:', reference);
 
     // Skip payment validation for promo code generation since payment was already confirmed
     // in the payment flow. The reference is only generated after successful payment.
     console.log('🎟️ API: Skipping payment validation - payment already confirmed in payment flow');
-
-    const maxListings = max_listings && max_listings > 0 ? max_listings : 1;
 
     // Generate random promo code (8 characters, alphanumeric)
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -553,19 +549,18 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       promoCode += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     
-    // Create promo code with specified listing count
+    // Create promo code (each use = 1 listing)
     const promo = await prisma.promo.create({
       data: {
         code: promoCode.toLowerCase(),
         remaining_uses: 1, // Single use for payment-generated codes
-        max_listings: maxListings,
         email: null
       }
     });
     
     const response = { 
       code: promoCode,
-      max_listings: promo.max_listings
+      remaining_uses: promo.remaining_uses
     };
     
     console.log('🎟️ API: Generated promo code response:', response);
