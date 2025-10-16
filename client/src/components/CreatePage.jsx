@@ -85,7 +85,18 @@ function CreatePage() {
     }
   };
 
-  const handlePayment = () => {
+  const handlePayment = (e) => {
+    // Prevent form submission for Buy Promo Code
+    if (formData.payment_network === 'promo') {
+      e.preventDefault();
+      e.stopPropagation();
+      // Clear all validation errors immediately
+      setValidationErrors({});
+      // Show modal immediately - no form validation needed for buying promo codes
+      setShowQRModal(true);
+      return;
+    }
+    
     // 1) PAY WITH PROMO: If promo code exists, validate and submit (no payment needed)
     if (formData.promo_code) {
       if (!validateForm()) {
@@ -95,21 +106,7 @@ function CreatePage() {
       return;
     }
     
-    // 2) BUY PROMO CODE: No form validation needed, just show promo selection
-    if (formData.payment_network === 'promo') {
-      // Clear all validation errors immediately
-      setValidationErrors({});
-      // Remove required attributes from all inputs to prevent browser validation
-      const inputs = document.querySelectorAll('input[required], textarea[required], select[required]');
-      inputs.forEach(input => {
-        input.removeAttribute('required');
-      });
-      // Show modal immediately - no form validation needed for buying promo codes
-      setShowQRModal(true);
-      return;
-    }
-    
-    // 3) SOLANA PAY 1 USDC: Validate form and show QR for 1 USDC
+    // 2) SOLANA PAY 1 USDC: Validate form and show QR for 1 USDC
     if (formData.payment_network === 'solana') {
       if (!validateForm()) {
         return;
@@ -642,7 +639,7 @@ function CreatePage() {
                   <div className="mt-6">
                     <button
                       type="button"
-                      onClick={handlePayment}
+                      onClick={(e) => handlePayment(e)}
                       className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
                     >
                       {formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana'}
