@@ -42,6 +42,7 @@ function CreatePage() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationResults, setTranslationResults] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -287,6 +288,9 @@ function CreatePage() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
+    
     try {
       const response = await fetch('/api/listings', {
         method: 'POST',
@@ -312,13 +316,16 @@ function CreatePage() {
       });
 
       if (response.ok) {
-        window.location.href = '/';
+        // Show success modal instead of redirecting
+        setShowSuccessModal(true);
       } else {
         const error = await response.json();
         console.error('Pay with promo error:', error);
       }
     } catch (error) {
       console.error('Pay with promo error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -915,9 +922,10 @@ function CreatePage() {
                           handlePayment(e);
                         }
                       }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isSubmitting}
                     >
-                      {formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana'}
+                      {isSubmitting ? '⏳ Processing...' : (formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana')}
                     </button>
                   </div>
                 </div>
