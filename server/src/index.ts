@@ -673,6 +673,7 @@ app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () =
       sqm: listing.sqm,
       cost: listing.cost,
       payment_network: listing.payment_network,
+      promo_code_used: listing.promo_code_used,
       created_at: listing.created_at,
       expires_at: listing.expires_at,
       is_expired: listing.expires_at <= new Date()
