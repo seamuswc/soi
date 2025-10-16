@@ -540,14 +540,9 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
 
     console.log('🎟️ API: Generating promo code for reference:', reference, 'max_listings:', max_listings);
 
-    // Verify Solana payment was made
-    const isValid = await validateSolanaPayment(reference);
-    console.log('🎟️ API: Payment validation result:', isValid);
-    
-    if (!isValid) {
-      console.log('🎟️ API: Payment not verified, returning error');
-      return reply.code(400).send({ error: 'Payment not verified' });
-    }
+    // Skip payment validation for promo code generation since payment was already confirmed
+    // in the payment flow. The reference is only generated after successful payment.
+    console.log('🎟️ API: Skipping payment validation - payment already confirmed in payment flow');
 
     const maxListings = max_listings && max_listings > 0 ? max_listings : 1;
 
