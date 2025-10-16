@@ -72,7 +72,7 @@ export async function sendPromoCodeEmail(data: PromoCodeEmailData): Promise<bool
       .replace(/\{\{reference\}\}/g, data.reference)
       .replace(/\{\{purchaseDate\}\}/g, new Date().toLocaleDateString());
 
-    // Create email request
+    // Create email request using direct content (no template)
     const request = {
       FromEmailAddress: sender,
       Destination: [data.email],
