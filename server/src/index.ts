@@ -789,24 +789,40 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
     const sqmChange = 0; // Could calculate SQM trends if needed
     
     // Real area analysis based on actual listings
-    const areaData = [
-      { name: 'Central', listings: 0, avgPrice: 0, change: 0, lat: 13.7563, lng: 100.5018 },
-      { name: 'North', listings: 0, avgPrice: 0, change: 0, lat: 13.8000, lng: 100.5500 },
-      { name: 'South', listings: 0, avgPrice: 0, change: 0, lat: 13.7000, lng: 100.4500 },
-      { name: 'East', listings: 0, avgPrice: 0, change: 0, lat: 13.7800, lng: 100.5800 },
-      { name: 'West', listings: 0, avgPrice: 0, change: 0, lat: 13.7300, lng: 100.4200 }
-    ];
+    let areaData = [];
     
-    // For now, show all listings as "Central" until we implement proper area detection
     if (totalListings > 0) {
-      areaData[0] = {
-        name: 'Central',
-        listings: totalListings,
-        avgPrice: averageRent,
-        change: rentChange,
-        lat: 13.7563,
-        lng: 100.5018
-      };
+      // Group listings by building name and use actual coordinates
+      const groupedByBuilding = listings.reduce((acc, listing) => {
+        const buildingName = listing.building_name;
+        if (!acc[buildingName]) {
+          acc[buildingName] = {
+            name: buildingName,
+            listings: 0,
+            totalCost: 0,
+            lat: listing.latitude,
+            lng: listing.longitude
+          };
+        }
+        acc[buildingName].listings += 1;
+        acc[buildingName].totalCost += listing.cost;
+        return acc;
+      }, {});
+
+      // Convert to areaData format
+      areaData = Object.values(groupedByBuilding).map(building => ({
+        name: building.name,
+        listings: building.listings,
+        avgPrice: Math.round(building.totalCost / building.listings),
+        change: 0, // No historical data yet
+        lat: building.lat,
+        lng: building.lng
+      }));
+    } else {
+      // No listings, show empty areas
+      areaData = [
+        { name: 'No Listings', listings: 0, avgPrice: 0, change: 0, lat: 12.9236, lng: 100.8825 }
+      ];
     }
 
     // Top performing areas

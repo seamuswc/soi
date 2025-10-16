@@ -178,21 +178,15 @@ function AdvancedDataPage() {
   };
 
   const generatePriceData = (basePrice, length) => {
-    const data = [];
-    for (let i = 0; i < length; i++) {
-      const variation = (Math.random() - 0.5) * 0.2; // ±10% variation
-      data.push(Math.round(basePrice * (0.9 + variation + (i * 0.02))));
-    }
-    return data;
+    // For now, show flat line with current average price
+    // TODO: Implement real historical data when available
+    return Array(length).fill(Math.round(basePrice));
   };
 
   const generateVolumeData = (baseVolume, length) => {
-    const data = [];
-    for (let i = 0; i < length; i++) {
-      const variation = (Math.random() - 0.5) * 0.3; // ±15% variation
-      data.push(Math.round(baseVolume * (0.8 + variation + (i * 0.05))));
-    }
-    return data;
+    // For now, show flat line with current total listings
+    // TODO: Implement real historical data when available
+    return Array(length).fill(Math.round(baseVolume));
   };
 
   // Remove city switching - use domain-specific defaults
@@ -278,14 +272,34 @@ function AdvancedDataPage() {
   };
 
   const getChartLabels = (period) => {
+    const now = new Date();
     switch (period) {
-      case '1month': return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      case '3months': return ['Month 1', 'Month 2', 'Month 3'];
-      case '6months': return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      case '1year': return ['Q1', 'Q2', 'Q3', 'Q4'];
-      case 'beginning': return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      case 'all': return ['2020', '2021', '2022', '2023', '2024'];
-      default: return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      case '1month': 
+        return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      case '3months': 
+        return ['Month 1', 'Month 2', 'Month 3'];
+      case '6months': 
+        // Show last 6 months with real month names
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months.push(date.toLocaleDateString('en-US', { month: 'short' }));
+        }
+        return months;
+      case '1year': 
+        return ['Q1', 'Q2', 'Q3', 'Q4'];
+      case 'beginning': 
+        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      case 'all': 
+        return ['2020', '2021', '2022', '2023', '2024'];
+      default: 
+        // Show last 6 months with real month names
+        const defaultMonths = [];
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          defaultMonths.push(date.toLocaleDateString('en-US', { month: 'short' }));
+        }
+        return defaultMonths;
     }
   };
 
