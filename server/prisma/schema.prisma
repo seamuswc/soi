@@ -43,7 +43,7 @@ model Promo {
 
 model User {
   id           Int      @id @default(autoincrement())
-  email        String   // Removed @unique to allow multiple accounts per email
+  email        String   @unique
   password     String   // Generated password for login
   payment_reference String @unique // Solana payment reference
   expires_at   DateTime // 365 days from creation
