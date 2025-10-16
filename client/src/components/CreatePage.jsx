@@ -1020,7 +1020,7 @@ function CreatePage() {
                 href="/"
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
               >
-                Go to Home
+                Go to Map
               </a>
             </div>
           </div>
