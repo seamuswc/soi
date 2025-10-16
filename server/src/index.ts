@@ -538,9 +538,14 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       max_listings?: number; 
     };
 
+    console.log('🎟️ API: Generating promo code for reference:', reference, 'max_listings:', max_listings);
+
     // Verify Solana payment was made
     const isValid = await validateSolanaPayment(reference);
+    console.log('🎟️ API: Payment validation result:', isValid);
+    
     if (!isValid) {
+      console.log('🎟️ API: Payment not verified, returning error');
       return reply.code(400).send({ error: 'Payment not verified' });
     }
 
@@ -563,10 +568,13 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       }
     });
     
-    return { 
+    const response = { 
       code: promoCode,
       max_listings: promo.max_listings
     };
+    
+    console.log('🎟️ API: Generated promo code response:', response);
+    return response;
   } catch (error: any) {
     app.log.error('Error generating promo code after payment:', error);
     return reply.code(500).send({ error: 'Failed to generate promo code' });

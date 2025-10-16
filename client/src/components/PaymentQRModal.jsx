@@ -254,7 +254,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         </button>
 
         {/* Only show header if promo code hasn't been generated yet */}
-        {console.log('🎟️ Modal render - generatedPromo:', generatedPromo, 'network:', network)}
         {!generatedPromo && (
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-6 mb-6 text-center">
             <h2 className="text-2xl font-bold mb-2">{network === 'promo' ? 'Buy Promo Code with Solana' : 'Pay with Solana'}</h2>
