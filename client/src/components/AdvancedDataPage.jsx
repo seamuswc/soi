@@ -152,7 +152,7 @@ function AdvancedDataPage() {
         data: {
           labels: labels,
           datasets: [{
-            label: chartType === 'price' ? `Average Price (${domainConfig.currency || 'THB'})` : 'Listings Volume',
+            label: chartType === 'price' ? `Average Price (USDC)` : 'Listings Volume',
             data: chartType === 'price' 
               ? generatePriceData(data?.averageRent || 0, labels.length)
               : generateVolumeData(data?.totalListings || 0, labels.length),
@@ -206,7 +206,7 @@ function AdvancedDataPage() {
   const switchChart = (type) => {
     setChartType(type);
     if (chart) {
-      chart.data.datasets[0].label = type === 'price' ? `Average Price (${domainConfig.currency || 'THB'})` : 'Listings Volume';
+      chart.data.datasets[0].label = type === 'price' ? `Average Price (USDC)` : 'Listings Volume';
       chart.data.datasets[0].data = type === 'price' 
         ? generatePriceData(data?.averageRent || 0, chart.data.labels.length)
         : generateVolumeData(data?.totalListings || 0, chart.data.labels.length);
@@ -266,8 +266,7 @@ function AdvancedDataPage() {
   };
 
   const formatCurrency = (amount) => {
-    const currency = domainConfig.currency || 'THB';
-    const symbol = currency === 'THB' ? '฿' : currency === 'INR' ? '₹' : currency === 'NGN' ? '₦' : '฿';
+    const symbol = 'USDC';
     return `${symbol}${amount.toLocaleString()}`;
   };
 

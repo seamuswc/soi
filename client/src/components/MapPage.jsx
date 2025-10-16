@@ -111,8 +111,8 @@ function MapPage() {
           <div className="grid grid-cols-2 gap-2 text-sm">
             <input className="border rounded px-2 py-1" placeholder="Min sqm" value={minSqm} onChange={e => setMinSqm(e.target.value)} />
             <input className="border rounded px-2 py-1" placeholder="Max sqm" value={maxSqm} onChange={e => setMaxSqm(e.target.value)} />
-            <input className="border rounded px-2 py-1" placeholder="Min THB" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
-            <input className="border rounded px-2 py-1" placeholder="Max THB" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+            <input className="border rounded px-2 py-1" placeholder="Min USDC" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
+            <input className="border rounded px-2 py-1" placeholder="Max USDC" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
           </div>
           <div className="space-y-1 text-sm">
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => {
@@ -175,7 +175,7 @@ function MapPage() {
                 <p><strong>Building:</strong> {selectedBuilding.building_name}</p>
                 <p><strong>Floor:</strong> {selectedBuilding.floor}</p>
                 <p><strong>Size:</strong> {selectedBuilding.sqm} sqm</p>
-                <p><strong>Cost:</strong> {selectedBuilding.cost} THB</p>
+                <p><strong>Cost:</strong> {selectedBuilding.cost} USDC</p>
                 <p><strong>Coordinates:</strong> {selectedBuilding.latitude}, {selectedBuilding.longitude}</p>
               </div>
             )}
@@ -216,15 +216,14 @@ function MapPage() {
                 return acc;
               }, {});
 
-              console.log('🗺️ Rendering markers for grouped listings:', grouped);
               return Object.entries(grouped).map(([buildingName, buildingListings], index) => {
                 const firstListing = buildingListings[0];
                 
-                // Add small random offset to prevent marker overlap at same coordinates
+                // Add small offset to prevent marker overlap at same coordinates
                 const baseLat = firstListing.latitude;
                 const baseLng = firstListing.longitude;
                 
-                // Create a consistent offset based on building name hash to avoid random repositioning on re-renders
+                // Create consistent offset based on building name hash
                 const hash = buildingName.split('').reduce((a, b) => {
                   a = ((a << 5) - a) + b.charCodeAt(0);
                   return a & a;
@@ -233,8 +232,6 @@ function MapPage() {
                 // Small offset (~10-20 meters) to prevent exact overlap
                 const offsetLat = baseLat + ((hash % 100) - 50) * 0.0001;
                 const offsetLng = baseLng + (((hash >> 8) % 100) - 50) * 0.0001;
-                
-                console.log('📍 Rendering marker for:', buildingName, 'at', offsetLat, offsetLng, '(offset from', baseLat, baseLng, ')');
                 return (
                   <React.Fragment key={buildingName}>
                     <Marker

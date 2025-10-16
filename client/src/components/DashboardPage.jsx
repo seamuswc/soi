@@ -388,7 +388,7 @@ function DashboardPage() {
                     Size (sqm)
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cost (THB)
+                    Cost (USDC)
                   </th>
                   <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment

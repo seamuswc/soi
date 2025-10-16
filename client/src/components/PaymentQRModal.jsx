@@ -54,8 +54,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           message: message
         });
         const url = `solana:${merchantAddress}?${params.toString()}`;
-        console.log('🔗 Generated QR URL:', url);
-        console.log('💰 Amount:', amount, 'Merchant:', merchantAddress);
+        // QR URL generated for payment
         setQrUrl(url);
 
         // Step 2: Try Phantom wallet first (desktop)
@@ -83,7 +82,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
             setLoading(false);
           } catch (walletErr) {
             // Phantom failed, show QR code
-            console.log('Phantom failed, showing QR:', walletErr);
             setShowQR(true);
             setLoading(false);
           }
@@ -103,7 +101,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               
               // Handle different payment types
               if (network === 'promo') {
-                console.log('🎟️ Payment confirmed for promo code purchase');
                 setShowQR(false); // Hide QR code for promo codes
                 await generatePromoCode();
               } else {
@@ -149,16 +146,12 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const generatePromoCode = async () => {
     try {
       setGeneratingPromo(true);
-      console.log('🎟️ Generating promo code for reference:', reference);
-      
       const response = await axios.post('/api/promo/generate-after-payment', {
         reference: reference
       });
       
-      console.log('🎟️ Promo code generated:', response.data);
       setGeneratedPromo(response.data);
       setGeneratingPromo(false);
-      console.log('🎟️ generatedPromo state set to:', response.data);
     } catch (error) {
       console.error('Failed to generate promo code:', error);
       setGeneratingPromo(false);
@@ -201,8 +194,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         message: 'Promo Code Purchase'
       });
       const url = `solana:${merchantAddress}?${params.toString()}`;
-      console.log('🎟️ Generated Promo QR URL:', url);
-      console.log('🎟️ Amount:', totalAmount, 'Merchant:', merchantAddress);
+      // Promo QR URL generated
       setQrUrl(url);
       
       setShowListingSelection(false);

@@ -169,14 +169,10 @@ function CreatePage() {
         window.location.href = '/';
       } else {
         const error = await response.json();
-        console.error('🚨 PAY WITH PROMO ERROR:', error);
-        console.error('🚨 Full error object:', JSON.stringify(error, null, 2));
-        // Error logged to console only - no alert popup
+        console.error('Pay with promo error:', error);
       }
     } catch (error) {
-      console.error('🚨 PAY WITH PROMO ERROR:', error);
-      console.error('🚨 Full error object:', JSON.stringify(error, null, 2));
-      // Error logged to console only - no alert popup
+      console.error('Pay with promo error:', error);
     }
   };
 
