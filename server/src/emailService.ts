@@ -22,7 +22,7 @@ export async function sendSubscriptionEmail(data: SubscriptionEmailData): Promis
     }
 
     // Initialize Tencent SES client
-    const client = new ses.Client({
+    const client = new ses.v20201002.Client({
       credential: {
         secretId: secretId,
         secretKey: secretKey,
