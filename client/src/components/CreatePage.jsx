@@ -86,16 +86,7 @@ function CreatePage() {
   };
 
   const handlePayment = (e) => {
-    // 1) PAY WITH PROMO: If promo code exists, validate and submit (no payment needed)
-    if (formData.promo_code) {
-      if (!validateForm()) {
-        return;
-      }
-      handleSubmit();
-      return;
-    }
-    
-    // 2) BUY PROMO CODE: No form validation needed, just show promo selection
+    // 1) BUY PROMO CODE: No form validation needed, just show promo selection
     if (formData.payment_network === 'promo') {
       e.preventDefault();
       e.stopPropagation();
@@ -106,12 +97,21 @@ function CreatePage() {
       return;
     }
     
-    // 3) SOLANA PAY 1 USDC: Validate form and show QR for 1 USDC
+    // 2) SOLANA PAY 1 USDC: Validate form and show QR for 1 USDC
     if (formData.payment_network === 'solana') {
       if (!validateForm()) {
         return;
       }
       setShowQRModal(true);
+      return;
+    }
+    
+    // 3) PAY WITH PROMO: If promo code exists, validate and submit (no payment needed)
+    if (formData.promo_code) {
+      if (!validateForm()) {
+        return;
+      }
+      handleSubmit();
       return;
     }
   };
