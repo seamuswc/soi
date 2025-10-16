@@ -1143,7 +1143,8 @@ app.get('/api/settings/current', { preHandler: authenticateToken }, async (reque
       emailSecretKey: process.env.TENCENT_SECRET_KEY || '',
       emailRegion: process.env.TENCENT_SES_REGION || 'ap-singapore',
       emailSender: process.env.TENCENT_SES_SENDER || 'data@soipattaya.com',
-      googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || ''
+      googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || '',
+      solanaMerchantAddress: process.env.SOLANA_MERCHANT_ADDRESS || ''
     };
 
     return currentSettings;
@@ -1162,7 +1163,8 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailSecretKey, 
       emailRegion, 
       emailSender, 
-      googleMapsApiKey 
+      googleMapsApiKey,
+      solanaMerchantAddress
     } = request.body as {
       deepseekApiKey?: string;
       emailSecretId?: string;
@@ -1170,12 +1172,13 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailRegion?: string;
       emailSender?: string;
       googleMapsApiKey?: string;
+      solanaMerchantAddress?: string;
     };
 
     // Read current .env file
     const fs = require('fs');
     const path = require('path');
-    const envPath = path.join(__dirname, '../.env');
+    const envPath = path.join(__dirname, '../../.env');
     
     let envContent = '';
     if (fs.existsSync(envPath)) {
@@ -1189,7 +1192,8 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       'TENCENT_SECRET_KEY': emailSecretKey,
       'TENCENT_SES_REGION': emailRegion,
       'TENCENT_SES_SENDER': emailSender,
-      'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey
+      'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey,
+      'SOLANA_MERCHANT_ADDRESS': solanaMerchantAddress
     };
 
     // Process each update
