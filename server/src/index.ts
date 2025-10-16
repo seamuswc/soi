@@ -1215,6 +1215,26 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
     // Write updated .env file
     fs.writeFileSync(envPath, envContent);
 
+    // If Google Maps API key was updated, rebuild client
+    if (googleMapsApiKey && googleMapsApiKey.trim()) {
+      console.log('🗺️ Google Maps API key updated, rebuilding client...');
+      try {
+        const { exec } = require('child_process');
+        const path = require('path');
+        const clientPath = path.join(__dirname, '../../client');
+        
+        exec(`cd ${clientPath} && VITE_GOOGLE_MAPS_API_KEY="${googleMapsApiKey}" npm run build`, (error, stdout, stderr) => {
+          if (error) {
+            console.error('❌ Client rebuild failed:', error);
+          } else {
+            console.log('✅ Client rebuilt successfully with new Google Maps API key');
+          }
+        });
+      } catch (rebuildError) {
+        console.error('❌ Error rebuilding client:', rebuildError);
+      }
+    }
+
     console.log('🔧 Settings updated in .env file');
     return { success: true, message: 'Settings updated successfully' };
   } catch (error: any) {
