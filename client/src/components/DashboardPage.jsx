@@ -14,6 +14,15 @@ function DashboardPage() {
   const [promoList, setPromoList] = useState([]);
   const [users, setUsers] = useState([]);
   const [showUsers, setShowUsers] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({
+    deepseekApiKey: '',
+    emailSecretId: '',
+    emailSecretKey: '',
+    emailRegion: 'ap-singapore',
+    emailSender: 'data@soipattaya.com',
+    googleMapsApiKey: ''
+  });
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -73,6 +82,27 @@ function DashboardPage() {
     setToken(null);
     setIsAuthenticated(false);
     setDashboardData(null);
+  };
+
+  const handleSettingsChange = (e) => {
+    const { name, value } = e.target;
+    setSettingsForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const saveSettings = async () => {
+    try {
+      await axios.post('/api/settings/update', settingsForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Settings saved successfully! Server will restart to apply changes.');
+      setShowSettings(false);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    }
   };
 
   const generatePromoCode = async () => {
@@ -200,6 +230,9 @@ function DashboardPage() {
           <div className="flex gap-2">
             <button onClick={fetchUsers} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               👥 View Users
+            </button>
+            <button onClick={() => setShowSettings(true)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
+              ⚙️ Settings
             </button>
             <a href="/data" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               📊 Data Analytics
@@ -506,6 +539,121 @@ function DashboardPage() {
             
             <div className="mt-4 text-sm text-gray-600">
               Total Users: {users.length}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">⚙️ API Settings</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Update API keys and settings. Changes will be applied to the server's .env file.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  DeepSeek API Key
+                </label>
+                <input
+                  type="password"
+                  name="deepseekApiKey"
+                  value={settingsForm.deepseekApiKey}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="sk-..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tencent Email Secret ID
+                </label>
+                <input
+                  type="password"
+                  name="emailSecretId"
+                  value={settingsForm.emailSecretId}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="AKID..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tencent Email Secret Key
+                </label>
+                <input
+                  type="password"
+                  name="emailSecretKey"
+                  value={settingsForm.emailSecretKey}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Secret key..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Region
+                </label>
+                <select
+                  name="emailRegion"
+                  value={settingsForm.emailRegion}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="ap-singapore">ap-singapore</option>
+                  <option value="ap-hongkong">ap-hongkong</option>
+                  <option value="ap-tokyo">ap-tokyo</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Sender
+                </label>
+                <input
+                  type="email"
+                  name="emailSender"
+                  value={settingsForm.emailSender}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="data@soipattaya.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Google Maps API Key
+                </label>
+                <input
+                  type="password"
+                  name="googleMapsApiKey"
+                  value={settingsForm.googleMapsApiKey}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="AIzaSy..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveSettings}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              >
+                Save Settings
+              </button>
             </div>
           </div>
         </div>

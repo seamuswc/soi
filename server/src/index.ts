@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import path from 'path';
 import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
-import { sendSubscriptionEmail } from './emailService';
+import { sendSubscriptionEmail, sendPromoCodeEmail } from './emailService';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -1043,6 +1043,175 @@ if (process.env.NODE_ENV === 'production') {
     reply.type('text/html').send(require('fs').readFileSync(path.join(__dirname, '../../client/dist/index.html'), 'utf8'));
   });
 }
+
+// Maintenance mode state
+let maintenanceMode: {
+  enabled: boolean;
+  startTime: Date | null;
+  endTime: Date | null;
+  message: string;
+} = {
+  enabled: false,
+  startTime: null,
+  endTime: null,
+  message: ''
+};
+
+// Maintenance mode endpoints
+app.post('/api/maintenance/start', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { startTime, endTime, message } = request.body as {
+      startTime: string;
+      endTime: string;
+      message?: string;
+    };
+
+    maintenanceMode = {
+      enabled: true,
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
+      message: message || 'Scheduled maintenance in progress'
+    };
+
+    console.log('🔧 Maintenance mode enabled:', maintenanceMode);
+    return { success: true, maintenance: maintenanceMode };
+  } catch (error: any) {
+    app.log.error('Error starting maintenance mode:', error);
+    return reply.code(500).send({ error: 'Failed to start maintenance mode' });
+  }
+});
+
+app.post('/api/maintenance/stop', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    maintenanceMode = {
+      enabled: false,
+      startTime: null,
+      endTime: null,
+      message: ''
+    };
+
+    console.log('✅ Maintenance mode disabled');
+    return { success: true };
+  } catch (error: any) {
+    app.log.error('Error stopping maintenance mode:', error);
+    return reply.code(500).send({ error: 'Failed to stop maintenance mode' });
+  }
+});
+
+app.get('/api/maintenance/status', async (request, reply) => {
+  try {
+    const now = new Date();
+    const isMaintenanceActive = maintenanceMode.enabled && 
+      maintenanceMode.startTime && 
+      maintenanceMode.endTime &&
+      now >= maintenanceMode.startTime! && 
+      now <= maintenanceMode.endTime!;
+
+    const timeUntilMaintenance = maintenanceMode.startTime ? 
+      Math.max(0, maintenanceMode.startTime.getTime() - now.getTime()) : 0;
+
+    return {
+      enabled: maintenanceMode.enabled,
+      active: isMaintenanceActive,
+      startTime: maintenanceMode.startTime,
+      endTime: maintenanceMode.endTime,
+      message: maintenanceMode.message,
+      timeUntilMaintenance: timeUntilMaintenance
+    };
+  } catch (error: any) {
+    app.log.error('Error getting maintenance status:', error);
+    return reply.code(500).send({ error: 'Failed to get maintenance status' });
+  }
+});
+
+// Settings update endpoint
+app.post('/api/settings/update', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { 
+      deepseekApiKey, 
+      emailSecretId, 
+      emailSecretKey, 
+      emailRegion, 
+      emailSender, 
+      googleMapsApiKey 
+    } = request.body as {
+      deepseekApiKey?: string;
+      emailSecretId?: string;
+      emailSecretKey?: string;
+      emailRegion?: string;
+      emailSender?: string;
+      googleMapsApiKey?: string;
+    };
+
+    // Read current .env file
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(__dirname, '../.env');
+    
+    let envContent = '';
+    if (fs.existsSync(envPath)) {
+      envContent = fs.readFileSync(envPath, 'utf8');
+    }
+
+    // Update or add environment variables
+    const updates = {
+      'DEEPSEEK_API_KEY': deepseekApiKey,
+      'TENCENT_SECRET_ID': emailSecretId,
+      'TENCENT_SECRET_KEY': emailSecretKey,
+      'TENCENT_SES_REGION': emailRegion,
+      'TENCENT_SES_SENDER': emailSender,
+      'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey
+    };
+
+    // Process each update
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value.trim()) {
+        const regex = new RegExp(`^${key}=.*$`, 'm');
+        const newLine = `${key}=${value}`;
+        
+        if (regex.test(envContent)) {
+          // Update existing line
+          envContent = envContent.replace(regex, newLine);
+        } else {
+          // Add new line
+          envContent += `\n${newLine}`;
+        }
+      }
+    });
+
+    // Write updated .env file
+    fs.writeFileSync(envPath, envContent);
+
+    console.log('🔧 Settings updated in .env file');
+    return { success: true, message: 'Settings updated successfully' };
+  } catch (error: any) {
+    app.log.error('Error updating settings:', error);
+    return reply.code(500).send({ error: 'Failed to update settings' });
+  }
+});
+
+// Middleware to block payments during maintenance
+app.addHook('preHandler', async (request, reply) => {
+  const now = new Date();
+  const isMaintenanceActive = maintenanceMode.enabled && 
+    maintenanceMode.startTime && 
+    maintenanceMode.endTime &&
+    now >= maintenanceMode.startTime! && 
+    now <= maintenanceMode.endTime!;
+
+  // Block payment-related endpoints during maintenance
+  if (isMaintenanceActive && (
+    request.url.includes('/api/promo/generate-after-payment') ||
+    request.url.includes('/api/listings') ||
+    request.url.includes('/api/transaction')
+  )) {
+    return reply.code(503).send({ 
+      error: 'Service temporarily unavailable due to maintenance',
+      maintenance: true,
+      message: maintenanceMode.message
+    });
+  }
+});
 
 // Start server
 const start = async () => {
