@@ -701,9 +701,11 @@ app.post('/api/listings', async (request, reply) => {
 
     // Promo handling - check database for promo code
     if (data.promo_code) {
+      console.log(`🎟️ Processing promo code: ${data.promo_code}`);
       const promo = await prisma.promo.findUnique({
         where: { code: data.promo_code.toLowerCase() }
       });
+      console.log(`🎟️ Found promo: ${promo ? `${promo.remaining_uses} uses remaining` : 'NOT FOUND'}`);
       
       if (!promo) {
         return reply.code(400).send({ error: 'Invalid promo code' });
@@ -714,10 +716,12 @@ app.post('/api/listings', async (request, reply) => {
       }
       
       // Decrement promo usage
-      await prisma.promo.update({ 
+      console.log(`🎟️ Before decrement: ${promo.remaining_uses} uses remaining for ${data.promo_code}`);
+      const updatedPromo = await prisma.promo.update({ 
         where: { code: data.promo_code.toLowerCase() }, 
         data: { remaining_uses: { decrement: 1 } } 
       });
+      console.log(`🎟️ After decrement: ${updatedPromo.remaining_uses} uses remaining for ${data.promo_code}`);
       
       // Promo accepted: skip payment validation
       isValid = true;
