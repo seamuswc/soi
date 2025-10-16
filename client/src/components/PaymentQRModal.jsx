@@ -126,9 +126,21 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       if (network !== 'promo') {
         await axios.post('/api/listings', listingData);
       }
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
+      
+      // For Solana payments, show success message before redirecting
+      if (network === 'solana') {
+        setPaid(true);
+        setShowQR(false);
+        // Show success message for 3 seconds, then redirect
+        setTimeout(() => {
+          onSuccess();
+        }, 3000);
+      } else {
+        // For promo codes, don't redirect - let user copy the code
+        setTimeout(() => {
+          onSuccess();
+        }, 2000);
+      }
     } catch (error) {
       console.error('Failed to create listing:', error);
       alert('Failed to create listing. Please try again.');
@@ -360,6 +372,21 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           </div>
         )}
 
+        {/* Solana payment success message */}
+        {paid && network === 'solana' && (
+          <div className="text-center">
+            <div className="text-6xl mb-4">✅</div>
+            <p className="text-green-600 font-bold text-xl mb-4">Payment Successful!</p>
+            <p className="text-gray-600 mb-4">Your listing has been created successfully.</p>
+            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
+              <p className="text-sm text-green-800">
+                🎉 <strong>Success!</strong> Your property listing is now live on the map.
+              </p>
+            </div>
+            <p className="text-sm text-gray-500">Redirecting to homepage...</p>
+          </div>
+        )}
+
         {/* Generated promo code */}
         {generatedPromo && (
           <div className="text-center">
@@ -388,6 +415,18 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               >
                 🏠 Create Listing with Code
               </a>
+              
+              <button
+                onClick={() => {
+                  // Pass the promo code to the success handler
+                  if (onSuccess) {
+                    onSuccess(generatedPromo.code);
+                  }
+                }}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                ✅ Use This Promo Code
+              </button>
               
               <button
                 onClick={onClose}

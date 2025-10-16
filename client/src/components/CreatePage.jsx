@@ -187,6 +187,17 @@ function CreatePage() {
     window.location.href = '/';
   };
 
+  const handlePromoCodeSuccess = (promoCode) => {
+    setShowQRModal(false);
+    // Auto-fill the promo code input
+    setFormData(prev => ({
+      ...prev,
+      promo_code: promoCode
+    }));
+    // Show success message
+    alert(`Promo code ${promoCode} has been added to your form!`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       
@@ -681,7 +692,7 @@ function CreatePage() {
             cost: parseInt(formData.cost) || 0
           }}
           onClose={() => setShowQRModal(false)}
-          onSuccess={handlePaymentSuccess}
+          onSuccess={formData.payment_network === 'promo' ? handlePromoCodeSuccess : handlePaymentSuccess}
         />
       )}
     </div>
