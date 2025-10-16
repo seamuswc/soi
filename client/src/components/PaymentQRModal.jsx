@@ -219,7 +219,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           if (r.data?.confirmed) {
             setPaid(true);
             setShowQR(false);
-            setShowPromoForm(true);
+            await generatePromoCode();
             return;
           }
         } catch {}
