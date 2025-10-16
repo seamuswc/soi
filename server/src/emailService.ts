@@ -119,9 +119,7 @@ This email was sent automatically. Please keep your login credentials safe.`;
     // Create email request
     const request = {
       FromEmailAddress: sender,
-      Destination: {
-        ToAddresses: [data.email],
-      },
+      Destination: [data.email],
       Subject: '🎉 Data Subscription Confirmed - Welcome!',
       ReplyToAddresses: [sender],
       Template: {
