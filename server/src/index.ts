@@ -69,6 +69,30 @@ const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xW
 const app = fastify({ logger: true });
 const prisma = new PrismaClient();
 
+// Function to ensure FREE promo exists
+async function ensureFreePromo() {
+  try {
+    const existingFree = await prisma.promo.findUnique({
+      where: { code: 'free' }
+    });
+    
+    if (!existingFree) {
+      await prisma.promo.create({
+        data: {
+          code: 'free',
+          remaining_uses: 1000,
+          email: null
+        }
+      });
+      console.log('✅ FREE promo code created (1000 uses)');
+    } else {
+      console.log(`✅ FREE promo code exists (${existingFree.remaining_uses} uses remaining)`);
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring FREE promo:', error);
+  }
+}
+
 app.register(cors, { origin: '*' });
 
 // Solana Connection
@@ -932,6 +956,9 @@ if (process.env.NODE_ENV === 'production') {
 // Start server
 const start = async () => {
   try {
+    // Ensure FREE promo exists on startup
+    await ensureFreePromo();
+    
     const PORT = parseInt(process.env.PORT || '3000', 10);
     await app.listen({ port: PORT, host: '0.0.0.0' });
   } catch (err) {
