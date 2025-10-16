@@ -1,8 +1,14 @@
 #!/bin/bash
 # SOI Pattaya - Production Deployment Script
-# Usage: ./deploy.sh
+# Usage: ./deploy.sh [--force-build]
+#   --force-build: Force rebuild even if dist exists (for server restarts)
 
 set -euo pipefail
+
+FORCE_BUILD=false
+if [ "${1:-}" = "--force-build" ]; then
+    FORCE_BUILD=true
+fi
 
 echo "🚀 SOI Pattaya - Production Deployment"
 echo "======================================"
@@ -57,17 +63,24 @@ cd ..
 
 echo "🔨 Building application..."
 
-# Build server
-echo "   Building server..."
-cd server
-npm run build
-cd ..
+# Build logic: only build if missing or force requested
+if [ "$FORCE_BUILD" = true ] || [ ! -d "server/dist" ] || [ -z "$(ls -A server/dist)" ]; then
+    echo "   Building server..."
+    cd server
+    npm run build
+    cd ..
+else
+    echo "   Server already built, skipping..."
+fi
 
-# Build client
-echo "   Building client..."
-cd client
-npm run build
-cd ..
+if [ "$FORCE_BUILD" = true ] || [ ! -d "client/dist" ] || [ -z "$(ls -A client/dist)" ]; then
+    echo "   Building client..."
+    cd client
+    npm run build
+    cd ..
+else
+    echo "   Client already built, skipping..."
+fi
 
 echo "🚀 Restarting application..."
 pm2 restart all
