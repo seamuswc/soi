@@ -41,6 +41,7 @@ function CreatePage() {
   const [selectedBuildingName, setSelectedBuildingName] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationResults, setTranslationResults] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -329,12 +330,8 @@ function CreatePage() {
 
   const handlePromoCodeSuccess = (promoCode) => {
     setShowQRModal(false);
-    // Auto-fill the promo code input and reset payment method to use the promo
-    setFormData(prev => ({
-      ...prev,
-      promo_code: promoCode,
-      payment_network: 'solana' // Reset to default, will be overridden to 'promo' when using the promo
-    }));
+    // Show success modal instead of redirecting
+    setShowSuccessModal(true);
   };
 
   return (
@@ -983,6 +980,40 @@ function CreatePage() {
             
             <div className="mt-4 text-xs text-gray-500">
               💡 Tip: Using the same building name will group all listings together on the map
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-6xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-green-600 mb-4">Listing Created Successfully!</h2>
+            <p className="text-gray-600 mb-6">
+              Your property listing has been created and is now live on the map. 
+              Thank you for using our platform!
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+              <a
+                href="/"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Go to Home
+              </a>
             </div>
           </div>
         </div>
