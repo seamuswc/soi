@@ -79,7 +79,7 @@ export async function sendSubscriptionEmail(data: SubscriptionEmailData): Promis
             </div>
             <div class="info-box">
                 <h3>🔐 Login Information</h3>
-                <p><strong>Website:</strong> https://soipattaya.com/data</p>
+                <p><strong>Website:</strong> https://soipattaya.com/data or https://soibkk.com/data</p>
                 <p><strong>Email:</strong> ${data.email}</p>
                 <p><strong>Password:</strong> <span class="password">${data.password}</span></p>
             </div>
@@ -109,12 +109,14 @@ WHAT'S NEXT?
 
 LOGIN INFORMATION:
 =================
-Website: https://soipattaya.com/data
+Website: https://soipattaya.com/data or https://soibkk.com/data
 Email: ${data.email}
 Password: ${data.password}
 
 Thank you for subscribing to our data service!
-This email was sent automatically. Please keep your login credentials safe.`;
+This email was sent automatically. Please keep your login credentials safe.
+
+📧 Note: If you don't see this email, please check your spam folder.`;
 
     // Create email request
     const request = {
@@ -143,6 +145,7 @@ This email was sent automatically. Please keep your login credentials safe.`;
     
     console.log('📊 Response:', response);
     console.log(`✅ Subscription email sent to ${data.email}`);
+    console.log(`📧 Please check spam folder if email not received within 5 minutes`);
     return true;
 
   } catch (error) {
