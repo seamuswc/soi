@@ -395,12 +395,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                 📋 Copy Code
               </button>
               
-              <a
-                href="/create"
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors inline-block"
-              >
-                🏠 Create Listing with Code
-              </a>
               
               <button
                 onClick={() => {
