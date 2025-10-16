@@ -325,28 +325,11 @@ function AdvancedDataPage() {
               <p className="text-sm text-gray-600">Real estate market insights for {getCityData().name}</p>
             </div>
             <div className="flex space-x-4">
-              {/* City Selector Buttons */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentCity('pattaya')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    currentCity === 'pattaya' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Pattaya
-                </button>
-                <button
-                  onClick={() => setCurrentCity('bangkok')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    currentCity === 'bangkok' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Bangkok
-                </button>
+              {/* City Display - No switching allowed */}
+              <div className="flex items-center">
+                <span className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white">
+                  {currentCity === 'bangkok' ? 'Bangkok' : 'Pattaya'} Data
+                </span>
               </div>
               
               <select

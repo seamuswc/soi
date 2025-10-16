@@ -759,9 +759,18 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
   try {
     const { area = 'all', period = '6months', city = 'pattaya' } = request.query as { area?: string; period?: string; city?: string };
     
-    // Get all listings for analysis
+    // Get listings filtered by city
     const listings = await prisma.listing.findMany({
       where: {
+        // Filter by city based on coordinates
+        ...(city === 'bangkok' ? {
+          latitude: { gte: 13.0, lte: 14.0 },
+          longitude: { gte: 100.0, lte: 101.0 }
+        } : {
+          // Default to Pattaya area
+          latitude: { gte: 12.0, lte: 13.0 },
+          longitude: { gte: 100.0, lte: 101.0 }
+        }),
         // Add area filtering if needed
         ...(area !== 'all' && { /* area filter logic */ })
       },
