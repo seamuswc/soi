@@ -6,6 +6,7 @@ import { getDomainConfig } from '../utils/domainConfig';
 
 function CreatePage() {
   const [rentalType, setRentalType] = useState('living'); // 'living' or 'business'
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -52,7 +53,19 @@ function CreatePage() {
     
     // Check if FREE promo is available and auto-fill
     checkFreePromo();
+    
+    // Check maintenance status
+    checkMaintenanceStatus();
   }, []);
+
+  const checkMaintenanceStatus = async () => {
+    try {
+      const response = await axios.get('/api/maintenance/status');
+      setMaintenanceMode(response.data.enabled);
+    } catch (error) {
+      console.error('Failed to check maintenance status:', error);
+    }
+  };
 
   const checkFreePromo = async () => {
     try {
@@ -336,6 +349,25 @@ function CreatePage() {
           </div>
         </div>
       </div>
+
+      {/* Maintenance Message */}
+      {maintenanceMode && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mx-4 my-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-500 text-xl">🔧</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Maintenance underway, please dont make payments or listings. Thank you for your patience.</strong>
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                <strong>กำลังบำรุงรักษา กรุณาอย่าทำการชำระเงินหรือลงประกาศ ขอขอบคุณสำหรับความอดทน</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 py-6 md:py-12">

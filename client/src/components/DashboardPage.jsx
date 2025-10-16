@@ -26,7 +26,6 @@ function DashboardPage() {
   });
   const [currentSettings, setCurrentSettings] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [maintenanceMessage, setMaintenanceMessage] = useState('');
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -128,11 +127,11 @@ function DashboardPage() {
   const startMaintenance = async () => {
     try {
       await axios.post('/api/maintenance/start', {
-        message: maintenanceMessage || 'Scheduled maintenance in 10 minutes. Please complete any transactions.'
+        message: 'Maintenance underway, please dont make payments or listings. Thank you for your patience. / กำลังบำรุงรักษา กรุณาอย่าทำการชำระเงินหรือลงประกาศ ขอขอบคุณสำหรับความอดทน'
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Maintenance mode activated! Users will be notified of upcoming maintenance.');
+      alert('Maintenance mode activated! Users will see the maintenance message.');
       setMaintenanceMode(true);
     } catch (error) {
       console.error('Error starting maintenance:', error);
@@ -282,8 +281,8 @@ function DashboardPage() {
             <button onClick={() => setShowSettings(true)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               ⚙️ Settings
             </button>
-            <button onClick={() => setMaintenanceMode(true)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
-              🔧 Maintenance
+            <button onClick={maintenanceMode ? stopMaintenance : startMaintenance} className={`${maintenanceMode ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'} text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center`}>
+              🔧 {maintenanceMode ? 'Stop Maintenance' : 'Start Maintenance'}
             </button>
             <a href="/data" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               📊 Data Analytics
@@ -725,38 +724,6 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* Maintenance Modal */}
-      {maintenanceMode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">🔧 Maintenance Mode</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Enter a custom maintenance message (optional):
-            </p>
-            <textarea
-              value={maintenanceMessage}
-              onChange={(e) => setMaintenanceMessage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent mb-4"
-              placeholder="Scheduled maintenance in 10 minutes. Please complete any transactions."
-              rows={3}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setMaintenanceMode(false)}
-                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={startMaintenance}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
-              >
-                Start Maintenance
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

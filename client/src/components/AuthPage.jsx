@@ -14,12 +14,23 @@ function AuthPage() {
   const [qrUrl, setQrUrl] = useState('');
   const [reference, setReference] = useState('');
   const [paid, setPaid] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   const domainConfig = getDomainConfig();
 
   useEffect(() => {
     fetchCityData();
+    checkMaintenanceStatus();
   }, []);
+
+  const checkMaintenanceStatus = async () => {
+    try {
+      const response = await axios.get('/api/maintenance/status');
+      setMaintenanceMode(response.data.enabled);
+    } catch (error) {
+      console.error('Failed to check maintenance status:', error);
+    }
+  };
 
   const fetchCityData = async () => {
     try {
@@ -147,6 +158,25 @@ function AuthPage() {
             Access premium analytics and market data
           </p>
         </div>
+
+        {/* Maintenance Message */}
+        {maintenanceMode && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-yellow-500 text-xl">🔧</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Maintenance underway, please dont make payments or listings. Thank you for your patience.</strong>
+                </p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  <strong>กำลังบำรุงรักษา กรุณาอย่าทำการชำระเงินหรือลงประกาศ ขอขอบคุณสำหรับความอดทน</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* City Data Display */}
         {cityData && (
