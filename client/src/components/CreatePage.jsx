@@ -99,6 +99,11 @@ function CreatePage() {
     if (formData.payment_network === 'promo') {
       // Clear all validation errors immediately
       setValidationErrors({});
+      // Remove required attributes from all inputs to prevent browser validation
+      const inputs = document.querySelectorAll('input[required], textarea[required], select[required]');
+      inputs.forEach(input => {
+        input.removeAttribute('required');
+      });
       // Show modal immediately - no form validation needed for buying promo codes
       setShowQRModal(true);
       return;
