@@ -152,6 +152,8 @@ function CreatePage() {
           ...formData,
           sqm: parseInt(formData.sqm) || 0,
           cost: parseInt(formData.cost) || 0,
+          latitude: parseFloat(formData.latitude) || 0,
+          longitude: parseFloat(formData.longitude) || 0,
           coordinates: `${formData.latitude}, ${formData.longitude}`,
           rental_type: rentalType,
           // Set appropriate values for business rentals
