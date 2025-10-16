@@ -44,7 +44,21 @@ function CreatePage() {
 
     // Fetch merchant addresses from server
     fetchMerchantAddresses();
+    
+    // Check if FREE promo is available and auto-fill
+    checkFreePromo();
   }, []);
+
+  const checkFreePromo = async () => {
+    try {
+      const response = await axios.get('/api/promo/free');
+      if (response.data.available) {
+        setFormData(prev => ({ ...prev, promo_code: 'free' }));
+      }
+    } catch (error) {
+      console.error('Failed to check FREE promo:', error);
+    }
+  };
 
   const fetchMerchantAddresses = async () => {
     try {

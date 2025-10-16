@@ -563,6 +563,27 @@ app.get('/api/promo/list', { preHandler: authenticateToken }, async (request, re
   }
 });
 
+// Check if FREE promo is available (public endpoint)
+app.get('/api/promo/free', async (request, reply) => {
+  try {
+    const freePromo = await prisma.promo.findUnique({
+      where: { code: 'free' }
+    });
+    
+    if (!freePromo) {
+      return { available: false, remaining_uses: 0 };
+    }
+    
+    return { 
+      available: freePromo.remaining_uses > 0, 
+      remaining_uses: freePromo.remaining_uses 
+    };
+  } catch (error: any) {
+    app.log.error('Error checking FREE promo:', error);
+    return reply.code(500).send({ error: 'Failed to check FREE promo' });
+  }
+});
+
 // Add admin dashboard route (protected)
 app.get('/api/listings/dashboard', { preHandler: authenticateToken }, async () => {
   const listings = await prisma.listing.findMany({
