@@ -114,6 +114,33 @@ function MapPage() {
             <input className="border rounded px-2 py-1" placeholder="Min USDC" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
             <input className="border rounded px-2 py-1" placeholder="Max USDC" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
           </div>
+          
+          {/* Price Legend */}
+          <div className="border-t pt-2 mt-2">
+            <div className="text-xs font-semibold mb-1">Price Colors / สีราคา</div>
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#3b82f6'}}></div>
+                <span>Cheapest / ถูกที่สุด</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#10b981'}}></div>
+                <span>Low / ต่ำ</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#f59e0b'}}></div>
+                <span>Medium / ปานกลาง</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#f97316'}}></div>
+                <span>High / สูง</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#ef4444'}}></div>
+                <span>Most Expensive / แพงที่สุด</span>
+              </div>
+            </div>
+          </div>
           <div className="space-y-1 text-sm">
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => {
               setFilterPool(e.target.checked);
@@ -219,7 +246,28 @@ function MapPage() {
               return Object.entries(grouped).map(([buildingName, buildingListings], index) => {
                 const firstListing = buildingListings[0];
                 
-                // Add small offset to prevent marker overlap at same coordinates
+                // Calculate average price for color coding
+                const avgPrice = buildingListings.reduce((sum, listing) => sum + listing.cost, 0) / buildingListings.length;
+                
+                // Get all prices to determine min/max for color scale
+                const allPrices = Object.values(grouped).flat().map(listing => listing.cost);
+                const minPrice = Math.min(...allPrices);
+                const maxPrice = Math.max(...allPrices);
+                
+                // Color scale from blue (cheap) to red (expensive)
+                const getMarkerColor = (price) => {
+                  if (maxPrice === minPrice) return '#3b82f6'; // Blue if all same price
+                  
+                  const ratio = (price - minPrice) / (maxPrice - minPrice);
+                  
+                  if (ratio <= 0.2) return '#3b82f6'; // Blue - cheapest
+                  if (ratio <= 0.4) return '#10b981'; // Green
+                  if (ratio <= 0.6) return '#f59e0b'; // Yellow
+                  if (ratio <= 0.8) return '#f97316'; // Orange
+                  return '#ef4444'; // Red - most expensive
+                };
+                
+                // Add very small offset to prevent marker overlap at same coordinates
                 const baseLat = firstListing.latitude;
                 const baseLng = firstListing.longitude;
                 
@@ -229,18 +277,19 @@ function MapPage() {
                   return a & a;
                 }, 0);
                 
-                // Small offset (~10-20 meters) to prevent exact overlap
-                const offsetLat = baseLat + ((hash % 100) - 50) * 0.0001;
-                const offsetLng = baseLng + (((hash >> 8) % 100) - 50) * 0.0001;
+                // Much smaller offset (~2-5 meters) to keep markers very close
+                const offsetLat = baseLat + ((hash % 20) - 10) * 0.00001;
+                const offsetLng = baseLng + (((hash >> 8) % 20) - 10) * 0.00001;
+                
                 return (
                   <React.Fragment key={buildingName}>
                     <Marker
                       position={{ lat: offsetLat, lng: offsetLng }}
-                      title={buildingName}
+                      title={`${buildingName} - Avg: ${Math.round(avgPrice)} USDC`}
                       onClick={() => setSelectedMarker(buildingName)}
                       icon={{
                         path: 'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2z',
-                        fillColor: '#dc2626',
+                        fillColor: getMarkerColor(avgPrice),
                         fillOpacity: 1,
                         strokeColor: '#ffffff',
                         strokeWeight: 2,
