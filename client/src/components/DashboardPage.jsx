@@ -422,17 +422,10 @@ function DashboardPage() {
                         listing.payment_network === 'promo' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {(() => {
-                          console.log('Debug listing:', listing.id, 'payment_network:', listing.payment_network, 'promo_code_used:', listing.promo_code_used);
-                          if (listing.payment_network === 'solana') {
-                            return 'Solana';
-                          } else if (listing.payment_network === 'promo') {
-                            // If PROMO, get the PROMO code from same row
-                            return listing.promo_code_used || 'Unknown Code';
-                          } else {
-                            return listing.payment_network.toUpperCase();
-                          }
-                        })()}
+                        {listing.payment_network === 'solana' ? 'Solana' : 
+                         listing.payment_network === 'promo' ? 
+                           (listing.promo_code_used || 'Unknown Code') : 
+                         listing.payment_network.toUpperCase()}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm">
