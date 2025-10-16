@@ -86,7 +86,7 @@ function CreatePage() {
   };
 
   const handlePayment = () => {
-    // If promo code is provided, validate and submit directly without payment
+    // If using an existing promo code (not the auto-filled 'free'), validate and submit directly
     if (formData.promo_code && formData.promo_code !== 'free') {
       if (!validateForm()) {
         return;
@@ -95,16 +95,20 @@ function CreatePage() {
       return;
     }
     
+    // If buying a new promo code, show promo selection modal
     if (formData.payment_network === 'promo') {
-      // Buy Promo Code with Solana - no form validation needed
       setValidationErrors({}); // Clear any existing validation errors
       setShowQRModal(true);
-    } else {
-      // Regular Solana payment - validate form first before showing QR
+      return;
+    }
+    
+    // Regular Solana payment for listing creation
+    if (formData.payment_network === 'solana') {
       if (!validateForm()) {
         return;
       }
       setShowQRModal(true);
+      return;
     }
   };
 
