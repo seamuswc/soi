@@ -303,30 +303,6 @@ function CreatePage() {
               </h2>
               
               <div className="space-y-4">
-                {rentalType === 'living' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Building Name / ชื่ออาคาร *
-                    </label>
-                    <input
-                      type="text"
-                      name="building_name"
-                      value={formData.building_name}
-                      onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
-                        validationErrors.building_name 
-                          ? 'border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 focus:ring-blue-500'
-                      }`}
-                      placeholder="e.g., View Talay 1"
-                      required
-                    />
-                    {validationErrors.building_name && (
-                      <p className="text-xs text-red-500 mt-1">{validationErrors.building_name}</p>
-                    )}
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Coordinates (Latitude, Longitude) / พิกัด *
@@ -351,6 +327,30 @@ function CreatePage() {
                     <p className="text-xs text-gray-500 mt-1">Get coordinates from Google Maps</p>
                   )}
                 </div>
+
+                {rentalType === 'living' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Building Name / ชื่ออาคาร *
+                    </label>
+                    <input
+                      type="text"
+                      name="building_name"
+                      value={formData.building_name}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        validationErrors.building_name 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-blue-500'
+                      }`}
+                      placeholder="e.g., View Talay 1"
+                      required
+                    />
+                    {validationErrors.building_name && (
+                      <p className="text-xs text-red-500 mt-1">{validationErrors.building_name}</p>
+                    )}
+                  </div>
+                )}
 
                 {rentalType === 'living' ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
