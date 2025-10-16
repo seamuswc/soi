@@ -167,10 +167,13 @@ function CreatePage() {
         window.location.href = '/';
       } else {
         const error = await response.json();
+        console.error('🚨 PAY WITH PROMO ERROR:', error);
+        console.error('🚨 Full error object:', JSON.stringify(error, null, 2));
         alert(`Error: ${error.error || 'Failed to create listing'}`);
       }
     } catch (error) {
-      console.error('Error creating listing:', error);
+      console.error('🚨 PAY WITH PROMO ERROR:', error);
+      console.error('🚨 Full error object:', JSON.stringify(error, null, 2));
       alert('Error creating listing. Please try again.');
     }
   };
