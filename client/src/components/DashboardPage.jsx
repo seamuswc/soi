@@ -577,20 +577,14 @@ function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="font-medium text-gray-600">DeepSeek API:</span>
-                    <span className="ml-2 text-gray-800">
-                      {currentSettings.deepseekApiKey ? 
-                        `${currentSettings.deepseekApiKey.substring(0, 8)}...` : 
-                        'Not set'
-                      }
+                    <span className="ml-2 text-gray-800 font-mono text-xs">
+                      {currentSettings.deepseekApiKey || 'Not set'}
                     </span>
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Email Secret ID:</span>
-                    <span className="ml-2 text-gray-800">
-                      {currentSettings.emailSecretId ? 
-                        `${currentSettings.emailSecretId.substring(0, 8)}...` : 
-                        'Not set'
-                      }
+                    <span className="ml-2 text-gray-800 font-mono text-xs">
+                      {currentSettings.emailSecretId || 'Not set'}
                     </span>
                   </div>
                   <div>
@@ -603,11 +597,8 @@ function DashboardPage() {
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Google Maps API:</span>
-                    <span className="ml-2 text-gray-800">
-                      {currentSettings.googleMapsApiKey ? 
-                        `${currentSettings.googleMapsApiKey.substring(0, 8)}...` : 
-                        'Not set'
-                      }
+                    <span className="ml-2 text-gray-800 font-mono text-xs">
+                      {currentSettings.googleMapsApiKey || 'Not set'}
                     </span>
                   </div>
                 </div>
