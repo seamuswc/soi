@@ -1,5 +1,5 @@
 // Tencent SES email service using official SDK
-import { SesClient, SendEmailRequest } from 'tencentcloud-sdk-nodejs';
+import { ses } from 'tencentcloud-sdk-nodejs';
 
 export interface SubscriptionEmailData {
   email: string;
@@ -22,7 +22,7 @@ export async function sendSubscriptionEmail(data: SubscriptionEmailData): Promis
     }
 
     // Initialize Tencent SES client
-    const client = new SesClient({
+    const client = new ses.Client({
       credential: {
         secretId: secretId,
         secretKey: secretKey,
@@ -117,7 +117,7 @@ Thank you for subscribing to our data service!
 This email was sent automatically. Please keep your login credentials safe.`;
 
     // Create email request
-    const request: SendEmailRequest = {
+    const request = {
       Source: sender,
       Destination: {
         ToAddresses: [data.email],
