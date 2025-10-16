@@ -216,24 +216,25 @@ function MapPage() {
                 return acc;
               }, {});
 
+              console.log('🗺️ Rendering markers for grouped listings:', grouped);
               return Object.entries(grouped).map(([buildingName, buildingListings]) => {
                 const firstListing = buildingListings[0];
+                console.log('📍 Rendering marker for:', buildingName, 'at', firstListing.latitude, firstListing.longitude);
                 return (
                   <React.Fragment key={buildingName}>
-                    <AdvancedMarkerElement
+                    <Marker
                       position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
                       title={buildingName}
                       onClick={() => setSelectedMarker(buildingName)}
-                    >
-                      <div style={{
-                        width: '24px',
-                        height: '24px',
-                        backgroundColor: '#dc2626',
-                        border: '2px solid #ffffff',
-                        borderRadius: '50%',
-                        cursor: 'pointer'
-                      }} />
-                    </AdvancedMarkerElement>
+                      icon={{
+                        path: 'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2z',
+                        fillColor: '#dc2626',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 0.8
+                      }}
+                    />
                     {selectedMarker === buildingName && (
                       <InfoWindow
                         position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
