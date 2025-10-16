@@ -10,9 +10,22 @@ export interface SubscriptionEmailData {
 async function generateSignature(method: string, uri: string, queryString: string, payload: string, timestamp: string): Promise<string> {
   const crypto = require('crypto');
   const secretKey = process.env.TENCENT_SECRET_KEY || '';
+  const region = process.env.TENCENT_SES_REGION || 'ap-singapore';
+  const service = 'ses';
+  const date = timestamp.split('T')[0];
   
-  const stringToSign = `${method}\n${uri}\n${queryString}\n${crypto.createHash('sha256').update(payload).digest('hex')}\n${timestamp}`;
-  const signature = crypto.createHmac('sha256', secretKey).update(stringToSign).digest('hex');
+  // Step 1: Create canonical request
+  const canonicalRequest = `${method}\n${uri}\n${queryString}\ncontent-type:application/json\nhost:ses.${region}.tencentcloudapi.com\n\ncontent-type;host\n${crypto.createHash('sha256').update(payload).digest('hex')}`;
+  
+  // Step 2: Create string to sign
+  const credentialScope = `${date}/${region}/${service}/tc3_request`;
+  const stringToSign = `TC3-HMAC-SHA256\n${timestamp}\n${credentialScope}\n${crypto.createHash('sha256').update(canonicalRequest).digest('hex')}`;
+  
+  // Step 3: Calculate signature
+  const secretDate = crypto.createHmac('sha256', `TC3${secretKey}`).update(date).digest();
+  const secretService = crypto.createHmac('sha256', secretDate).update(service).digest();
+  const secretSigning = crypto.createHmac('sha256', secretService).update('tc3_request').digest();
+  const signature = crypto.createHmac('sha256', secretSigning).update(stringToSign).digest('hex');
   
   return signature;
 }
