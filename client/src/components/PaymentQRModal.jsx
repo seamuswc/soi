@@ -98,7 +98,14 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
             if (r.data?.confirmed) {
               setPaid(true);
               setShowQR(false);
-              await submitListing();
+              
+              // Handle different payment types
+              if (network === 'promo') {
+                console.log('🎟️ Payment confirmed for promo code purchase');
+                await generatePromoCode();
+              } else {
+                await submitListing();
+              }
               return;
             }
           } catch {}
@@ -121,26 +128,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const submitListing = async () => {
     try {
-      // Only submit listing if it's not a promo code purchase
-      if (network !== 'promo') {
-        await axios.post('/api/listings', listingData);
-      }
+      // Submit listing for Solana payments
+      await axios.post('/api/listings', listingData);
       
-      // For Solana payments, show success message before redirecting
-      if (network === 'solana') {
-        setPaid(true);
-        setShowQR(false);
-        // Show success message for 3 seconds, then redirect
-        setTimeout(() => {
-          onSuccess();
-        }, 3000);
-      } else {
-        // For promo codes, auto-generate the code immediately
-        console.log('🎟️ Auto-generating promo code after payment...');
-        setPaid(true);
-        setShowQR(false);
-        await generatePromoCode();
-      }
+      // Show success message for 3 seconds, then redirect
+      setTimeout(() => {
+        onSuccess();
+      }, 3000);
     } catch (error) {
       console.error('Failed to create listing:', error);
       alert('Failed to create listing. Please try again.');
