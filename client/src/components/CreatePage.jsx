@@ -97,6 +97,7 @@ function CreatePage() {
     
     if (formData.payment_network === 'promo') {
       // Buy Promo Code with Solana - no form validation needed
+      setValidationErrors({}); // Clear any existing validation errors
       setShowQRModal(true);
     } else {
       // Regular Solana payment - validate form first before showing QR
