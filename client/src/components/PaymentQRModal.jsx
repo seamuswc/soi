@@ -147,7 +147,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     try {
       setGeneratingPromo(true);
       const response = await axios.post('/api/promo/generate-after-payment', {
-        reference: reference
+        reference: reference,
+        uses: paidAmount || 1
       });
       
       setGeneratedPromo(response.data);
