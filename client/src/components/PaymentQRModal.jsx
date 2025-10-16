@@ -12,7 +12,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [showQR, setShowQR] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
   const [promoForm, setPromoForm] = useState({
-    max_listings: 1
+    listings: 1
   });
   const [generatedPromo, setGeneratedPromo] = useState(null);
   const [showListingSelection, setShowListingSelection] = useState(false);
@@ -149,13 +149,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const generatePromoCode = async () => {
     try {
       setGeneratingPromo(true);
-      // Use paidAmount if available, otherwise fall back to promoForm.max_listings
-      const maxListings = paidAmount || promoForm.max_listings;
-      console.log('🎟️ Generating promo code with max_listings:', maxListings, 'paidAmount:', paidAmount);
+      console.log('🎟️ Generating promo code for reference:', reference);
       
       const response = await axios.post('/api/promo/generate-after-payment', {
-        reference: reference,
-        max_listings: maxListings
+        reference: reference
       });
       
       console.log('🎟️ Promo code generated:', response.data);
@@ -173,7 +170,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     const { name, value } = e.target;
     setPromoForm(prev => ({
       ...prev,
-      [name]: name === 'max_listings' ? parseInt(value) || 1 : value
+      [name]: name === 'listings' ? parseInt(value) || 1 : value
     }));
   };
 
@@ -182,7 +179,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
     if (paid && paidAmount) {
       setPromoForm(prev => ({
         ...prev,
-        max_listings: paidAmount
+        listings: paidAmount
       }));
     }
   }, [paid, paidAmount]);
@@ -190,7 +187,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const proceedToPayment = async () => {
     try {
       // Calculate total amount based on selected listings
-      const totalAmount = promoForm.max_listings;
+      const totalAmount = promoForm.listings;
       
       // Store the paid amount to limit future selections
       setPaidAmount(totalAmount);
@@ -257,7 +254,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         {!generatedPromo && (
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-6 mb-6 text-center">
             <h2 className="text-2xl font-bold mb-2">{network === 'promo' ? 'Buy Promo Code with Solana' : 'Pay with Solana'}</h2>
-            <p className="text-3xl font-bold mt-2">{network === 'promo' ? promoForm.max_listings : amount} USDC</p>
+            <p className="text-3xl font-bold mt-2">{network === 'promo' ? promoForm.listings : amount} USDC</p>
           </div>
         )}
 
@@ -275,8 +272,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                 </label>
                 <input
                   type="number"
-                  name="max_listings"
-                  value={promoForm.max_listings}
+                  name="listings"
+                  value={promoForm.listings}
                   onChange={handlePromoFormChange}
                   min="1"
                   max="100"
@@ -287,7 +284,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-sm text-purple-800">
-                  💡 <strong>Total:</strong> {promoForm.max_listings} listing{promoForm.max_listings > 1 ? 's' : ''} for {promoForm.max_listings} USDC
+                  💡 <strong>Total:</strong> {promoForm.listings} listing{promoForm.listings > 1 ? 's' : ''} for {promoForm.listings} USDC
                 </p>
               </div>
               
@@ -295,7 +292,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                 onClick={proceedToPayment}
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
               >
-                💳 Pay {promoForm.max_listings} USDC & Get Promo Code
+                💳 Pay {promoForm.listings} USDC & Get Promo Code
               </button>
             </div>
           </div>
@@ -383,7 +380,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
               <p className="text-sm text-gray-600 mb-2">Your Promo Code:</p>
               <p className="text-2xl font-mono font-bold text-gray-800 break-all">{generatedPromo.code}</p>
               <p className="text-xs text-gray-500 mt-2">
-                Valid for {generatedPromo.max_listings} listing{generatedPromo.max_listings > 1 ? 's' : ''}
+                Valid for 1 listing per use
               </p>
             </div>
             

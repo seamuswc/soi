@@ -321,7 +321,7 @@ function DashboardPage() {
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">{promo.max_listings}</span>
+                        <span className="text-sm font-medium text-gray-900">1</span>
                       </td>
                       <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-500">
