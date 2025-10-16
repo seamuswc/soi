@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import path from 'path';
 import { Connection, PublicKey, Keypair, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
+import { sendSubscriptionEmail } from './emailService';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -408,6 +409,20 @@ app.post('/api/auth/register', async (request, reply) => {
         expires_at: expiresAt
       }
     });
+
+    // Send subscription confirmation email
+    try {
+      await sendSubscriptionEmail({
+        email: user.email,
+        password: user.password,
+        subscriptionDate: user.created_at.toLocaleDateString(),
+        expiryDate: user.expires_at.toLocaleDateString(),
+        paymentReference: user.payment_reference,
+      });
+    } catch (emailError) {
+      console.error('Failed to send subscription email:', emailError);
+      // Don't fail the user creation if email fails
+    }
 
     return { 
       success: true, 

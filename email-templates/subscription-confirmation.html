@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Data Subscription Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .info-box {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .value {
+            color: #333;
+            font-family: monospace;
+        }
+        .password {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 Data Subscription Confirmed!</h1>
+        <p>Welcome to our premium data service</p>
+    </div>
+    
+    <div class="content">
+        <h2>Your Subscription Details</h2>
+        
+        <div class="info-box">
+            <div class="info-row">
+                <span class="label">📧 Email:</span>
+                <span class="value">{{email}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">🔑 Password:</span>
+                <div class="password">{{password}}</div>
+            </div>
+            <div class="info-row">
+                <span class="label">📅 Subscription Date:</span>
+                <span class="value">{{subscriptionDate}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">⏰ Expires:</span>
+                <span class="value">{{expiryDate}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">💳 Payment Reference:</span>
+                <span class="value">{{paymentReference}}</span>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h3>🚀 What's Next?</h3>
+            <ul>
+                <li>Use your email and password to access the data dashboard</li>
+                <li>Your subscription is valid for 365 days from today</li>
+                <li>You can access premium data and analytics</li>
+                <li>Contact support if you need any assistance</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <h3>🔐 Login Information</h3>
+            <p><strong>Website:</strong> https://soipattaya.com/data</p>
+            <p><strong>Email:</strong> {{email}}</p>
+            <p><strong>Password:</strong> <span class="password">{{password}}</span></p>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Thank you for subscribing to our data service!</p>
+        <p>This email was sent automatically. Please keep your login credentials safe.</p>
+    </div>
+</body>
+</html>

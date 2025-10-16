@@ -1,0 +1,27 @@
+🎉 DATA SUBSCRIPTION CONFIRMED!
+
+Welcome to our premium data service!
+
+YOUR SUBSCRIPTION DETAILS:
+============================
+📧 Email: {{email}}
+🔑 Password: {{password}}
+📅 Subscription Date: {{subscriptionDate}}
+⏰ Expires: {{expiryDate}}
+💳 Payment Reference: {{paymentReference}}
+
+WHAT'S NEXT?
+============
+• Use your email and password to access the data dashboard
+• Your subscription is valid for 365 days from today
+• You can access premium data and analytics
+• Contact support if you need any assistance
+
+LOGIN INFORMATION:
+=================
+Website: https://soipattaya.com/data
+Email: {{email}}
+Password: {{password}}
+
+Thank you for subscribing to our data service!
+This email was sent automatically. Please keep your login credentials safe.
