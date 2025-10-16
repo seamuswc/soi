@@ -18,7 +18,7 @@ model Listing {
   description     String
   youtube_link    String
   reference       String
-  payment_network String   @default("solana") // Allowed values: 'solana', 'thb', or 'promo'
+  payment_network String   @default("solana") // Allowed values: 'solana' or 'promo'
   rental_type     String   @default("living") // Allowed values: 'living' or 'business'
   business_photo  String?  // Base64 encoded image for business listings
   promo_code_used String?  // The actual promo code used for this listing
