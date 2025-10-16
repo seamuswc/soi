@@ -672,9 +672,6 @@ app.post('/api/listings', async (request, reply) => {
       return reply.code(400).send({ error: 'Invalid payment' });
     }
 
-    const months = data.six_months ? 6 : 1;
-    const expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
-
     // Promo handling - check database for promo code
     if (data.promo_code) {
       const promo = await prisma.promo.findUnique({
@@ -699,6 +696,17 @@ app.post('/api/listings', async (request, reply) => {
       isValid = true;
     }
 
+    // Set expiration date (only for paid listings, not promo codes)
+    let expiresAt;
+    if (data.promo_code) {
+      // Promo code listings don't expire
+      expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    } else {
+      // Paid listings expire based on six_months option
+      const months = data.six_months ? 6 : 1;
+      expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
+    }
+
     const listing = await prisma.listing.create({
       data: {
         building_name: data.building_name,
@@ -710,7 +718,7 @@ app.post('/api/listings', async (request, reply) => {
         description: data.description,
         youtube_link: data.youtube_link,
         reference: data.reference,
-        payment_network: data.promo_code ? 'promo' : data.payment_network,
+        payment_network: data.promo_code ? data.promo_code : data.payment_network,
         rental_type: data.rental_type,
         business_photo: data.business_photo,
         thai_only: data.thai_only ?? false,
