@@ -53,6 +53,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           message: message
         });
         const url = `solana:${merchantAddress}?${params.toString()}`;
+        console.log('🔗 Generated QR URL:', url);
+        console.log('💰 Amount:', amount, 'Merchant:', merchantAddress);
         setQrUrl(url);
 
         // Step 2: Try Phantom wallet first (desktop)
@@ -196,6 +198,8 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         message: 'Promo Code Purchase'
       });
       const url = `solana:${merchantAddress}?${params.toString()}`;
+      console.log('🎟️ Generated Promo QR URL:', url);
+      console.log('🎟️ Amount:', totalAmount, 'Merchant:', merchantAddress);
       setQrUrl(url);
       
       setShowListingSelection(false);
