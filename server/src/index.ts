@@ -1223,7 +1223,7 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
         const path = require('path');
         const clientPath = path.join(__dirname, '../../client');
         
-        exec(`cd ${clientPath} && VITE_GOOGLE_MAPS_API_KEY="${googleMapsApiKey}" npm run build`, (error, stdout, stderr) => {
+        exec(`cd ${clientPath} && VITE_GOOGLE_MAPS_API_KEY="${googleMapsApiKey}" npm run build`, (error: any, stdout: any, stderr: any) => {
           if (error) {
             console.error('❌ Client rebuild failed:', error);
           } else {
