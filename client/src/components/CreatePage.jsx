@@ -629,9 +629,29 @@ function CreatePage() {
                           </button>
                         </div>
                         {Object.entries(translationResults).map(([lang, text]) => (
-                          <div key={lang} className="p-2 bg-gray-50 rounded text-sm border-l-2 border-blue-200">
-                            <span className="font-medium capitalize text-blue-700">{lang}:</span> 
-                            <span className="ml-2">{text}</span>
+                          <div key={lang} className="p-2 bg-gray-50 rounded text-sm border-l-2 border-blue-200 flex items-center justify-between">
+                            <div className="flex-1">
+                              <span className="font-medium capitalize text-blue-700">{lang}:</span> 
+                              <span className="ml-2">{text}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(text);
+                                // Show brief feedback
+                                const btn = event.target;
+                                const originalText = btn.textContent;
+                                btn.textContent = '✓ Copied!';
+                                btn.className = 'ml-2 px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
+                                setTimeout(() => {
+                                  btn.textContent = originalText;
+                                  btn.className = 'ml-2 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors';
+                                }, 1500);
+                              }}
+                              className="ml-2 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                            >
+                              📋 Copy
+                            </button>
                           </div>
                         ))}
                       </div>
