@@ -9,7 +9,7 @@ TENCENT_SECRET_ID=IKIDA8qIWUCdokQpyvc3D7l9H9k6sSmsiIdi
 TENCENT_SECRET_KEY=qPjncBUYMuCE0WlskNkwvgDYfZFhwzpR
 TENCENT_SES_REGION=ap-singapore
 TENCENT_SES_SENDER=study@eigo.email
-TENCENT_SES_TEMPLATE_ID_EN=66878
+TENCENT_SES_TEMPLATE_ID_EN=66908
 ```
 
 ## Template Setup in Tencent SES
@@ -47,9 +47,9 @@ The template expects these variables:
 
 ### 5. Template ID
 
-After creating the template, note the Template ID and update:
+Template ID is set to: **66908**
 ```env
-TENCENT_SES_TEMPLATE_ID_EN=YOUR_TEMPLATE_ID_HERE
+TENCENT_SES_TEMPLATE_ID_EN=66908
 ```
 
 ## Testing
