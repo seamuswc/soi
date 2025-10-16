@@ -123,7 +123,7 @@ This email was sent automatically. Please keep your login credentials safe.`;
       Subject: '🎉 Data Subscription Confirmed - Welcome!',
       ReplyToAddresses: sender,
       Template: {
-        TemplateID: process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908',
+        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908'),
         TemplateData: JSON.stringify({
           email: data.email,
           password: data.password,
