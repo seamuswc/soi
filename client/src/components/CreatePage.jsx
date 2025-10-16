@@ -87,7 +87,7 @@ function CreatePage() {
 
   const handlePayment = () => {
     // If promo code is provided, validate and submit directly without payment
-    if (formData.promo_code) {
+    if (formData.promo_code && formData.promo_code !== 'free') {
       if (!validateForm()) {
         return;
       }
