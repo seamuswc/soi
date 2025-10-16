@@ -638,8 +638,17 @@ function CreatePage() {
                   {/* Payment Button */}
                   <div className="mt-6">
                     <button
-                      type="button"
-                      onClick={(e) => handlePayment(e)}
+                      type={formData.payment_network === 'promo' ? 'button' : 'submit'}
+                      onClick={(e) => {
+                        if (formData.payment_network === 'promo') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setValidationErrors({});
+                          setShowQRModal(true);
+                        } else {
+                          handlePayment(e);
+                        }
+                      }}
                       className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
                     >
                       {formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana'}
