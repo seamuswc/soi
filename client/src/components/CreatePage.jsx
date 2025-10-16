@@ -97,8 +97,12 @@ function CreatePage() {
     
     // 2) BUY PROMO CODE: No form validation needed, just show promo selection
     if (formData.payment_network === 'promo') {
+      // Clear all validation errors immediately
       setValidationErrors({});
-      setShowQRModal(true);
+      // Force a small delay to ensure state updates
+      setTimeout(() => {
+        setShowQRModal(true);
+      }, 0);
       return;
     }
     
