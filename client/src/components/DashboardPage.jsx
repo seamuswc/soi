@@ -238,7 +238,7 @@ function DashboardPage() {
     }
     
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('admin_token');
       await axios.delete(`/api/listings/${listingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
