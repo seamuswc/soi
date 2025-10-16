@@ -1,4 +1,6 @@
-// Tencent SES email service using direct API calls
+// Tencent SES email service using official SDK
+import { SesClient, SendEmailRequest } from 'tencentcloud-sdk-nodejs';
+
 export interface SubscriptionEmailData {
   email: string;
   password: string;
@@ -7,41 +9,31 @@ export interface SubscriptionEmailData {
   paymentReference: string;
 }
 
-async function generateSignature(method: string, uri: string, queryString: string, payload: string, timestamp: string): Promise<string> {
-  const crypto = require('crypto');
-  const secretKey = process.env.TENCENT_SECRET_KEY || '';
-  const region = process.env.TENCENT_SES_REGION || 'ap-singapore';
-  const service = 'ses';
-  const date = timestamp.split('T')[0];
-  
-  // Step 1: Create canonical request
-  const canonicalRequest = `${method}\n${uri}\n${queryString}\ncontent-type:application/json\nhost:ses.${region}.tencentcloudapi.com\n\ncontent-type;host\n${crypto.createHash('sha256').update(payload).digest('hex')}`;
-  
-  // Step 2: Create string to sign
-  const credentialScope = `${date}/${region}/${service}/tc3_request`;
-  const stringToSign = `TC3-HMAC-SHA256\n${timestamp}\n${credentialScope}\n${crypto.createHash('sha256').update(canonicalRequest).digest('hex')}`;
-  
-  // Step 3: Calculate signature
-  const secretDate = crypto.createHmac('sha256', `TC3${secretKey}`).update(date).digest();
-  const secretService = crypto.createHmac('sha256', secretDate).update(service).digest();
-  const secretSigning = crypto.createHmac('sha256', secretService).update('tc3_request').digest();
-  const signature = crypto.createHmac('sha256', secretSigning).update(stringToSign).digest('hex');
-  
-  return signature;
-}
-
 export async function sendSubscriptionEmail(data: SubscriptionEmailData): Promise<boolean> {
   try {
     const secretId = process.env.TENCENT_SECRET_ID;
     const secretKey = process.env.TENCENT_SECRET_KEY;
     const region = process.env.TENCENT_SES_REGION || 'ap-singapore';
-    const sender = process.env.TENCENT_SES_SENDER || 'study@eigo.email';
-    const templateId = process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908';
+    const sender = process.env.TENCENT_SES_SENDER || 'data@soipattaya.com';
 
     if (!secretId || !secretKey) {
       console.error('❌ Tencent SES credentials not configured');
       return false;
     }
+
+    // Initialize Tencent SES client
+    const client = new SesClient({
+      credential: {
+        secretId: secretId,
+        secretKey: secretKey,
+      },
+      region: region,
+      profile: {
+        httpProfile: {
+          endpoint: 'ses.tencentcloudapi.com',
+        },
+      },
+    });
 
     // Prepare email content
     const htmlContent = `
@@ -124,54 +116,41 @@ Password: ${data.password}
 Thank you for subscribing to our data service!
 This email was sent automatically. Please keep your login credentials safe.`;
 
-    // Use Tencent SES API with proper authentication
-    const timestamp = new Date().toISOString();
-    const date = timestamp.split('T')[0];
-    const payload = JSON.stringify({
+    // Create email request
+    const request: SendEmailRequest = {
       Source: sender,
-      Destination: { ToAddresses: [data.email] },
+      Destination: {
+        ToAddresses: [data.email],
+      },
       Message: {
-        Subject: { Data: '🎉 Data Subscription Confirmed - Welcome!' },
+        Subject: {
+          Data: '🎉 Data Subscription Confirmed - Welcome!',
+          Charset: 'UTF-8'
+        },
         Body: {
-          Html: { Data: htmlContent },
-          Text: { Data: textContent }
+          Html: {
+            Data: htmlContent,
+            Charset: 'UTF-8'
+          },
+          Text: {
+            Data: textContent,
+            Charset: 'UTF-8'
+          }
         }
       }
-    });
+    };
 
-    const signature = await generateSignature('POST', '/', '', payload, timestamp);
-    
-    console.log('🔐 Making API call to Tencent SES...');
+    console.log('🔐 Sending email via Tencent SES SDK...');
     console.log('📧 Sending to:', data.email);
     console.log('📤 From:', sender);
+
+    // Send email using SDK
+    const response = await client.SendEmail(request);
     
-    const response = await fetch(`https://ses.${region}.tencentcloudapi.com/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `TC3-HMAC-SHA256 Credential=${secretId}/${date}/${region}/ses/tc3_request, SignedHeaders=content-type;host, Signature=${signature}`,
-        'Host': `ses.${region}.tencentcloudapi.com`,
-        'X-TC-Action': 'SendEmail',
-        'X-TC-Version': '2020-10-02',
-        'X-TC-Region': region,
-        'X-TC-Timestamp': Math.floor(Date.now() / 1000).toString()
-      },
-      body: payload
-    });
+    console.log('📊 Response:', response);
+    console.log(`✅ Subscription email sent to ${data.email}`);
+    return true;
 
-    console.log('📊 Response status:', response.status);
-    console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
-
-    if (response.ok) {
-      const responseData = await response.json();
-      console.log('📊 Response data:', responseData);
-      console.log(`✅ Subscription email sent to ${data.email}`);
-      return true;
-    } else {
-      const errorText = await response.text();
-      console.error('❌ Failed to send email:', response.status, errorText);
-      return false;
-    }
   } catch (error) {
     console.error('❌ Error sending subscription email:', error);
     return false;
