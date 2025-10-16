@@ -12,6 +12,8 @@ function DashboardPage() {
   const [generatingPromo, setGeneratingPromo] = useState(false);
   const [maxUses, setMaxUses] = useState(1);
   const [promoList, setPromoList] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [showUsers, setShowUsers] = useState(false);
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -51,6 +53,19 @@ function DashboardPage() {
     setToken(newToken);
     setIsAuthenticated(true);
     localStorage.setItem('admin_token', newToken);
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('/api/users/list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(response.data.users);
+      setShowUsers(true);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      alert('Error fetching users');
+    }
   };
 
   const handleLogout = () => {
@@ -183,6 +198,9 @@ function DashboardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{domainConfig.siteName} Admin Dashboard</h1>
           <div className="flex gap-2">
+            <button onClick={fetchUsers} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
+              👥 View Users
+            </button>
             <a href="/data" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               📊 Data Analytics
             </a>
@@ -448,6 +466,58 @@ function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Users Modal */}
+      {showUsers && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">👥 Data Subscribers</h2>
+              <button
+                onClick={() => setShowUsers(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Reference</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires At</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900">{user.id}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-mono">{user.password}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-mono">{user.payment_reference}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {new Date(user.expires_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              Total Users: {users.length}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

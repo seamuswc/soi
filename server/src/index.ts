@@ -563,6 +563,22 @@ app.get('/api/promo/list', { preHandler: authenticateToken }, async (request, re
   }
 });
 
+// Get all users/subscribers (admin only)
+app.get('/api/users/list', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+    
+    return { users };
+  } catch (error: any) {
+    app.log.error('Error fetching users:', error);
+    return reply.code(500).send({ error: 'Failed to fetch users' });
+  }
+});
+
 // Check if FREE promo is available (public endpoint)
 app.get('/api/promo/free', async (request, reply) => {
   try {
