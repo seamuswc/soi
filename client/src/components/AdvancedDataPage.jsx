@@ -45,10 +45,22 @@ function AdvancedDataPage() {
 
   useEffect(() => {
     if (data) {
-      initMap();
-      initChart();
+      // Clear existing map and chart when switching cities
+      if (map) {
+        map.remove();
+        setMap(null);
+      }
+      if (chart) {
+        chart.destroy();
+        setChart(null);
+      }
+      // Re-initialize with new city data
+      setTimeout(() => {
+        initMap();
+        initChart();
+      }, 100);
     }
-  }, [data]);
+  }, [data, currentCity]);
 
   useEffect(() => {
     if (chart) {
@@ -97,7 +109,7 @@ function AdvancedDataPage() {
   };
 
   const initMap = () => {
-    if (mapRef.current && !map) {
+    if (mapRef.current) {
       const cityData = getCityData();
       const leafletMap = L.map(mapRef.current).setView(cityData.center, 11);
       
@@ -132,7 +144,7 @@ function AdvancedDataPage() {
   };
 
   const initChart = () => {
-    if (chartRef.current && !chart) {
+    if (chartRef.current) {
       const ctx = chartRef.current.getContext('2d');
       const labels = getChartLabels(selectedPeriod);
       const chartInstance = new Chart(ctx, {
