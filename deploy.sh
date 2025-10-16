@@ -66,8 +66,10 @@ npm run setup
 
 # Use single .env file for all processes (more secure)
 echo "🔐 Using single .env file for security..."
-# Remove duplicate .env files to prevent confusion and security risks
-rm -f $APP_DIR/server/.env $APP_DIR/client/.env
+# Keep server .env for Prisma compatibility, but sync from root
+cp $APP_DIR/.env $APP_DIR/server/.env || true
+# Remove client .env to use root .env
+rm -f $APP_DIR/client/.env
 
 # Setup database
 echo "🗄️ Setting up database..."
