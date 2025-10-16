@@ -811,7 +811,7 @@ function CreatePage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-600 mt-2">
-                  Have a promo code? Enter it to skip payment
+                  Have a promo code? Enter it to skip payment / มีรหัสโปรโมชั่น? ใส่เพื่อข้ามการชำระเงิน
                 </p>
               </div>
             </div>
