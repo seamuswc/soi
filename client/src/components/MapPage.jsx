@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, AdvancedMarkerElement, InfoWindow } from '@react-google-maps/api';
 import axios from 'axios';
 import { getDomainConfig } from '../utils/domainConfig';
 
@@ -220,19 +220,20 @@ function MapPage() {
                 const firstListing = buildingListings[0];
                 return (
                   <React.Fragment key={buildingName}>
-                    <Marker
+                    <AdvancedMarkerElement
                       position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
                       title={buildingName}
                       onClick={() => setSelectedMarker(buildingName)}
-                      icon={{
-                        path: 'M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2z',
-                        fillColor: '#dc2626',
-                        fillOpacity: 1,
-                        strokeColor: '#ffffff',
-                        strokeWeight: 2,
-                        scale: 0.8
-                      }}
-                    />
+                    >
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        backgroundColor: '#dc2626',
+                        border: '2px solid #ffffff',
+                        borderRadius: '50%',
+                        cursor: 'pointer'
+                      }} />
+                    </AdvancedMarkerElement>
                     {selectedMarker === buildingName && (
                       <InfoWindow
                         position={{ lat: firstListing.latitude, lng: firstListing.longitude }}
