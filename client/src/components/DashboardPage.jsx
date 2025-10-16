@@ -571,46 +571,6 @@ function DashboardPage() {
               Update API keys and settings. Changes will be applied to the server's .env file.
             </p>
             
-            {/* Current Settings Display */}
-            {currentSettings && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">📋 Current Settings</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="font-medium text-gray-600">DeepSeek API:</span>
-                    <span className="ml-2 text-gray-800 font-mono text-xs">
-                      {currentSettings.deepseekApiKey || 'Not set'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Email Secret ID:</span>
-                    <span className="ml-2 text-gray-800 font-mono text-xs">
-                      {currentSettings.emailSecretId || 'Not set'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Email Region:</span>
-                    <span className="ml-2 text-gray-800">{currentSettings.emailRegion}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Email Sender:</span>
-                    <span className="ml-2 text-gray-800">{currentSettings.emailSender}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Google Maps API:</span>
-                    <span className="ml-2 text-gray-800 font-mono text-xs">
-                      {currentSettings.googleMapsApiKey || 'Not set'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Solana Address:</span>
-                    <span className="ml-2 text-gray-800 font-mono text-xs">
-                      {currentSettings.solanaMerchantAddress || 'Not set'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
             
             <div className="space-y-4">
               <div>
@@ -618,7 +578,7 @@ function DashboardPage() {
                   DeepSeek API Key
                 </label>
                 <input
-                  type="password"
+                  type="text"
                   name="deepseekApiKey"
                   value={settingsForm.deepseekApiKey}
                   onChange={handleSettingsChange}
@@ -632,7 +592,7 @@ function DashboardPage() {
                   Tencent Email Secret ID
                 </label>
                 <input
-                  type="password"
+                  type="text"
                   name="emailSecretId"
                   value={settingsForm.emailSecretId}
                   onChange={handleSettingsChange}
@@ -646,7 +606,7 @@ function DashboardPage() {
                   Tencent Email Secret Key
                 </label>
                 <input
-                  type="password"
+                  type="text"
                   name="emailSecretKey"
                   value={settingsForm.emailSecretKey}
                   onChange={handleSettingsChange}
@@ -690,7 +650,7 @@ function DashboardPage() {
                   Google Maps API Key
                 </label>
                 <input
-                  type="password"
+                  type="text"
                   name="googleMapsApiKey"
                   value={settingsForm.googleMapsApiKey}
                   onChange={handleSettingsChange}
