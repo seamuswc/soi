@@ -200,8 +200,11 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
   try {
     if (!reference || reference.length < 32) return false;
     
+    // Clean reference - remove any suffixes like :1 that might be added by browsers
+    const cleanReference = reference.split(':')[0];
+    
     // Convert reference to PublicKey
-    const referencePublicKey = new PublicKey(reference);
+    const referencePublicKey = new PublicKey(cleanReference);
     
     // Get signatures for the reference address
     // If the reference appears in any transaction, payment was made
