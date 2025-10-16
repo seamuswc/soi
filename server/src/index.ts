@@ -1124,6 +1124,35 @@ app.get('/api/maintenance/status', async (request, reply) => {
   }
 });
 
+// Get current settings endpoint
+app.get('/api/settings/current', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(__dirname, '../.env');
+    
+    let envContent = '';
+    if (fs.existsSync(envPath)) {
+      envContent = fs.readFileSync(envPath, 'utf8');
+    }
+
+    // Parse current environment variables
+    const currentSettings = {
+      deepseekApiKey: process.env.DEEPSEEK_API_KEY || '',
+      emailSecretId: process.env.TENCENT_SECRET_ID || '',
+      emailSecretKey: process.env.TENCENT_SECRET_KEY || '',
+      emailRegion: process.env.TENCENT_SES_REGION || 'ap-singapore',
+      emailSender: process.env.TENCENT_SES_SENDER || 'data@soipattaya.com',
+      googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || ''
+    };
+
+    return currentSettings;
+  } catch (error: any) {
+    app.log.error('Error getting current settings:', error);
+    return reply.code(500).send({ error: 'Failed to get current settings' });
+  }
+});
+
 // Settings update endpoint
 app.post('/api/settings/update', { preHandler: authenticateToken }, async (request, reply) => {
   try {

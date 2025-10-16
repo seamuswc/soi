@@ -23,6 +23,7 @@ function DashboardPage() {
     emailSender: 'data@soipattaya.com',
     googleMapsApiKey: ''
   });
+  const [currentSettings, setCurrentSettings] = useState(null);
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
@@ -92,6 +93,18 @@ function DashboardPage() {
     }));
   };
 
+  const fetchCurrentSettings = async () => {
+    try {
+      const response = await axios.get('/api/settings/current', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCurrentSettings(response.data);
+      setSettingsForm(response.data);
+    } catch (error) {
+      console.error('Error fetching current settings:', error);
+    }
+  };
+
   const saveSettings = async () => {
     try {
       await axios.post('/api/settings/update', settingsForm, {
@@ -99,6 +112,7 @@ function DashboardPage() {
       });
       alert('Settings saved successfully! Server will restart to apply changes.');
       setShowSettings(false);
+      fetchCurrentSettings(); // Refresh current settings
     } catch (error) {
       console.error('Error saving settings:', error);
       alert('Failed to save settings. Please try again.');
