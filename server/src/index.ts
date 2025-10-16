@@ -793,7 +793,7 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
     
     if (totalListings > 0) {
       // Group listings by building name and use actual coordinates
-      const groupedByBuilding = listings.reduce((acc, listing) => {
+      const groupedByBuilding: { [key: string]: any } = listings.reduce((acc: any, listing: any) => {
         const buildingName = listing.building_name;
         if (!acc[buildingName]) {
           acc[buildingName] = {
@@ -810,7 +810,7 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       }, {});
 
       // Convert to areaData format
-      areaData = Object.values(groupedByBuilding).map(building => ({
+      areaData = Object.values(groupedByBuilding).map((building: any) => ({
         name: building.name,
         listings: building.listings,
         avgPrice: Math.round(building.totalCost / building.listings),
