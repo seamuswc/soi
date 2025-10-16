@@ -190,10 +190,11 @@ function CreatePage() {
 
   const handlePromoCodeSuccess = (promoCode) => {
     setShowQRModal(false);
-    // Auto-fill the promo code input
+    // Auto-fill the promo code input and reset payment method to use the promo
     setFormData(prev => ({
       ...prev,
-      promo_code: promoCode
+      promo_code: promoCode,
+      payment_network: 'solana' // Reset to default, will be overridden to 'promo' when using the promo
     }));
   };
 
