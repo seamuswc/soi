@@ -723,16 +723,8 @@ app.post('/api/listings', async (request, reply) => {
       isValid = true;
     }
 
-    // Set expiration date (only for paid listings, not promo codes)
-    let expiresAt;
-    if (data.promo_code) {
-      // Promo code listings don't expire
-      expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
-    } else {
-      // Paid listings expire based on six_months option
-      const months = data.six_months ? 6 : 1;
-      expiresAt = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
-    }
+    // Set expiration date - all listings expire in 2 months
+    const expiresAt = new Date(Date.now() + 2 * 30 * 24 * 60 * 60 * 1000); // 2 months from now
 
     const listing = await prisma.listing.create({
       data: {
