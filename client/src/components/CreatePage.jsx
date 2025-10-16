@@ -35,6 +35,9 @@ function CreatePage() {
 
   const [showQRModal, setShowQRModal] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [showCoordinateModal, setShowCoordinateModal] = useState(false);
+  const [existingBuildings, setExistingBuildings] = useState([]);
+  const [selectedBuildingName, setSelectedBuildingName] = useState('');
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -69,7 +72,7 @@ function CreatePage() {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ 
       ...prev, 
@@ -83,6 +86,54 @@ function CreatePage() {
         [name]: ''
       }));
     }
+
+    // Check for existing buildings when coordinates change
+    if (name === 'coordinates' && value.trim()) {
+      await checkExistingBuildings(value);
+    }
+  };
+
+  // Check for existing buildings at the same coordinates
+  const checkExistingBuildings = async (coordinates) => {
+    try {
+      const [lat, lng] = coordinates.split(',').map(coord => parseFloat(coord.trim()));
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const response = await axios.get('/api/listings');
+      const allListings = Object.values(response.data).flat();
+      
+      // Find listings with similar coordinates (within ~10 meters)
+      const existingBuildings = allListings.filter(listing => {
+        const latDiff = Math.abs(listing.latitude - lat);
+        const lngDiff = Math.abs(listing.longitude - lng);
+        return latDiff < 0.0001 && lngDiff < 0.0001; // ~10 meters tolerance
+      });
+
+      if (existingBuildings.length > 0) {
+        const uniqueBuildings = [...new Set(existingBuildings.map(l => l.building_name))];
+        setExistingBuildings(uniqueBuildings);
+        setShowCoordinateModal(true);
+        return true; // Found existing buildings
+      }
+    } catch (error) {
+      console.error('Error checking existing buildings:', error);
+    }
+    return false; // No existing buildings found
+  };
+
+  // Handle coordinate modal actions
+  const handleUseExistingBuilding = (buildingName) => {
+    setFormData(prev => ({
+      ...prev,
+      building_name: buildingName
+    }));
+    setShowCoordinateModal(false);
+    setSelectedBuildingName(buildingName);
+  };
+
+  const handleUseNewBuildingName = () => {
+    setShowCoordinateModal(false);
+    setSelectedBuildingName('');
   };
 
   const handlePayWithPromo = (e) => {
@@ -694,6 +745,46 @@ function CreatePage() {
           onClose={() => setShowQRModal(false)}
           onSuccess={formData.payment_network === 'promo' ? handlePromoCodeSuccess : handlePaymentSuccess}
         />
+      )}
+
+      {/* Coordinate Conflict Modal */}
+      {showCoordinateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">📍 Building Name Conflict</h3>
+            <p className="text-gray-600 mb-4">
+              We found existing buildings at these coordinates. Would you like to:
+            </p>
+            
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-gray-700">Use existing building name:</div>
+              {existingBuildings.map((buildingName, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleUseExistingBuilding(buildingName)}
+                  className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium">{buildingName}</div>
+                  <div className="text-sm text-gray-500">Keep existing name</div>
+                </button>
+              ))}
+              
+              <div className="border-t pt-3">
+                <button
+                  onClick={handleUseNewBuildingName}
+                  className="w-full text-left p-3 border border-blue-300 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <div className="font-medium text-blue-700">Use new building name</div>
+                  <div className="text-sm text-blue-600">Enter a more accurate name</div>
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-xs text-gray-500">
+              💡 Tip: Using the same building name will group all listings together on the map
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
