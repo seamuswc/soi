@@ -11,7 +11,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const [paid, setPaid] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
-  const [showPromoForm, setShowPromoForm] = useState(false);
   const [promoForm, setPromoForm] = useState({
     max_listings: 1
   });
@@ -136,10 +135,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           onSuccess();
         }, 3000);
       } else {
-        // For promo codes, don't redirect - let user copy the code
-        setTimeout(() => {
-          onSuccess();
-        }, 2000);
+        // For promo codes, auto-generate the code immediately
+        setPaid(true);
+        setShowQR(false);
+        await generatePromoCode();
       }
     } catch (error) {
       console.error('Failed to create listing:', error);
@@ -335,42 +334,6 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           </div>
         )}
 
-        {/* Payment confirmed - Show promo form */}
-        {paid && showPromoForm && !generatedPromo && (
-          <div className="text-center">
-            <div className="text-6xl mb-4">✅</div>
-            <p className="text-green-600 font-bold text-xl mb-4">Payment Confirmed!</p>
-            <p className="text-sm text-gray-500 mb-6">Select how many listings you want for your promo code:</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Listings
-                </label>
-                <select
-                  name="max_listings"
-                  value={promoForm.max_listings}
-                  onChange={handlePromoFormChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {Array.from({ length: paidAmount || 1 }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>
-                      {num} Listing{num > 1 ? 's' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              
-              <button
-                onClick={generatePromoCode}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg"
-              >
-                🎟️ Generate Promo Code
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Solana payment success message */}
         {paid && network === 'solana' && (
