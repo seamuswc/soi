@@ -39,11 +39,13 @@ function DashboardPage() {
         }),
         axios.get('/api/promo/list', {
           headers: { Authorization: `Bearer ${token}` }
-        })
+        }),
+        axios.get('/api/maintenance/status')
       ])
-      .then(([dashboardResponse, promoResponse]) => {
+      .then(([dashboardResponse, promoResponse, maintenanceResponse]) => {
         setDashboardData(dashboardResponse.data);
         setPromoList(promoResponse.data.promos);
+        setMaintenanceMode(maintenanceResponse.data.enabled);
         setIsAuthenticated(true);
         setLoading(false);
       })
