@@ -247,10 +247,13 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           ×
         </button>
 
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-6 mb-6 text-center">
-          <h2 className="text-2xl font-bold mb-2">{network === 'promo' ? 'Buy Promo Code with Solana' : 'Pay with Solana'}</h2>
-          <p className="text-3xl font-bold mt-2">{network === 'promo' ? promoForm.max_listings : amount} USDC</p>
-        </div>
+        {/* Only show header if promo code hasn't been generated yet */}
+        {!generatedPromo && (
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl p-6 mb-6 text-center">
+            <h2 className="text-2xl font-bold mb-2">{network === 'promo' ? 'Buy Promo Code with Solana' : 'Pay with Solana'}</h2>
+            <p className="text-3xl font-bold mt-2">{network === 'promo' ? promoForm.max_listings : amount} USDC</p>
+          </div>
+        )}
 
         {/* Listing selection for promo code purchase */}
         {showListingSelection && (
