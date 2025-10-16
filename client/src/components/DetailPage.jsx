@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 
 function DetailPage() {
@@ -47,9 +48,39 @@ function DetailPage() {
     );
   }
 
+  // Generate SEO data
+  const buildingName = name;
+  const totalListings = listings.length;
+  const minPrice = Math.min(...listings.map(l => l.cost));
+  const maxPrice = Math.max(...listings.map(l => l.cost));
+  const avgPrice = Math.round(listings.reduce((sum, l) => sum + l.cost, 0) / listings.length);
+  const hasPool = listings.some(l => l.has_pool);
+  const hasParking = listings.some(l => l.has_parking);
+  const hasTopFloor = listings.some(l => l.is_top_floor);
+  
+  const seoTitle = `${buildingName} - ${totalListings} Available Units | SoiPattaya Real Estate`;
+  const seoDescription = `Find ${totalListings} available units at ${buildingName}. Prices from ${minPrice.toLocaleString()}฿ to ${maxPrice.toLocaleString()}฿. ${hasPool ? 'Swimming pool available. ' : ''}${hasParking ? 'Parking available. ' : ''}${hasTopFloor ? 'Top floor units available. ' : ''}View all listings and book your viewing today.`;
+  const seoKeywords = `${buildingName}, Pattaya real estate, ${buildingName} apartments, ${buildingName} condos, Pattaya rentals, ${buildingName} units, Pattaya property, ${buildingName} building, Pattaya accommodation, ${buildingName} listings`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-      <div className="max-w-6xl mx-auto py-6 md:py-8">
+    <>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://soipattaya.com/${encodeURIComponent(buildingName)}`} />
+        <meta property="og:site_name" content="SoiPattaya Real Estate" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={`https://soipattaya.com/${encodeURIComponent(buildingName)}`} />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <div className="max-w-6xl mx-auto py-6 md:py-8">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -187,6 +218,7 @@ function DetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

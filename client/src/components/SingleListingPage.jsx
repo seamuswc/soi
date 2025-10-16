@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 
 function SingleListingPage() {
@@ -51,8 +52,29 @@ function SingleListingPage() {
 
   const isExpired = new Date(listing.expires_at) < new Date();
 
+  // Generate SEO data
+  const seoTitle = `${listing.building_name} - Floor ${listing.floor} | ${listing.cost.toLocaleString()}฿/mo | SoiPattaya Real Estate`;
+  const seoDescription = `${listing.building_name} Floor ${listing.floor} - ${listing.sqm} sqm unit for ${listing.cost.toLocaleString()}฿/month. ${listing.has_pool ? 'Swimming pool available. ' : ''}${listing.has_parking ? 'Parking available. ' : ''}${listing.is_top_floor ? 'Top floor unit. ' : ''}${listing.description.substring(0, 100)}...`;
+  const seoKeywords = `${listing.building_name}, Floor ${listing.floor}, ${listing.cost.toLocaleString()}฿, ${listing.sqm} sqm, Pattaya real estate, ${listing.building_name} apartment, ${listing.building_name} condo, Pattaya rental, ${listing.building_name} unit`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+    <>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://soipattaya.com/listing/${listing.id}`} />
+        <meta property="og:site_name" content="SoiPattaya Real Estate" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={`https://soipattaya.com/listing/${listing.id}`} />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
       <div className="max-w-4xl mx-auto py-6 md:py-8">
         {/* Header */}
         <div className="mb-6">
@@ -169,6 +191,7 @@ function SingleListingPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
