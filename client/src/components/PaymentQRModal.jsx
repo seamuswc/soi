@@ -136,6 +136,7 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
         }, 3000);
       } else {
         // For promo codes, auto-generate the code immediately
+        console.log('🎟️ Auto-generating promo code after payment...');
         setPaid(true);
         setShowQR(false);
         await generatePromoCode();
@@ -149,11 +150,16 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const generatePromoCode = async () => {
     try {
+      // Use paidAmount if available, otherwise fall back to promoForm.max_listings
+      const maxListings = paidAmount || promoForm.max_listings;
+      console.log('🎟️ Generating promo code with max_listings:', maxListings, 'paidAmount:', paidAmount);
+      
       const response = await axios.post('/api/promo/generate-after-payment', {
         reference: reference,
-        max_listings: promoForm.max_listings
+        max_listings: maxListings
       });
       
+      console.log('🎟️ Promo code generated:', response.data);
       setGeneratedPromo(response.data);
     } catch (error) {
       console.error('Failed to generate promo code:', error);
