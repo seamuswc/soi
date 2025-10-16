@@ -194,8 +194,6 @@ function CreatePage() {
       ...prev,
       promo_code: promoCode
     }));
-    // Show success message
-    alert(`Promo code ${promoCode} has been added to your form!`);
   };
 
   return (
