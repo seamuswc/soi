@@ -155,10 +155,17 @@ function DashboardPage() {
   };
 
   const generatePromoCode = async () => {
+    // Validate input before generating
+    const usesValue = parseInt(maxUses);
+    if (!maxUses || isNaN(usesValue) || usesValue < 1) {
+      alert(`Please enter a valid number of uses (minimum 1). Current value: "${maxUses}"`);
+      return;
+    }
+    
     setGeneratingPromo(true);
     try {
       const response = await axios.post('/api/promo/generate', 
-        { max_uses: maxUses },
+        { max_uses: usesValue },
         { headers: { Authorization: `Bearer ${token}` }}
       );
       setGeneratedPromo(response.data);
@@ -330,11 +337,10 @@ function DashboardPage() {
                 Number of Uses
               </label>
               <input
-                type="number"
-                min="1"
+                type="text"
                 max="1000"
                 value={maxUses}
-                onChange={(e) => setMaxUses(parseInt(e.target.value) || 1)}
+                onChange={(e) => setMaxUses(e.target.value)}
                 className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 placeholder="1"
               />
