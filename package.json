@@ -3,23 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "setup": "node setup-env.js",
-    "merchant": "node set-merchant.js",
-    "line": "node set-line.js",
-    "promo": "node set-promo.js",
-    "check-promo": "node check-promo.js",
-    "maintenance": "node maintenance.js",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
-    "start": "node server/dist/index.js",
-    "deploy": "sudo ./deploy.sh",
-    "deploy:one-liner": "curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash",
-    "update": "sudo bash ./update.sh",
-    "safe-update": "npm run maintenance on && npm run update && npm run maintenance off"
+    "start": "node server/dist/index.js"
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
