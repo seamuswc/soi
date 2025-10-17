@@ -920,8 +920,33 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
 
     // Calculate real trends (compare with previous period)
     const now = new Date();
-    const periodStart = new Date(now.getTime() - (period === '1month' ? 30 : period === '3months' ? 90 : period === '6months' ? 180 : period === '1year' ? 365 : 180) * 24 * 60 * 60 * 1000);
-    const previousPeriodStart = new Date(periodStart.getTime() - (period === '1month' ? 30 : period === '3months' ? 90 : period === '6months' ? 180 : period === '1year' ? 365 : 180) * 24 * 60 * 60 * 1000);
+    
+    // Helper function to get proper month-based date ranges
+    const getPeriodDates = (period: string) => {
+      const currentDate = new Date();
+      let monthsBack: number;
+      
+      switch (period) {
+        case '1month': monthsBack = 1; break;
+        case '3months': monthsBack = 3; break;
+        case '6months': monthsBack = 6; break;
+        case '1year': monthsBack = 12; break;
+        case 'beginning': 
+          // Beginning of current year
+          return new Date(currentDate.getFullYear(), 0, 1);
+        case 'all': 
+          // Go back 2 years for "all time"
+          monthsBack = 24; break;
+        default: monthsBack = 6; break;
+      }
+      
+      const periodStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - monthsBack, currentDate.getDate());
+      const previousPeriodStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - (monthsBack * 2), currentDate.getDate());
+      
+      return { periodStart, previousPeriodStart };
+    };
+    
+    const { periodStart, previousPeriodStart } = getPeriodDates(period);
     
     const currentPeriodListings = listings.filter(l => new Date(l.created_at) >= periodStart);
     const previousPeriodListings = listings.filter(l => new Date(l.created_at) >= previousPeriodStart && new Date(l.created_at) < periodStart);
@@ -932,36 +957,53 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
     const rentChange = previousAvgRent > 0 ? ((currentAvgRent - previousAvgRent) / previousAvgRent) * 100 : 0;
     const sqmChange = 0; // Could calculate SQM trends if needed
     
-    // Real area analysis based on actual listings
+    // Real area analysis based on geographical areas (North, East, West, South)
     let areaData = [];
     
     if (totalListings > 0) {
-      // Group listings by building name and use actual coordinates
-      const groupedByBuilding: { [key: string]: any } = listings.reduce((acc: any, listing: any) => {
-        const buildingName = listing.building_name;
-        if (!acc[buildingName]) {
-          acc[buildingName] = {
-            name: buildingName,
-            listings: 0,
-            totalCost: 0,
-            lat: listing.latitude,
-            lng: listing.longitude
-          };
+      // Define city center coordinates for area calculation
+      const cityCenter = city === 'bangkok' 
+        ? { lat: 13.7563, lng: 100.5018 }  // Bangkok center
+        : { lat: 12.9236, lng: 100.8825 }; // Pattaya center
+      
+      // Group listings by geographical areas (North, East, West, South)
+      const areas = {
+        north: { name: 'North', listings: [], totalCost: 0, lat: cityCenter.lat + 0.1, lng: cityCenter.lng },
+        east: { name: 'East', listings: [], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng + 0.1 },
+        west: { name: 'West', listings: [], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng - 0.1 },
+        south: { name: 'South', listings: [], totalCost: 0, lat: cityCenter.lat - 0.1, lng: cityCenter.lng }
+      };
+      
+      // Categorize each listing into geographical areas
+      listings.forEach(listing => {
+        const lat = listing.latitude;
+        const lng = listing.longitude;
+        
+        // Determine which area the listing belongs to
+        if (lat > cityCenter.lat && lng > cityCenter.lng) {
+          areas.north.listings.push(listing);
+          areas.north.totalCost += listing.cost;
+        } else if (lat > cityCenter.lat && lng <= cityCenter.lng) {
+          areas.west.listings.push(listing);
+          areas.west.totalCost += listing.cost;
+        } else if (lat <= cityCenter.lat && lng > cityCenter.lng) {
+          areas.east.listings.push(listing);
+          areas.east.totalCost += listing.cost;
+        } else {
+          areas.south.listings.push(listing);
+          areas.south.totalCost += listing.cost;
         }
-        acc[buildingName].listings += 1;
-        acc[buildingName].totalCost += listing.cost;
-        return acc;
-      }, {});
+      });
 
       // Convert to areaData format
-      areaData = Object.values(groupedByBuilding).map((building: any) => ({
-        name: building.name,
-        listings: building.listings,
-        avgPrice: Math.round(building.totalCost / building.listings),
-        change: 0, // No historical data yet
-        lat: building.lat,
-        lng: building.lng
-      }));
+      areaData = Object.values(areas).map((area: any) => ({
+        name: area.name,
+        listings: area.listings.length,
+        avgPrice: area.listings.length > 0 ? Math.round(area.totalCost / area.listings.length) : 0,
+        change: 0, // Could calculate real change if needed
+        lat: area.lat,
+        lng: area.lng
+      })).filter(area => area.listings > 0); // Only show areas with listings
     } else {
       // No listings, show empty areas
       areaData = [
@@ -995,6 +1037,100 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       longTerm: rentChange > 0 ? `+${(rentChange * 1.5).toFixed(1)}%` : `${(rentChange * 1.5).toFixed(1)}%`
     };
 
+    // Generate historical chart data based on actual listing dates
+    const generateHistoricalData = (period: string) => {
+      const now = new Date();
+      let labels: string[] = [];
+      let priceData: number[] = [];
+      let volumeData: number[] = [];
+      
+      switch (period) {
+        case '1month':
+          labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+          // Group listings by week
+          for (let i = 3; i >= 0; i--) {
+            const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+            const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+            const weekListings = listings.filter(l => {
+              const created = new Date(l.created_at);
+              return created >= weekStart && created < weekEnd;
+            });
+            priceData.push(weekListings.length > 0 ? weekListings.reduce((sum, l) => sum + l.cost, 0) / weekListings.length : 0);
+            volumeData.push(weekListings.length);
+          }
+          break;
+          
+        case '3months':
+          labels = ['Month 1', 'Month 2', 'Month 3'];
+          for (let i = 2; i >= 0; i--) {
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            const monthListings = listings.filter(l => {
+              const created = new Date(l.created_at);
+              return created >= monthStart && created < monthEnd;
+            });
+            priceData.push(monthListings.length > 0 ? monthListings.reduce((sum, l) => sum + l.cost, 0) / monthListings.length : 0);
+            volumeData.push(monthListings.length);
+          }
+          break;
+          
+        case '6months':
+          labels = [];
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+            
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            const monthListings = listings.filter(l => {
+              const created = new Date(l.created_at);
+              return created >= monthStart && created < monthEnd;
+            });
+            priceData.push(monthListings.length > 0 ? monthListings.reduce((sum, l) => sum + l.cost, 0) / monthListings.length : 0);
+            volumeData.push(monthListings.length);
+          }
+          break;
+          
+        case 'beginning':
+          labels = [];
+          for (let i = 0; i <= now.getMonth(); i++) {
+            const date = new Date(now.getFullYear(), i, 1);
+            labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+            
+            const monthStart = new Date(now.getFullYear(), i, 1);
+            const monthEnd = new Date(now.getFullYear(), i + 1, 1);
+            const monthListings = listings.filter(l => {
+              const created = new Date(l.created_at);
+              return created >= monthStart && created < monthEnd;
+            });
+            priceData.push(monthListings.length > 0 ? monthListings.reduce((sum, l) => sum + l.cost, 0) / monthListings.length : 0);
+            volumeData.push(monthListings.length);
+          }
+          break;
+          
+        default:
+          // Default to 6 months
+          labels = [];
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+            
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            const monthListings = listings.filter(l => {
+              const created = new Date(l.created_at);
+              return created >= monthStart && created < monthEnd;
+            });
+            priceData.push(monthListings.length > 0 ? monthListings.reduce((sum, l) => sum + l.cost, 0) / monthListings.length : 0);
+            volumeData.push(monthListings.length);
+          }
+      }
+      
+      return { labels, priceData, volumeData };
+    };
+    
+    const historicalData = generateHistoricalData(period);
+
     return {
       averageRent: Math.round(averageRent),
       pricePerSqm: Math.round(pricePerSqm),
@@ -1010,7 +1146,13 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       areaData,
       topAreas,
       priceRanges,
-      predictions
+      predictions,
+      // Add historical chart data
+      chartData: {
+        labels: historicalData.labels,
+        priceData: historicalData.priceData.map(p => Math.round(p)),
+        volumeData: historicalData.volumeData
+      }
     };
   } catch (error: any) {
     app.log.error('Error fetching analytics data:', error);
@@ -1318,7 +1460,7 @@ const start = async () => {
     // Don't auto-create FREE promo - let admin control it via dashboard
     console.log('🚀 Server starting without auto-creating FREE promo');
     
-    const PORT = parseInt(process.env.PORT || '3000', 10);
+    const PORT = parseInt(process.env.PORT || '3001', 10);
     await app.listen({ port: PORT, host: '0.0.0.0' });
   } catch (err) {
     app.log.error(err);

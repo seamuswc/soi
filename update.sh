@@ -1,81 +1,59 @@
 #!/bin/bash
+# SOI Pattaya - Update Script
+# Pulls new git code, updates server, updates packages, etc.
 
 set -euo pipefail
 
-# Resolve project root (directory containing this script)
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$PROJECT_ROOT"
+echo "🔄 SOI Pattaya - Server Update"
+echo "=============================="
 
-echo "📦 Ensuring Node 20.x and latest npm/pm2 (non-interactive where possible)..."
-if command -v apt &> /dev/null; then
-  export DEBIAN_FRONTEND=noninteractive
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - || true
-  sudo apt-get -o Dpkg::Options::="--force-confold" install -yq nodejs || true
-fi
-npm install -g npm pm2@latest || true
+# Configuration
+APP_DIR="/var/www/soipattaya"
 
-echo "🔄 Updating code..."
-# Discard any local changes to package-lock.json files
-git checkout -- client/package-lock.json 2>/dev/null || true
-git checkout -- server/package-lock.json 2>/dev/null || true
-git checkout -- package-lock.json 2>/dev/null || true
-git pull
+# Navigate to app directory
+cd $APP_DIR
 
-echo "🧹 Cleaning old node_modules..."
-rm -rf node_modules client/node_modules server/node_modules 2>/dev/null || true
+echo "📥 Pulling latest changes from git..."
+git pull origin main
 
-echo "📦 Installing dependencies (root)..."
-if [ -f package-lock.json ]; then 
-  if ! npm ci 2>/dev/null; then
-    echo "⚠️  npm ci failed, falling back to npm install..."
-    npm install
-  fi
-else 
-  npm install
-fi
+echo "📦 Updating dependencies..."
+# Update root dependencies
+npm install
 
-echo "📦 Installing dependencies (client)..."
-pushd client >/dev/null
-if [ -f package-lock.json ]; then 
-  if ! npm ci 2>/dev/null; then
-    echo "⚠️  npm ci failed, falling back to npm install..."
-    npm install
-  fi
-else 
-  npm install
-fi
-# Ensure Vite envs are present for client build
-if [ -f "$PROJECT_ROOT/.env" ]; then
-  echo "🔐 Syncing VITE_* vars to client/.env"
-  grep -E '^VITE_[A-Z0-9_]+=' "$PROJECT_ROOT/.env" > ./.env 2>/dev/null || true
-fi
-popd >/dev/null
+# Update client dependencies
+cd client
+npm install
+cd ..
 
-echo "📦 Installing dependencies (server) and applying DB changes..."
-pushd server >/dev/null
-if [ -f package-lock.json ]; then 
-  if ! npm ci 2>/dev/null; then
-    echo "⚠️  npm ci failed, falling back to npm install..."
-    npm install
-  fi
-else 
-  npm install
-fi
-if ! npx prisma migrate deploy; then
-  npx prisma db push
-fi
-popd >/dev/null
+# Update server dependencies
+cd server
+npm install
+cd ..
 
-echo "🔨 Rebuilding application (client + server)..."
+echo "🗄️ Updating database schema..."
+cd server
+npx prisma generate
+npx prisma db push
+cd ..
+
+echo "🔨 Rebuilding application..."
+# Build server
+cd server
 npm run build
+cd ..
 
-echo "🚀 Restarting application with PM2..."
-if pm2 restart soipattaya; then
-  echo "PM2 process restarted."
-else
-  echo "PM2 process not found. Starting via ecosystem config..."
-  pm2 start ecosystem.config.js || true
-fi
+# Build client
+cd client
+npm run build
+cd ..
 
-echo "✅ Update complete."
+echo "🚀 Restarting application..."
+pm2 restart soipattaya
 
+echo "🔒 Renewing SSL certificate..."
+certbot renew --quiet
+
+echo "✅ Update complete!"
+echo "🌐 App is running at: https://soipattaya.com"
+echo "📊 Check status: pm2 status"
+echo "📝 View logs: pm2 logs soipattaya"

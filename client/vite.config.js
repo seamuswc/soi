@@ -18,10 +18,10 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY || ''),
     },
     server: {
-      port: 5175,
+      port: 3000,
       proxy: {
         '/api': {
-          target: env.API_URL || 'http://localhost:8080',
+          target: env.API_URL || 'http://localhost:3001',
           changeOrigin: true
         }
       }

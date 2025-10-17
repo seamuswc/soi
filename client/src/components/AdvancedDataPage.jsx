@@ -190,15 +190,23 @@ function AdvancedDataPage() {
   };
 
   const generatePriceData = (basePrice, length) => {
-    // For now, show flat line with current average price
-    // TODO: Implement real historical data when available
-    return Array(length).fill(Math.round(basePrice));
+    // ONLY use real historical data from server - NO FAKE DATA
+    if (data?.chartData?.priceData && data.chartData.priceData.length > 0) {
+      return data.chartData.priceData;
+    }
+    
+    // If no real data available, show zeros - NO FAKE DATA
+    return Array(length).fill(0);
   };
 
   const generateVolumeData = (baseVolume, length) => {
-    // For now, show flat line with current total listings
-    // TODO: Implement real historical data when available
-    return Array(length).fill(Math.round(baseVolume));
+    // ONLY use real historical data from server - NO FAKE DATA
+    if (data?.chartData?.volumeData && data.chartData.volumeData.length > 0) {
+      return data.chartData.volumeData;
+    }
+    
+    // If no real data available, show zeros - NO FAKE DATA
+    return Array(length).fill(0);
   };
 
   // Remove city switching - use domain-specific defaults
@@ -283,35 +291,13 @@ function AdvancedDataPage() {
   };
 
   const getChartLabels = (period) => {
-    const now = new Date();
-    switch (period) {
-      case '1month': 
-        return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      case '3months': 
-        return ['Month 1', 'Month 2', 'Month 3'];
-      case '6months': 
-        // Show last 6 months with real month names
-        const months = [];
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          months.push(date.toLocaleDateString('en-US', { month: 'short' }));
-        }
-        return months;
-      case '1year': 
-        return ['Q1', 'Q2', 'Q3', 'Q4'];
-      case 'beginning': 
-        return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      case 'all': 
-        return ['2020', '2021', '2022', '2023', '2024'];
-      default: 
-        // Show last 6 months with real month names
-        const defaultMonths = [];
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          defaultMonths.push(date.toLocaleDateString('en-US', { month: 'short' }));
-        }
-        return defaultMonths;
+    // ONLY use real labels from server data - NO FAKE LABELS
+    if (data?.chartData?.labels && data.chartData.labels.length > 0) {
+      return data.chartData.labels;
     }
+    
+    // If no real data available, show "No Data Available"
+    return ['No Data Available'];
   };
 
   if (loading) {
@@ -472,7 +458,17 @@ function AdvancedDataPage() {
               </div>
             </div>
             <div className="h-64">
-              <canvas ref={chartRef}></canvas>
+              {data?.chartData?.priceData && data.chartData.priceData.length > 0 ? (
+                <canvas ref={chartRef}></canvas>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📊</div>
+                    <p>No historical data available</p>
+                    <p className="text-sm">Data will appear as listings are created</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

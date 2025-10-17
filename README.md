@@ -1,36 +1,88 @@
-# SOI Pattaya — Minimal Deploy
+# SOI Pattaya - Deployment Commands
 
-## 🚀 Deployment Options
+## 🚀 Deployments
 
-### 1. **Deploy Local** (Recommended - Fastest!)
-Build on your local machine, deploy to server:
+### 1. Complete Server Setup (First Time)
 ```bash
-./deploy-local.sh root@soipattaya.com
+sudo ./setup.sh
 ```
-*Builds locally (fastest!) + complete server setup + SSL*
+**What it does:** FULL AND COMPLETE server and site setup - installs Node.js, nginx, SSL, PM2, builds code, sets up database, configures everything. NO QUESTIONS, NO COMMANDS NEEDED AFTER.
 
-### 2. **One-Liner Deploy** (Fresh Server)
+**Run from inside server:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/seamuswc/soipattaya_JS/main/one-liner.sh | sudo bash
+cd /var/www/soipattaya
+sudo ./setup.sh
 ```
-*Complete automated setup on fresh server + SSL*
 
-### 3. **Pre-Built Deploy** (Update Existing)
+**Run from your local terminal via SSH:**
 ```bash
-./deploy-prebuilt.sh
+ssh root@soipattaya.com 'cd /var/www/soipattaya && sudo ./setup.sh'
 ```
-*Quick updates with pre-built files*
 
-## ⚙️ Management Tools
-
+### 2. Update Server (Existing Server)
 ```bash
-npm run merchant     # Set crypto payment addresses (Solana)
-npm run line         # Set LINE account for Thai Baht payments
-npm run promo        # Generate promo codes
+sudo ./update.sh
+```
+**What it does:** Pulls new git code, updates server, updates packages, rebuilds, restarts services.
+
+**Run from inside server:**
+```bash
+cd /var/www/soipattaya
+sudo ./update.sh
+```
+
+**Run from your local terminal via SSH:**
+```bash
+ssh root@soipattaya.com 'cd /var/www/soipattaya && sudo ./update.sh'
+```
+
+### 3. Local Development
+```bash
+npm install
+npm run build
+cd server && node dist/index.js &
+node proxy-server.js &
+```
+**Access:** http://localhost:8080
+
+## 💾 Database Backup
+
+### Backup Database
+```bash
+# Create backup
+node backup-database.js
+
+# This creates: backup_YYYY-MM-DD_HH-MM-SS.sqlite
+```
+
+**Run from inside server:**
+```bash
+cd /var/www/soipattaya
+node backup-database.js
+```
+
+**Run from your local terminal via SSH:**
+```bash
+ssh root@soipattaya.com 'cd /var/www/soipattaya && node backup-database.js'
+```
+
+### Restore Database
+```bash
+# Restore from backup
+node restore-database.js backup_2024-10-17_19-30-00.sqlite
+```
+
+**Run from inside server:**
+```bash
+cd /var/www/soipattaya
+node restore-database.js backup_2024-10-17_19-30-00.sqlite
+```
+
+**Run from your local terminal via SSH:**
+```bash
+ssh root@soipattaya.com 'cd /var/www/soipattaya && node restore-database.js backup_2024-10-17_19-30-00.sqlite'
 ```
 
 ---
 
-**That's it!** Deploy with one command, manage with three. 🚀
-
-# soi
+**Repository**: https://github.com/seamuswc/soi
