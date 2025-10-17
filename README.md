@@ -33,3 +33,4 @@ npm run promo        # Generate promo codes
 
 **That's it!** Deploy with one command, manage with three. 🚀
 
+# soi
