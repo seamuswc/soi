@@ -164,10 +164,30 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const handlePromoFormChange = (e) => {
     const { name, value } = e.target;
-    setPromoForm(prev => ({
-      ...prev,
-      [name]: name === 'listings' ? parseInt(value) || 1 : value
-    }));
+    
+    if (name === 'listings') {
+      // Only allow digits, no negative numbers, no zero
+      const numericValue = value.replace(/[^0-9]/g, ''); // Remove non-digits
+      const parsedValue = parseInt(numericValue);
+      
+      // Don't allow 0 or negative numbers
+      if (numericValue === '' || parsedValue <= 0) {
+        setPromoForm(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      } else {
+        setPromoForm(prev => ({
+          ...prev,
+          [name]: parsedValue
+        }));
+      }
+    } else {
+      setPromoForm(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Set the form to the paid amount when payment is successful
@@ -182,6 +202,12 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
 
   const proceedToPayment = async () => {
     try {
+      // Validate input
+      if (!promoForm.listings || promoForm.listings <= 0 || isNaN(promoForm.listings)) {
+        alert('Please enter a valid number of listings (minimum 1)');
+        return;
+      }
+      
       // Calculate total amount based on selected listings
       const totalAmount = promoForm.listings;
       
@@ -266,11 +292,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
                   Number of Listings
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   name="listings"
                   value={promoForm.listings}
                   onChange={handlePromoFormChange}
-                  min="1"
                   max="100"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg"
                   placeholder="Enter number of listings"

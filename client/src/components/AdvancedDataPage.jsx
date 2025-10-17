@@ -267,7 +267,7 @@ function AdvancedDataPage() {
 
   const formatCurrency = (amount) => {
     const symbol = 'THB';
-    return `${symbol}${amount.toLocaleString()}`;
+    return `${symbol} ${amount.toLocaleString()}`;
   };
 
   const getPeriodText = (period) => {

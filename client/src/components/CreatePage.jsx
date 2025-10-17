@@ -43,6 +43,8 @@ function CreatePage() {
   const [translationResults, setTranslationResults] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promoCodeValid, setPromoCodeValid] = useState(false);
+  const [validatingPromo, setValidatingPromo] = useState(false);
 
   useEffect(() => {
     // Generate Solana reference as a valid PublicKey (base58 string)
@@ -74,9 +76,29 @@ function CreatePage() {
       const response = await axios.get('/api/promo/free');
       if (response.data.available) {
         setFormData(prev => ({ ...prev, promo_code: 'free' }));
+        // Validate the free promo code
+        await validatePromoCode('free');
       }
     } catch (error) {
       console.error('Failed to check FREE promo:', error);
+    }
+  };
+
+  const validatePromoCode = async (promoCode) => {
+    if (!promoCode || promoCode.trim().length < 3) {
+      setPromoCodeValid(false);
+      return;
+    }
+
+    setValidatingPromo(true);
+    try {
+      const response = await axios.get(`/api/promo/validate/${promoCode}`);
+      setPromoCodeValid(response.data.valid);
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      setPromoCodeValid(false);
+    } finally {
+      setValidatingPromo(false);
     }
   };
 
@@ -102,6 +124,11 @@ function CreatePage() {
         ...prev,
         [name]: ''
       }));
+    }
+
+    // Validate promo code when it changes
+    if (name === 'promo_code') {
+      await validatePromoCode(value);
     }
 
     // Check for existing buildings when coordinates change (only for living rentals)
@@ -226,18 +253,24 @@ function CreatePage() {
     }
   };
 
-  const handlePayWithPromo = (e) => {
-    // PAY WITH PROMO: Use existing promo code to create listing
-    // Clear any other payment method selections and ensure promo code is set
-    setFormData(prev => ({
-      ...prev,
-      payment_network: 'promo' // Set to promo since we're using a promo code
-    }));
+  const handlePayWithPromo = async (e) => {
+    e.preventDefault();
+    console.log('Using promo code:', formData.promo_code);
     
+    // Validate form before proceeding
     if (!validateForm()) {
+      console.log('Form validation failed');
       return;
     }
-    handleSubmit();
+    
+    // Set payment method to promo and submit the form
+    setFormData(prev => ({
+      ...prev,
+      payment_network: 'promo'
+    }));
+    
+    // Submit the form immediately
+    await handleSubmit(e);
   };
 
   const handlePayment = (e) => {
@@ -834,13 +867,20 @@ function CreatePage() {
                     placeholder="Enter promo code to list for free"
                   />
                   {formData.promo_code && (
-        <button
-          type="button"
-          onClick={handlePayWithPromo}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-4 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-        >
-          Pay / จ่าย
-        </button>
+                    <div className="flex items-center gap-2">
+                      {validatingPromo && (
+                        <div className="text-sm text-blue-600">Validating...</div>
+                      )}
+                      {promoCodeValid && !validatingPromo && (
+                        <button
+                          type="button"
+                          onClick={handlePayWithPromo}
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-4 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                        >
+                          Pay / จ่าย
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
                 <p className="text-xs text-gray-600 mt-2">

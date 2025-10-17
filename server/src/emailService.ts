@@ -42,44 +42,22 @@ export async function sendPromoCodeEmail(data: PromoCodeEmailData): Promise<bool
       },
     });
 
-    // Load email templates
-    const fs = require('fs');
-    const path = require('path');
-    
-    let htmlTemplate = '';
-    let textTemplate = '';
-    
-    try {
-      htmlTemplate = fs.readFileSync(path.join(__dirname, '../../email-templates/promo-code-purchase.html'), 'utf8');
-      textTemplate = fs.readFileSync(path.join(__dirname, '../../email-templates/promo-code-purchase.txt'), 'utf8');
-    } catch (error) {
-      console.error('❌ Error loading email templates:', error);
-      return false;
-    }
-    
-    // Replace template variables
-    const htmlContent = htmlTemplate
-      .replace(/\{\{email\}\}/g, data.email)
-      .replace(/\{\{promoCode\}\}/g, data.promoCode)
-      .replace(/\{\{uses\}\}/g, data.uses.toString())
-      .replace(/\{\{reference\}\}/g, data.reference)
-      .replace(/\{\{purchaseDate\}\}/g, new Date().toLocaleDateString());
-    
-    const textContent = textTemplate
-      .replace(/\{\{email\}\}/g, data.email)
-      .replace(/\{\{promoCode\}\}/g, data.promoCode)
-      .replace(/\{\{uses\}\}/g, data.uses.toString())
-      .replace(/\{\{reference\}\}/g, data.reference)
-      .replace(/\{\{purchaseDate\}\}/g, new Date().toLocaleDateString());
+    // Using Tencent SES template system
 
-    // Create email request using direct content (no template)
+    // Create email request using template
     const request = {
       FromEmailAddress: sender,
       Destination: [data.email],
       Subject: '🎟️ Promo Code Purchase Confirmed - Your Code is Ready!',
-      Simple: {
-        Html: Buffer.from(htmlContent, 'utf8').toString('base64'),
-        Text: Buffer.from(textContent, 'utf8').toString('base64')
+      Template: {
+        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_PROMO || '66909'),
+        TemplateData: JSON.stringify({
+          email: data.email,
+          promoCode: data.promoCode,
+          uses: data.uses,
+          reference: data.reference,
+          purchaseDate: new Date().toLocaleDateString()
+        })
       }
     };
 

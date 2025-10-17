@@ -22,7 +22,9 @@ function DashboardPage() {
     emailRegion: 'ap-singapore',
     emailSender: 'data@soipattaya.com',
     googleMapsApiKey: '',
-    solanaMerchantAddress: ''
+    solanaMerchantAddress: '',
+    tencentSesTemplateIdEn: '',
+    tencentSesTemplateIdPromo: ''
   });
   const [currentSettings, setCurrentSettings] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -209,6 +211,28 @@ function DashboardPage() {
     }
   };
 
+  const createFreePromo = async () => {
+    if (!window.confirm('Create FREE promo code with 1000 uses?')) {
+      return;
+    }
+
+    try {
+      await axios.post('/api/promo/create-free', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Refresh promo list
+      const response = await axios.get('/api/promo/list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPromoList(response.data.promos);
+      alert('✅ FREE promo code created successfully!');
+    } catch (error) {
+      console.error('Error creating FREE promo:', error);
+      alert('Failed to create FREE promo code');
+    }
+  };
+
   // Email functionality removed
 
   if (loading) {
@@ -297,6 +321,9 @@ function DashboardPage() {
           <div className="flex gap-2">
             <button onClick={fetchUsers} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               👥 View Users
+            </button>
+            <button onClick={createFreePromo} className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-4 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg text-sm md:text-base flex items-center">
+              🆓 Create FREE Promo
             </button>
             <button onClick={() => setShowSettings(true)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm md:text-base flex items-center">
               ⚙️ Settings
@@ -721,6 +748,34 @@ function DashboardPage() {
                   onChange={handleSettingsChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Data Subscription Template ID
+                </label>
+                <input
+                  type="text"
+                  name="tencentSesTemplateIdEn"
+                  value={settingsForm.tencentSesTemplateIdEn}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="66908"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Promo Code Template ID
+                </label>
+                <input
+                  type="text"
+                  name="tencentSesTemplateIdPromo"
+                  value={settingsForm.tencentSesTemplateIdPromo}
+                  onChange={handleSettingsChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="66909"
                 />
               </div>
             </div>

@@ -1144,7 +1144,9 @@ app.get('/api/settings/current', { preHandler: authenticateToken }, async (reque
       emailRegion: process.env.TENCENT_SES_REGION || 'ap-singapore',
       emailSender: process.env.TENCENT_SES_SENDER || 'data@soipattaya.com',
       googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || '',
-      solanaMerchantAddress: process.env.SOLANA_MERCHANT_ADDRESS || ''
+      solanaMerchantAddress: process.env.SOLANA_MERCHANT_ADDRESS || '',
+      tencentSesTemplateIdEn: process.env.TENCENT_SES_TEMPLATE_ID_EN || '',
+      tencentSesTemplateIdPromo: process.env.TENCENT_SES_TEMPLATE_ID_PROMO || ''
     };
 
     return currentSettings;
@@ -1164,7 +1166,9 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailRegion, 
       emailSender, 
       googleMapsApiKey,
-      solanaMerchantAddress
+      solanaMerchantAddress,
+      tencentSesTemplateIdEn,
+      tencentSesTemplateIdPromo
     } = request.body as {
       deepseekApiKey?: string;
       emailSecretId?: string;
@@ -1173,6 +1177,8 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailSender?: string;
       googleMapsApiKey?: string;
       solanaMerchantAddress?: string;
+      tencentSesTemplateIdEn?: string;
+      tencentSesTemplateIdPromo?: string;
     };
 
     // Read current .env file
@@ -1193,7 +1199,9 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       'TENCENT_SES_REGION': emailRegion,
       'TENCENT_SES_SENDER': emailSender,
       'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey,
-      'SOLANA_MERCHANT_ADDRESS': solanaMerchantAddress
+      'SOLANA_MERCHANT_ADDRESS': solanaMerchantAddress,
+      'TENCENT_SES_TEMPLATE_ID_EN': tencentSesTemplateIdEn,
+      'TENCENT_SES_TEMPLATE_ID_PROMO': tencentSesTemplateIdPromo
     };
 
     // Process each update
@@ -1259,11 +1267,56 @@ app.addHook('preHandler', async (request, reply) => {
   }
 });
 
+// Validate promo code
+app.get('/api/promo/validate/:code', async (request, reply) => {
+  try {
+    const { code } = request.params as { code: string };
+    
+    // Check if it's the FREE promo code
+    if (code.toLowerCase() === 'free') {
+      const freePromo = await prisma.promo.findUnique({
+        where: { code: 'free' }
+      });
+      
+      if (freePromo && freePromo.remaining_uses > 0) {
+        return { valid: true, promo: freePromo };
+      } else {
+        return { valid: false, message: 'FREE promo not available' };
+      }
+    }
+    
+    // Check other promo codes
+    const promo = await prisma.promo.findUnique({
+      where: { code: code }
+    });
+    
+    if (promo && promo.remaining_uses > 0) {
+      return { valid: true, promo: promo };
+    } else {
+      return { valid: false, message: 'Invalid or expired promo code' };
+    }
+  } catch (error: any) {
+    app.log.error('Error validating promo code:', error);
+    return reply.code(500).send({ error: 'Failed to validate promo code' });
+  }
+});
+
+// Create FREE promo code (admin only)
+app.post('/api/promo/create-free', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    await ensureFreePromo();
+    return { success: true, message: 'FREE promo code created/updated successfully' };
+  } catch (error: any) {
+    app.log.error('Error creating FREE promo:', error);
+    return reply.code(500).send({ error: 'Failed to create FREE promo' });
+  }
+});
+
 // Start server
 const start = async () => {
   try {
-    // Ensure FREE promo exists on startup
-    await ensureFreePromo();
+    // Don't auto-create FREE promo - let admin control it via dashboard
+    console.log('🚀 Server starting without auto-creating FREE promo');
     
     const PORT = parseInt(process.env.PORT || '3000', 10);
     await app.listen({ port: PORT, host: '0.0.0.0' });
