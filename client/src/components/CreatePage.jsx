@@ -104,8 +104,8 @@ function CreatePage() {
       }));
     }
 
-    // Check for existing buildings when coordinates change
-    if (name === 'coordinates' && value.trim()) {
+    // Check for existing buildings when coordinates change (only for living rentals)
+    if (name === 'coordinates' && value.trim() && rentalType === 'living') {
       await checkExistingBuildings(value);
     }
   };
@@ -957,13 +957,13 @@ function CreatePage() {
       {showCoordinateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">📍 Building Name Conflict</h3>
+            <h3 className="text-lg font-semibold mb-4">📍 Building Name Conflict / ความขัดแย้งชื่ออาคาร</h3>
             <p className="text-gray-600 mb-4">
-              We found existing buildings at these coordinates. Would you like to:
+              We found existing buildings at these coordinates. Would you like to: / พบอาคารที่มีอยู่แล้วที่พิกัดนี้ คุณต้องการ:
             </p>
             
             <div className="space-y-3">
-              <div className="text-sm font-medium text-gray-700">Use existing building name:</div>
+              <div className="text-sm font-medium text-gray-700">Use existing building name: / ใช้ชื่ออาคารที่มีอยู่:</div>
               {existingBuildings.map((buildingName, index) => (
                 <button
                   key={index}
@@ -971,23 +971,23 @@ function CreatePage() {
                   className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="font-medium">{buildingName}</div>
-                  <div className="text-sm text-gray-500">Keep existing name</div>
+                  <div className="text-sm text-gray-500">Keep existing name / ใช้ชื่อเดิม</div>
                 </button>
               ))}
               
               <div className="border-t pt-3">
                 <button
                   onClick={handleUseNewBuildingName}
-                  className="w-full text-left p-3 border border-blue-300 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="font-medium text-blue-700">Use new building name</div>
-                  <div className="text-sm text-blue-600">Enter a more accurate name</div>
+                  <div className="font-medium text-gray-700">Use new building name / ใช้ชื่ออาคารใหม่</div>
+                  <div className="text-sm text-gray-500">Enter a more accurate name / ใส่ชื่อที่ถูกต้องกว่า</div>
                 </button>
               </div>
             </div>
             
             <div className="mt-4 text-xs text-gray-500">
-              💡 Tip: Using the same building name will group all listings together on the map
+              💡 Tip: Using the same building name will group all listings together on the map / เคล็ดลับ: การใช้ชื่ออาคารเดียวกันจะจัดกลุ่มรายการทั้งหมดไว้ด้วยกันบนแผนที่
             </div>
           </div>
         </div>
