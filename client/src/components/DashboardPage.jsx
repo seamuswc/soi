@@ -232,13 +232,23 @@ function DashboardPage() {
     );
   }
 
+  const fetchDashboardData = async () => {
+    try {
+      const response = await axios.get('/api/listings/dashboard', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    }
+  };
+
   const deleteListing = async (listingId) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) {
       return;
     }
     
     try {
-      const token = localStorage.getItem('adminToken');
       await axios.delete(`/api/listings/${listingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -247,6 +257,7 @@ function DashboardPage() {
       fetchDashboardData();
       alert('Listing deleted successfully!');
     } catch (error) {
+      console.error('Error deleting listing:', error);
       alert('Failed to delete listing');
     }
   };
