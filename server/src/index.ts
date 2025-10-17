@@ -1243,7 +1243,7 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
   }
 });
 
-// Middleware to block payments during maintenance
+// Middleware to show maintenance message (no blocking)
 app.addHook('preHandler', async (request, reply) => {
   const now = new Date();
   const isMaintenanceActive = maintenanceMode.enabled && 
@@ -1252,17 +1252,10 @@ app.addHook('preHandler', async (request, reply) => {
     now >= maintenanceMode.startTime! && 
     now <= maintenanceMode.endTime!;
 
-  // Block payment-related endpoints during maintenance
-  if (isMaintenanceActive && (
-    request.url.includes('/api/promo/generate-after-payment') ||
-    request.url.includes('/api/listings') ||
-    request.url.includes('/api/transaction')
-  )) {
-    return reply.code(503).send({ 
-      error: 'Service temporarily unavailable due to maintenance',
-      maintenance: true,
-      message: maintenanceMode.message
-    });
+  // Add maintenance message to response headers (no blocking)
+  if (isMaintenanceActive) {
+    reply.header('X-Maintenance-Message', maintenanceMode.message);
+    reply.header('X-Maintenance-Active', 'true');
   }
 });
 
