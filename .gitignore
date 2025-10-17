@@ -10,12 +10,10 @@ build/
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.backup
-.env.production
+.env.*
+server/.env
+client/.env
+setup-env.js
 
 # Logs
 npm-debug.log*
