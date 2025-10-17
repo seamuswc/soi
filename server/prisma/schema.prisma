@@ -1,4 +1,3 @@
-// Fresh Prisma schema - completely rebuilt from scratch
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,62 +8,45 @@ datasource db {
 }
 
 model Listing {
-  id                Int      @id @default(autoincrement())
-  building_name     String
-  coordinates       String
-  floor             String
-  sqm               String
-  cost              String
-  description       String
-  rental_type       RentalType
-  business_photo    String?
-  youtube_link      String?
-  reference         String?
-  payment_network   String?
-  promo_code_used  String?
-  expires_at        DateTime
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  @@map("listings")
+  id              Int      @id @default(autoincrement())
+  building_name   String
+  latitude        Float
+  longitude       Float
+  floor           String
+  sqm             Int
+  cost            Int
+  description     String
+  youtube_link    String
+  reference       String
+  payment_network String   @default("solana")
+  rental_type     String   @default("living")
+  business_photo  String?
+  promo_code_used String?
+  thai_only       Boolean  @default(false)
+  has_pool        Boolean  @default(false)
+  has_parking     Boolean  @default(false)
+  is_top_floor    Boolean  @default(false)
+  six_months      Boolean  @default(false)
+  expires_at      DateTime
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
 
-model PromoCode {
+model Promo {
   id             Int      @id @default(autoincrement())
   code           String   @unique
-  max_uses       Int
-  remaining_uses Int
+  remaining_uses Int      @default(0)
   email          String?
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
-
-  @@map("promo_codes")
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  email             String   @unique
-  password          String
-  payment_reference String
-  expires_at        DateTime
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-
-  @@map("users")
-}
-
-model MaintenanceMode {
-  id         Int      @id @default(autoincrement())
-  enabled    Boolean  @default(false)
-  message    String?
-  start_time DateTime?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@map("maintenance_mode")
-}
-
-enum RentalType {
-  living
-  business
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  payment_reference String @unique
+  expires_at   DateTime
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 }
