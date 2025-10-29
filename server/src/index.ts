@@ -95,8 +95,13 @@ async function ensureFreePromo() {
 
 app.register(cors, { origin: '*' });
 
-// Solana Connection
+// Solana Connection with backup RPCs
 const SOLANA_RPC = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const BACKUP_RPCS = [
+  'https://api.mainnet-beta.solana.com',
+  'https://rpc.ankr.com/solana',
+  'https://solana-api.projectserum.com'
+];
 const connection = new Connection(SOLANA_RPC, 'confirmed');
 
 // Helper function to get Associated Token Account address
@@ -195,7 +200,7 @@ const createListingSchema = z.object({
   promo_code: z.string().optional()
 });
 
-// Solana payment validation - simpler approach from working code
+// Solana payment validation with retry logic and timeout
 async function validateSolanaPayment(reference: string): Promise<boolean> {
   try {
     if (!reference || reference.length < 32) return false;
@@ -206,11 +211,71 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
     // Convert reference to PublicKey
     const referencePublicKey = new PublicKey(cleanReference);
     
-    // Get signatures for the reference address
-    // If the reference appears in any transaction, payment was made
-    const signatures = await connection.getSignaturesForAddress(referencePublicKey, { limit: 1 });
+    // Retry configuration
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second base delay
+    const timeout = 10000; // 10 second timeout per attempt
     
-    return signatures && signatures.length > 0;
+    // Try each RPC endpoint
+    for (let rpcIndex = 0; rpcIndex < BACKUP_RPCS.length; rpcIndex++) {
+      const rpcUrl = BACKUP_RPCS[rpcIndex];
+      console.log(`🌐 Trying RPC ${rpcIndex + 1}/${BACKUP_RPCS.length}: ${rpcUrl}`);
+      
+      // Create connection with timeout for this RPC
+      const connectionWithTimeout = new Connection(rpcUrl, {
+        commitment: 'confirmed',
+        httpHeaders: {
+          'User-Agent': 'SoiPattaya/1.0'
+        }
+      });
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔍 Solana payment validation attempt ${attempt}/${maxRetries} for reference: ${cleanReference}`);
+          
+          // Create timeout promise
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), timeout);
+          });
+          
+          // Create validation promise
+          const validationPromise = connectionWithTimeout.getSignaturesForAddress(referencePublicKey, { limit: 1 });
+          
+          // Race between validation and timeout
+          const signatures = await Promise.race([validationPromise, timeoutPromise]);
+          
+          if (signatures && signatures.length > 0) {
+            console.log(`✅ Solana payment validated successfully on RPC ${rpcIndex + 1}, attempt ${attempt}`);
+            return true;
+          }
+          
+          console.log(`❌ No signatures found on RPC ${rpcIndex + 1}, attempt ${attempt}`);
+          
+          // If this is not the last attempt, wait before retrying
+          if (attempt < maxRetries) {
+            const delay = retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`⏳ Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+          
+        } catch (error: any) {
+          console.log(`❌ Solana validation RPC ${rpcIndex + 1}, attempt ${attempt} failed:`, error.message);
+          
+          // If this is the last attempt for this RPC, try next RPC
+          if (attempt === maxRetries) {
+            console.log(`🔄 RPC ${rpcIndex + 1} exhausted, trying next RPC...`);
+            break; // Move to next RPC
+          }
+          
+          // Wait before retrying (exponential backoff)
+          const delay = retryDelay * Math.pow(2, attempt - 1);
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    return false;
   } catch (error: any) {
     app.log.error('Solana payment validation error:', error);
     return false;
