@@ -92,6 +92,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
           setLoading(false);
         }
 
+        // Wait 5 seconds before starting payment validation
+        await new Promise(r => setTimeout(r, 5000));
+        
         // Step 3: Poll for payment confirmation (5 second intervals to avoid rate limits)
         for (let i = 0; i < 40; i++) {
           await new Promise(r => setTimeout(r, 5000));
@@ -228,6 +231,9 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
       
       setShowListingSelection(false);
       setShowQR(true);
+      
+      // Wait 5 seconds before starting payment validation
+      await new Promise(r => setTimeout(r, 5000));
       
       // Start polling for payment confirmation
       for (let i = 0; i < 40; i++) {

@@ -115,32 +115,6 @@ function MapPage() {
             <input className="border rounded px-2 py-1" placeholder="Max USDC" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
           </div>
           
-          {/* Price Legend */}
-          <div className="border-t pt-2 mt-2">
-            <div className="text-xs font-semibold mb-1">Price Colors / สีราคา</div>
-            <div className="space-y-1 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#3b82f6'}}></div>
-                <span>Cheapest / ถูกที่สุด</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#10b981'}}></div>
-                <span>Low / ต่ำ</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#f59e0b'}}></div>
-                <span>Medium / ปานกลาง</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#f97316'}}></div>
-                <span>High / สูง</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#ef4444'}}></div>
-                <span>Most Expensive / แพงที่สุด</span>
-              </div>
-            </div>
-          </div>
           <div className="space-y-1 text-sm">
             <label className="flex items-center gap-2"><input type="checkbox" checked={filterPool} onChange={e => {
               setFilterPool(e.target.checked);

@@ -95,13 +95,13 @@ async function ensureFreePromo() {
 
 app.register(cors, { origin: '*' });
 
-// Solana Connection with backup RPCs
-const SOLANA_RPC = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
-const BACKUP_RPCS = [
-  'https://api.mainnet-beta.solana.com',
-  'https://rpc.ankr.com/solana',
-  'https://solana-api.projectserum.com'
-];
+  // Solana Connection with backup RPCs - optimized order
+  const SOLANA_RPC = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+  const BACKUP_RPCS = [
+    'https://api.mainnet-beta.solana.com', // Most reliable, try first
+    'https://solana-api.projectserum.com', // Second most reliable
+    'https://rpc.ankr.com/solana' // Requires API key, try last
+  ];
 const connection = new Connection(SOLANA_RPC, 'confirmed');
 
 // Helper function to get Associated Token Account address
@@ -211,10 +211,10 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
     // Convert reference to PublicKey
     const referencePublicKey = new PublicKey(cleanReference);
     
-    // Retry configuration
-    const maxRetries = 3;
-    const retryDelay = 1000; // 1 second base delay
-    const timeout = 10000; // 10 second timeout per attempt
+      // Retry configuration - balanced for reliability and speed
+      const maxRetries = 6; // Increased to 6 attempts for better reliability
+      const retryDelay = 5000; // 5 seconds between attempts
+      const timeout = 10000; // 10 second timeout per attempt
     
     // Try each RPC endpoint
     for (let rpcIndex = 0; rpcIndex < BACKUP_RPCS.length; rpcIndex++) {
@@ -251,12 +251,12 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
           
           console.log(`❌ No signatures found on RPC ${rpcIndex + 1}, attempt ${attempt}`);
           
-          // If this is not the last attempt, wait before retrying
-          if (attempt < maxRetries) {
-            const delay = retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
-            console.log(`⏳ Waiting ${delay}ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
+                 // If this is not the last attempt, wait before retrying
+                 if (attempt < maxRetries) {
+                   const delay = retryDelay; // Simple fixed delay instead of exponential
+                   console.log(`⏳ Waiting ${delay}ms before retry...`);
+                   await new Promise(resolve => setTimeout(resolve, delay));
+                 }
           
         } catch (error: any) {
           console.log(`❌ Solana validation RPC ${rpcIndex + 1}, attempt ${attempt} failed:`, error.message);
@@ -267,8 +267,8 @@ async function validateSolanaPayment(reference: string): Promise<boolean> {
             break; // Move to next RPC
           }
           
-          // Wait before retrying (exponential backoff)
-          const delay = retryDelay * Math.pow(2, attempt - 1);
+          // Wait before retrying (simple fixed delay)
+          const delay = retryDelay;
           console.log(`⏳ Waiting ${delay}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
