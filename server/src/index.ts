@@ -1044,8 +1044,10 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
         case '6months': monthsBack = 6; break;
         case '1year': monthsBack = 12; break;
         case 'beginning': 
-          // Beginning of current year
-          return new Date(currentDate.getFullYear(), 0, 1);
+          // Beginning of current year - return as object for consistency
+          const beginningOfYear = new Date(currentDate.getFullYear(), 0, 1);
+          const previousYear = new Date(currentDate.getFullYear() - 1, 0, 1);
+          return { periodStart: beginningOfYear, previousPeriodStart: previousYear };
         case 'all': 
           // Go back 2 years for "all time"
           monthsBack = 24; break;
