@@ -54,7 +54,12 @@ apt install -y nodejs
 
 # Install PM2
 echo "📦 Installing PM2..."
-npm install -g pm2
+# Remove any existing PM2 installation first
+npm uninstall -g pm2 2>/dev/null || true
+# Install PM2 fresh
+npm install -g pm2@latest
+# Ensure PM2 is properly installed
+pm2 --version
 
 # Install nginx
 echo "🌐 Installing nginx..."
@@ -189,18 +194,23 @@ systemctl reload nginx
 
 # Start application with PM2
 echo "🚀 Starting application..."
-pm2 delete soipattaya 2>/dev/null || true
+# Kill any existing PM2 processes
+pm2 kill 2>/dev/null || true
+# Start fresh
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup systemd -u root --hp /root
 
 # Wait for application to start
 echo "⏳ Waiting for application to start..."
-sleep 5
+sleep 10
 
 # Check if application is running
 if ! pm2 list | grep -q "online.*soipattaya"; then
     echo "❌ Application failed to start!"
+    echo "📋 PM2 Status:"
+    pm2 list
+    echo "📋 PM2 Logs:"
     pm2 logs soipattaya --lines 20
     exit 1
 fi
