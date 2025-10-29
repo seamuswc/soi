@@ -1404,7 +1404,10 @@ app.get('/api/settings/current', { preHandler: authenticateToken }, async (reque
       googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || '',
       solanaMerchantAddress: process.env.SOLANA_MERCHANT_ADDRESS || '',
       tencentSesTemplateIdEn: process.env.TENCENT_SES_TEMPLATE_ID_EN || '',
-      tencentSesTemplateIdPromo: process.env.TENCENT_SES_TEMPLATE_ID_PROMO || ''
+      tencentSesTemplateIdPromo: process.env.TENCENT_SES_TEMPLATE_ID_PROMO || '',
+      adminUsername: process.env.ADMIN_USERNAME || 'admin',
+      adminPassword: process.env.ADMIN_PASSWORD || 'password',
+      adminToken: process.env.ADMIN_TOKEN || 'admin123'
     };
 
     return currentSettings;
@@ -1426,7 +1429,10 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       googleMapsApiKey,
       solanaMerchantAddress,
       tencentSesTemplateIdEn,
-      tencentSesTemplateIdPromo
+      tencentSesTemplateIdPromo,
+      adminUsername,
+      adminPassword,
+      adminToken
     } = request.body as {
       deepseekApiKey?: string;
       emailSecretId?: string;
@@ -1437,6 +1443,9 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       solanaMerchantAddress?: string;
       tencentSesTemplateIdEn?: string;
       tencentSesTemplateIdPromo?: string;
+      adminUsername?: string;
+      adminPassword?: string;
+      adminToken?: string;
     };
 
     // Read current .env file
@@ -1459,7 +1468,10 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey,
       'SOLANA_MERCHANT_ADDRESS': solanaMerchantAddress,
       'TENCENT_SES_TEMPLATE_ID_EN': tencentSesTemplateIdEn,
-      'TENCENT_SES_TEMPLATE_ID_PROMO': tencentSesTemplateIdPromo
+      'TENCENT_SES_TEMPLATE_ID_PROMO': tencentSesTemplateIdPromo,
+      'ADMIN_USERNAME': adminUsername,
+      'ADMIN_PASSWORD': adminPassword,
+      'ADMIN_TOKEN': adminToken
     };
 
     // Process each update

@@ -24,7 +24,10 @@ function DashboardPage() {
     googleMapsApiKey: '',
     solanaMerchantAddress: '',
     tencentSesTemplateIdEn: '',
-    tencentSesTemplateIdPromo: ''
+    tencentSesTemplateIdPromo: '',
+    adminUsername: 'admin',
+    adminPassword: 'password',
+    adminToken: 'admin123'
   });
   const [currentSettings, setCurrentSettings] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -777,6 +780,61 @@ function DashboardPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="66909"
                 />
+              </div>
+
+              {/* Admin Credentials Section */}
+              <div className="border-t pt-4 mt-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">🔐 Admin Credentials</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Change your dashboard login credentials. These will be updated in the server's .env file.
+                </p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Admin Username
+                    </label>
+                    <input
+                      type="text"
+                      name="adminUsername"
+                      value={settingsForm.adminUsername}
+                      onChange={handleSettingsChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="admin"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Admin Password
+                    </label>
+                    <input
+                      type="password"
+                      name="adminPassword"
+                      value={settingsForm.adminPassword}
+                      onChange={handleSettingsChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="password"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Admin Token
+                    </label>
+                    <input
+                      type="text"
+                      name="adminToken"
+                      value={settingsForm.adminToken}
+                      onChange={handleSettingsChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="admin123"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This token is used for API authentication. Keep it secure!
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
