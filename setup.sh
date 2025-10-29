@@ -5,8 +5,12 @@
 
 set -e  # Exit on any error
 
-# Set non-interactive mode for all package operations
+# FORCE non-interactive mode for ALL operations
 export DEBIAN_FRONTEND=noninteractive
+export UCF_FORCE_CONFFNEW=1
+export UCF_FORCE_CONFFMISS=1
+export APT_LISTCHANGES_FRONTEND=none
+export APT_LISTBUGS_FRONTEND=none
 
 # Configuration
 DOMAIN=${1:-"soipattaya.com"}
@@ -24,16 +28,22 @@ echo "   Nginx Config: $NGINX_CONFIG"
 echo "🔄 Updating system packages..."
 apt update && apt upgrade -y
 
-# Handle SSH configuration conflicts
+# Handle SSH configuration conflicts (NON-INTERACTIVE)
 echo "🔧 Configuring SSH..."
 if [ -f /etc/ssh/sshd_config ]; then
     # Backup current SSH config
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
     # Set default SSH config to avoid conflicts
-    echo "Port 22" > /etc/ssh/sshd_config
-    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
-    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+    cat > /etc/ssh/sshd_config << EOF
+Port 22
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes
+X11Forwarding yes
+PrintMotd no
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+EOF
     systemctl restart ssh
 fi
 

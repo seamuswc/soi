@@ -4,6 +4,13 @@
 
 set -euo pipefail
 
+# FORCE non-interactive mode for ALL operations
+export DEBIAN_FRONTEND=noninteractive
+export UCF_FORCE_CONFFNEW=1
+export UCF_FORCE_CONFFMISS=1
+export APT_LISTCHANGES_FRONTEND=none
+export APT_LISTBUGS_FRONTEND=none
+
 echo "🔄 SOI Pattaya - Server Update"
 echo "=============================="
 
@@ -28,7 +35,7 @@ fi
 
 echo "📦 Updating dependencies..."
 # Update root dependencies
-if ! npm install; then
+if ! npm install --silent; then
     echo "❌ Root dependencies update failed!"
     exit 1
 fi
@@ -36,7 +43,7 @@ fi
 # Update client dependencies
 echo "Updating client dependencies..."
 cd client
-if ! npm install; then
+if ! npm install --silent; then
     echo "❌ Client dependencies update failed!"
     exit 1
 fi
@@ -45,7 +52,7 @@ cd ..
 # Update server dependencies
 echo "Updating server dependencies..."
 cd server
-if ! npm install; then
+if ! npm install --silent; then
     echo "❌ Server dependencies update failed!"
     exit 1
 fi
@@ -89,7 +96,7 @@ echo "🚀 Restarting application..."
 # Check if PM2 is running
 if ! command -v pm2 &> /dev/null; then
     echo "❌ PM2 not found! Installing..."
-    npm install -g pm2
+    npm install -g pm2 --silent
 fi
 
 # Restart application
