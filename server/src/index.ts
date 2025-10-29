@@ -1058,7 +1058,9 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       return { periodStart, previousPeriodStart };
     };
     
-    const { periodStart, previousPeriodStart } = getPeriodDates(period);
+    const periodDates = getPeriodDates(period);
+    const periodStart = periodDates.periodStart;
+    const previousPeriodStart = periodDates.previousPeriodStart;
     
     const currentPeriodListings = listings.filter(l => new Date(l.created_at) >= periodStart);
     const previousPeriodListings = listings.filter(l => new Date(l.created_at) >= previousPeriodStart && new Date(l.created_at) < periodStart);
@@ -1080,10 +1082,10 @@ app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request,
       
       // Group listings by geographical areas (North, East, West, South)
       const areas = {
-        north: { name: 'North', listings: [], totalCost: 0, lat: cityCenter.lat + 0.1, lng: cityCenter.lng },
-        east: { name: 'East', listings: [], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng + 0.1 },
-        west: { name: 'West', listings: [], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng - 0.1 },
-        south: { name: 'South', listings: [], totalCost: 0, lat: cityCenter.lat - 0.1, lng: cityCenter.lng }
+        north: { name: 'North', listings: [] as any[], totalCost: 0, lat: cityCenter.lat + 0.1, lng: cityCenter.lng },
+        east: { name: 'East', listings: [] as any[], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng + 0.1 },
+        west: { name: 'West', listings: [] as any[], totalCost: 0, lat: cityCenter.lat, lng: cityCenter.lng - 0.1 },
+        south: { name: 'South', listings: [] as any[], totalCost: 0, lat: cityCenter.lat - 0.1, lng: cityCenter.lng }
       };
       
       // Categorize each listing into geographical areas
