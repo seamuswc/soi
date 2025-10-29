@@ -150,9 +150,10 @@ function PaymentQRModal({ network, amount, reference, merchantAddress, onClose, 
   const generatePromoCode = async () => {
     try {
       setGeneratingPromo(true);
+      // Use the form value instead of paidAmount to ensure we get the correct number
       const response = await axios.post('/api/promo/generate-after-payment', {
         reference: reference,
-        uses: paidAmount || 1,
+        uses: promoForm.listings || paidAmount || 1,
         email: promoForm.email || null
       });
       

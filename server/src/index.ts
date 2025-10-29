@@ -675,7 +675,7 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
       email?: string;
     };
 
-    console.log('🎟️ API: Generating promo code for reference:', reference, 'email:', email);
+    console.log('🎟️ API: Generating promo code for reference:', reference, 'email:', email, 'uses:', uses);
 
     // Skip payment validation for promo code generation since payment was already confirmed
     // in the payment flow. The reference is only generated after successful payment.
@@ -689,6 +689,7 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
     }
     
     // Create promo code with the number of uses paid for
+    console.log('🎟️ API: Creating promo code with uses:', uses);
     const promo = await prisma.promo.create({
       data: {
         code: promoCode.toLowerCase(),
@@ -696,6 +697,7 @@ app.post('/api/promo/generate-after-payment', async (request, reply) => {
         email: email || null
       }
     });
+    console.log('🎟️ API: Created promo code with remaining_uses:', promo.remaining_uses);
     
     // Send email if email is provided
     if (email) {
@@ -1538,9 +1540,11 @@ app.get('/api/promo/validate/:code', async (request, reply) => {
     }
     
     // Check other promo codes
+    console.log('🎟️ API: Validating promo code:', code);
     const promo = await prisma.promo.findUnique({
-      where: { code: code }
+      where: { code: code.toLowerCase() }
     });
+    console.log('🎟️ API: Found promo in validation:', promo);
     
     if (promo && promo.remaining_uses > 0) {
       return { valid: true, promo: promo };
