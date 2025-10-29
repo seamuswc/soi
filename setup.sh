@@ -5,6 +5,9 @@
 
 set -e  # Exit on any error
 
+# Set non-interactive mode for all package operations
+export DEBIAN_FRONTEND=noninteractive
+
 # Configuration
 DOMAIN=${1:-"soipattaya.com"}
 APP_DIR="/var/www/soipattaya"
@@ -20,6 +23,19 @@ echo "   Nginx Config: $NGINX_CONFIG"
 # Update system packages
 echo "🔄 Updating system packages..."
 apt update && apt upgrade -y
+
+# Handle SSH configuration conflicts
+echo "🔧 Configuring SSH..."
+if [ -f /etc/ssh/sshd_config ]; then
+    # Backup current SSH config
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+    # Set default SSH config to avoid conflicts
+    echo "Port 22" > /etc/ssh/sshd_config
+    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+    systemctl restart ssh
+fi
 
 # Install Node.js 20.x
 echo "📦 Installing Node.js 20.x..."
