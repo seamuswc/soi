@@ -10,50 +10,145 @@ echo "=============================="
 # Configuration
 APP_DIR="/var/www/soipattaya"
 
+# Check if app directory exists
+if [ ! -d "$APP_DIR" ]; then
+    echo "❌ App directory $APP_DIR not found!"
+    echo "💡 Run setup.sh first to install the application"
+    exit 1
+fi
+
 # Navigate to app directory
 cd $APP_DIR
 
 echo "📥 Pulling latest changes from git..."
-git pull origin main
+if ! git pull origin main; then
+    echo "❌ Git pull failed!"
+    exit 1
+fi
 
 echo "📦 Updating dependencies..."
 # Update root dependencies
-npm install
+if ! npm install; then
+    echo "❌ Root dependencies update failed!"
+    exit 1
+fi
 
 # Update client dependencies
+echo "Updating client dependencies..."
 cd client
-npm install
+if ! npm install; then
+    echo "❌ Client dependencies update failed!"
+    exit 1
+fi
 cd ..
 
 # Update server dependencies
+echo "Updating server dependencies..."
 cd server
-npm install
+if ! npm install; then
+    echo "❌ Server dependencies update failed!"
+    exit 1
+fi
 cd ..
 
 echo "🗄️ Updating database schema..."
 cd server
-npx prisma generate
-npx prisma db push
+if ! npx prisma generate; then
+    echo "❌ Prisma generate failed!"
+    exit 1
+fi
+
+if ! npx prisma db push; then
+    echo "❌ Database schema update failed!"
+    exit 1
+fi
 cd ..
 
 echo "🔨 Rebuilding application..."
-# Build server
+# Build server with error checking
+echo "Building server..."
 cd server
-npm run build
+if ! npm run build; then
+    echo "❌ Server build failed!"
+    echo "💡 Check TypeScript compilation errors"
+    exit 1
+fi
 cd ..
 
-# Build client
+# Build client with error checking
+echo "Building client..."
 cd client
-npm run build
+if ! npm run build; then
+    echo "❌ Client build failed!"
+    echo "💡 Check for build errors"
+    exit 1
+fi
 cd ..
 
 echo "🚀 Restarting application..."
-pm2 restart soipattaya
+# Check if PM2 is running
+if ! command -v pm2 &> /dev/null; then
+    echo "❌ PM2 not found! Installing..."
+    npm install -g pm2
+fi
+
+# Restart application
+if ! pm2 restart soipattaya; then
+    echo "❌ Failed to restart application!"
+    echo "💡 Trying to start application..."
+    if ! pm2 start ecosystem.config.js; then
+        echo "❌ Failed to start application!"
+        exit 1
+    fi
+fi
+
+# Wait for application to start
+echo "⏳ Waiting for application to start..."
+sleep 3
+
+# Check if application is running
+if ! pm2 list | grep -q "online.*soipattaya"; then
+    echo "❌ Application is not running!"
+    echo "📝 Application logs:"
+    pm2 logs soipattaya --lines 10
+    exit 1
+fi
+
+# Test application
+echo "🧪 Testing application..."
+if ! curl -s "http://localhost:3001/api/config/merchant-addresses" > /dev/null; then
+    echo "❌ Backend API not responding!"
+    echo "📝 Backend logs:"
+    pm2 logs soipattaya --lines 10
+    exit 1
+fi
+
+# Test frontend
+if ! curl -s "http://localhost" | grep -q "SoiPattaya"; then
+    echo "❌ Frontend not responding!"
+    exit 1
+fi
 
 echo "🔒 Renewing SSL certificate..."
-certbot renew --quiet
+# Only renew SSL if certificates exist
+if [ -d "/etc/letsencrypt/live" ]; then
+    if certbot renew --quiet; then
+        echo "✅ SSL certificate renewed"
+        systemctl reload nginx
+    else
+        echo "⚠️  SSL renewal failed, but continuing..."
+    fi
+else
+    echo "ℹ️  No SSL certificates found, skipping renewal"
+fi
 
+echo ""
 echo "✅ Update complete!"
-echo "🌐 App is running at: https://soipattaya.com"
-echo "📊 Check status: pm2 status"
-echo "📝 View logs: pm2 logs soipattaya"
+echo "📊 Application Status:"
+pm2 status
+echo ""
+echo "🌐 App is running successfully!"
+echo "📝 Useful commands:"
+echo "   Check status: pm2 status"
+echo "   View logs: pm2 logs soipattaya"
+echo "   Monitor: pm2 monit"
