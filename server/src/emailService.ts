@@ -50,7 +50,7 @@ export async function sendPromoCodeEmail(data: PromoCodeEmailData): Promise<bool
       Destination: [data.email],
       Subject: '🎟️ Promo Code Purchase Confirmed - Your Code is Ready!',
       Template: {
-        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_PROMO || '66909'),
+        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_PROMO || '66912'),
         TemplateData: JSON.stringify({
           email: data.email,
           promoCode: data.promoCode,
@@ -195,7 +195,7 @@ This email was sent automatically. Please keep your login credentials safe.
       Subject: '🎉 Data Subscription Confirmed - Welcome!',
       ReplyToAddresses: sender,
       Template: {
-        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_EN || '66908'),
+        TemplateID: parseInt(process.env.TENCENT_SES_TEMPLATE_ID_DATA || '66908'),
         TemplateData: JSON.stringify({
           email: data.email,
           password: data.password,

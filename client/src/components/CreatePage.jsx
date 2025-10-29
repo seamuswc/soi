@@ -370,8 +370,11 @@ function CreatePage() {
 
   const handlePromoCodeSuccess = (promoCode) => {
     setShowQRModal(false);
-    // Show success modal instead of redirecting
-    setShowSuccessModal(true);
+    // Fill the promo code input field with the generated code
+    setFormData(prev => ({
+      ...prev,
+      promo_code: promoCode
+    }));
   };
 
   return (

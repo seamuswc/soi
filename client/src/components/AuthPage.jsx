@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { QRCodeSVG } from 'qrcode.react';
 import { getDomainConfig } from '../utils/domainConfig';
 
 function AuthPage() {
@@ -42,7 +43,9 @@ function AuthPage() {
   };
 
   const generateReference = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    // Generate a valid Solana PublicKey as reference
+    const { Keypair } = require('@solana/web3.js');
+    return Keypair.generate().publicKey.toBase58();
   };
 
   const handleRegister = async () => {
@@ -226,9 +229,9 @@ function AuthPage() {
               Scan QR Code to Pay 1 USDC
             </h3>
             <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`}
-                alt="Payment QR Code"
+              <QRCodeSVG 
+                value={qrUrl}
+                size={200}
                 className="mx-auto"
               />
             </div>

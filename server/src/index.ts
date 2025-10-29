@@ -556,6 +556,51 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
   }
 });
 
+// Test data subscription email (for testing purposes)
+app.post('/api/test/data-subscription-email', async (request, reply) => {
+  try {
+    const { email } = request.body as { email: string };
+
+    console.log('📧 API: Testing data subscription email for:', email);
+
+    // Generate test data
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    const now = new Date();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 365);
+
+    // Send test subscription email
+    try {
+      await sendSubscriptionEmail({
+        email: email,
+        password: password,
+        subscriptionDate: now.toLocaleDateString(),
+        expiryDate: expiresAt.toLocaleDateString(),
+        paymentReference: 'TEST-REFERENCE-123',
+      });
+      console.log('📧 Data subscription email sent to:', email);
+    } catch (emailError) {
+      console.error('Failed to send data subscription email:', emailError);
+      return reply.code(500).send({ error: 'Failed to send email' });
+    }
+
+    return { 
+      success: true,
+      message: 'Data subscription email sent successfully',
+      email: email,
+      password: password
+    };
+  } catch (error: any) {
+    app.log.error('Error testing data subscription email:', error);
+    return reply.code(500).send({ error: 'Failed to send test email' });
+  }
+});
+
 // Generate promo code after Solana payment (public endpoint)
 app.post('/api/promo/generate-after-payment', async (request, reply) => {
   try {
