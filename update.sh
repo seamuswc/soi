@@ -99,27 +99,42 @@ if ! command -v pm2 &> /dev/null; then
     npm install -g pm2 --silent
 fi
 
-# Restart application
-if ! pm2 restart soipattaya; then
-    echo "❌ Failed to restart application!"
-    echo "💡 Trying to start application..."
-    if ! pm2 start ecosystem.config.js; then
-        echo "❌ Failed to start application!"
-        exit 1
+# Update PM2 and restart application
+pm2 update >/dev/null 2>&1 || true
+if ! pm2 reload soipattaya --update-env; then
+    echo "❌ Failed to reload application!"
+    echo "💡 Trying to restart application..."
+    if ! pm2 restart soipattaya --update-env; then
+        echo "❌ Failed to restart application!"
+        echo "💡 Trying to start application..."
+        if ! pm2 start ecosystem.config.js; then
+            echo "❌ Failed to start application!"
+            exit 1
+        fi
     fi
 fi
 
-# Wait for application to start
-echo "⏳ Waiting for application to start..."
-sleep 3
-
-# Check if application is running
-if ! pm2 list | grep -q "online.*soipattaya"; then
-    echo "❌ Application is not running!"
-    echo "📝 Application logs:"
-    pm2 logs soipattaya --lines 10
-    exit 1
+# Ensure jq is available for robust PM2 JSON health checks
+if ! command -v jq &> /dev/null; then
+    echo "📦 Installing jq for health checks..."
+    apt-get update -y >/dev/null 2>&1 || true
+    apt-get install -y jq >/dev/null 2>&1 || true
 fi
+
+# Wait for application to start with robust PM2 JSON check
+echo "⏳ Waiting for application to start..."
+ATTEMPTS=0
+MAX_ATTEMPTS=30
+until pm2 jlist | jq -e '.[] | select(.name=="soipattaya" and .pm2_env.status=="online")' >/dev/null 2>&1; do
+    ATTEMPTS=$((ATTEMPTS+1))
+    if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+        echo "❌ Application is not reported online by PM2"
+        echo "📝 PM2 list:" && pm2 list || true
+        echo "📝 Recent logs:" && pm2 logs soipattaya --lines 20 || true
+        exit 1
+    fi
+    sleep 1
+done
 
 # Test application
 echo "🧪 Testing application..."

@@ -72,6 +72,7 @@ if ! command -v node >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt install -y nodejs
 fi
+# Always ensure latest PM2
 npm uninstall -g pm2 >/dev/null 2>&1 || true
 npm install -g pm2@latest
 pm2 --version
@@ -90,6 +91,7 @@ mkdir -p "$APP_DIR"
 # Ensure git safe.directory for root-managed directory
 git config --global --add safe.directory "$APP_DIR" || true
 
+FRESH_INSTALL=0
 if [ -d "$APP_DIR/.git" ]; then
   echo "📥 Pulling latest code..."
   git -C "$APP_DIR" fetch --all
@@ -97,6 +99,7 @@ if [ -d "$APP_DIR/.git" ]; then
 else
   echo "📥 Cloning repository..."
   git clone "$REPO_URL" "$APP_DIR"
+  FRESH_INSTALL=1
 fi
 
 cd "$APP_DIR"
@@ -110,6 +113,11 @@ DATABASE_URL="file:./server/database/database.sqlite"
 # Server
 PORT=3001
 NODE_ENV=production
+
+# Admin
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD="poop"
+ADMIN_TOKEN="admin123"
 
 # Solana
 SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
@@ -143,6 +151,15 @@ cd client && npm install && cd ..
 echo "🗄️  Prisma setup..."
 cd server
 npx prisma generate
+# Fresh deploys should start with a clean database
+if [ "$FRESH_INSTALL" = "1" ]; then
+  echo "🧹 Fresh install detected – resetting SQLite database..."
+  # Remove any possible SQLite locations used in past layouts
+  rm -f "$APP_DIR/server/server/database/database.sqlite" || true
+  rm -f "$APP_DIR/server/database/database.sqlite" || true
+  rm -f "$APP_DIR/server/server/server/database/database.sqlite" || true
+fi
+
 npx prisma db push
 cd ..
 
@@ -191,7 +208,11 @@ nginx -t
 systemctl reload nginx
 
 echo "🚀 Starting app with PM2..."
+# Fresh PM2 bootstrap to avoid legacy global path issues
 pm2 kill >/dev/null 2>&1 || true
+rm -rf /root/.pm2 || true
+npm install -g pm2@latest >/dev/null 2>&1 || true
+pm2 update >/dev/null 2>&1 || true
 if [ -f "$APP_DIR/ecosystem.config.js" ]; then
   if ! pm2 start "$APP_DIR/ecosystem.config.js"; then
     pm2 start "node server/dist/index.js" --name soipattaya --cwd "$APP_DIR"
