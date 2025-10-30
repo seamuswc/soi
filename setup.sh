@@ -13,20 +13,30 @@ export APT_LISTCHANGES_FRONTEND=none
 export APT_LISTBUGS_FRONTEND=none
 
 # Configuration
-DOMAIN=${1:-"soipattaya.com"}
+# Accept multiple domains as space-separated args. First is primary.
+if [ "$#" -eq 0 ]; then
+    DOMAINS=("soipattaya.com")
+else
+    DOMAINS=("$@")
+fi
+PRIMARY_DOMAIN="${DOMAINS[0]}"
 APP_DIR="/var/www/soipattaya"
 NGINX_CONFIG="/etc/nginx/sites-available/soipattaya"
 
 echo "🚀 SOI Pattaya - Complete Server Setup"
 echo "======================================"
 echo "📋 Configuration:"
-echo "   Domain: $DOMAIN"
+echo "   Domains: ${DOMAINS[*]}"
 echo "   App Directory: $APP_DIR"
 echo "   Nginx Config: $NGINX_CONFIG"
 
 # Update system packages
 echo "🔄 Updating system packages..."
 apt update && apt upgrade -y
+
+# Install required base packages (non-interactive)
+echo "📦 Installing base packages (curl, git, build tools)..."
+apt install -y curl git ca-certificates build-essential python3 make >/dev/null 2>&1 || apt install -y curl git ca-certificates build-essential python3 make
 
 # Handle SSH configuration conflicts (NON-INTERACTIVE)
 echo "🔧 Configuring SSH..."
@@ -116,7 +126,7 @@ SMTP_PASS=""
 SMTP_FROM="noreply@soipattaya.com"
 
 # Vite Environment Variables
-VITE_API_URL="https://$DOMAIN/api"
+VITE_API_URL="https://$PRIMARY_DOMAIN/api"
 VITE_APP_NAME="SOI Pattaya"
 EOF
 fi
@@ -151,10 +161,15 @@ cd ..
 
 # Configure nginx (HTTP only first)
 echo "🌐 Configuring nginx..."
+# Build server_name list including www aliases
+SERVER_NAMES=""
+for d in "${DOMAINS[@]}"; do
+    SERVER_NAMES+="$d www.$d "
+done
 cat > $NGINX_CONFIG << EOF
 server {
     listen 80;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $SERVER_NAMES;
     
     location /api {
         proxy_pass http://localhost:3001;
@@ -192,54 +207,91 @@ fi
 # Reload nginx
 systemctl reload nginx
 
-# Start application with PM2
+"# Start application with PM2"
 echo "🚀 Starting application..."
 # Kill any existing PM2 processes
 pm2 kill 2>/dev/null || true
-# Start fresh
-pm2 start ecosystem.config.js
+# Start using ecosystem if present, otherwise fallback
+if [ -f "$APP_DIR/ecosystem.config.js" ]; then
+    if ! pm2 start "$APP_DIR/ecosystem.config.js"; then
+        echo "⚠️  PM2 ecosystem start failed, falling back to direct start..."
+        pm2 start "node server/dist/index.js" --name soipattaya --cwd "$APP_DIR"
+    fi
+else
+    echo "ℹ️  No ecosystem.config.js found, starting app directly..."
+    pm2 start "node server/dist/index.js" --name soipattaya --cwd "$APP_DIR"
+fi
 pm2 save
 pm2 startup systemd -u root --hp /root
 
-# Wait for application to start
+"# Wait for application to start"
 echo "⏳ Waiting for application to start..."
-sleep 10
 
-# Check if application is running
-if ! pm2 list | grep -q "online.*soipattaya"; then
-    echo "❌ Application failed to start!"
-    echo "📋 PM2 Status:"
-    pm2 list
-    echo "📋 PM2 Logs:"
-    pm2 logs soipattaya --lines 20
-    exit 1
-fi
+# Retry helper (up to 30 attempts, 2s apart)
+attempt=0
+max_attempts=30
+until pm2 list | grep -q "online.*soipattaya"; do
+    attempt=$((attempt+1))
+    if [ "$attempt" -ge "$max_attempts" ]; then
+        echo "❌ Application failed to report online in PM2!"
+        echo "📋 PM2 Status:"
+        pm2 list
+        echo "📋 PM2 Logs:"
+        pm2 logs soipattaya --lines 50
+        exit 1
+    fi
+    sleep 2
+done
 
-# Test application
+"# Test application"
 echo "🧪 Testing application..."
-if ! curl -s "http://localhost:3001/api/config/merchant-addresses" > /dev/null; then
-    echo "❌ Backend API not responding!"
-    exit 1
-fi
 
-if ! curl -s "http://localhost" | grep -q "SoiPattaya"; then
-    echo "❌ Frontend not responding!"
-    exit 1
-fi
+# Backend health check with retries
+attempt=0
+until curl -sf "http://localhost:3001/api/config/merchant-addresses" > /dev/null; do
+    attempt=$((attempt+1))
+    if [ "$attempt" -ge "$max_attempts" ]; then
+        echo "❌ Backend API not responding after retries!"
+        exit 1
+    fi
+    sleep 2
+done
+
+# Frontend health check with retries
+attempt=0
+until curl -sf "http://localhost" | grep -q "SoiPattaya"; do
+    attempt=$((attempt+1))
+    if [ "$attempt" -ge "$max_attempts" ]; then
+        echo "❌ Frontend not responding after retries!"
+        exit 1
+    fi
+    sleep 2
+done
 
 echo "✅ Application is running successfully!"
 
-# Setup SSL if domain is provided and not an IP
-if [[ $DOMAIN =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "ℹ️  IP address detected - skipping SSL setup"
-    echo "🌐 Site is available at: http://$DOMAIN"
+# Setup SSL for all non-IP domains provided
+NON_IP_DOMAINS=()
+for d in "${DOMAINS[@]}"; do
+    if [[ ! $d =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        NON_IP_DOMAINS+=("$d")
+    fi
+done
+
+if [ ${#NON_IP_DOMAINS[@]} -eq 0 ]; then
+    echo "ℹ️  Only IP(s) provided - skipping SSL setup"
+    echo "🌐 Site is available at: http://${DOMAINS[0]}"
 else
-    echo "🔒 Setting up SSL certificate..."
-    if certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN; then
-        echo "✅ SSL certificate installed successfully!"
-        echo "🌐 Site is available at: https://$DOMAIN"
+    echo "🔒 Setting up SSL certificates for: ${NON_IP_DOMAINS[*]} ..."
+    CERTBOT_ARGS=(--nginx --non-interactive --agree-tos --email admin@"$PRIMARY_DOMAIN")
+    for d in "${NON_IP_DOMAINS[@]}"; do
+        CERTBOT_ARGS+=( -d "$d" -d "www.$d" )
+    done
+    if certbot "${CERTBOT_ARGS[@]}"; then
+        echo "✅ SSL certificate(s) installed successfully!"
+        echo "🌐 Primary site: https://$PRIMARY_DOMAIN"
     else
-        echo "⚠️  SSL setup failed, but site is available at: http://$DOMAIN"
+        echo "⚠️  SSL setup failed, but site is available at: http://$PRIMARY_DOMAIN"
     fi
 fi
 
