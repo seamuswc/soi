@@ -87,6 +87,9 @@ yes | ufw enable >/dev/null 2>&1 || true
 echo "📁 Preparing app directory..."
 mkdir -p "$APP_DIR"
 
+# Ensure git safe.directory for root-managed directory
+git config --global --add safe.directory "$APP_DIR" || true
+
 if [ -d "$APP_DIR/.git" ]; then
   echo "📥 Pulling latest code..."
   git -C "$APP_DIR" fetch --all
