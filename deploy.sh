@@ -42,7 +42,7 @@ fi
 
 DOMAINS_JOINED="${DOMAINS[*]}"
 
-ssh root@"$SERVER" bash -s << 'REMOTE_EOF'
+ssh APP_DIR="$APP_DIR" REPO_URL="$REPO_URL" DOMAINS_JOINED="$DOMAINS_JOINED" PRIMARY_DOMAIN="$PRIMARY_DOMAIN" root@"$SERVER" bash -s << 'REMOTE_EOF'
 set -e
 
 export DEBIAN_FRONTEND=noninteractive
@@ -51,11 +51,7 @@ export UCF_FORCE_CONFFMISS=1
 export APT_LISTCHANGES_FRONTEND=none
 export APT_LISTBUGS_FRONTEND=none
 
-# Receive variables from outer scope via heredoc env export
-read -r APP_DIR REPO_URL DOMAINS_JOINED PRIMARY_DOMAIN <<'VARS_EOF'
-APP_DIR_PLACEHOLDER REPO_URL_PLACEHOLDER DOMAINS_PLACEHOLDER PRIMARY_PLACEHOLDER
-VARS_EOF
-
+# Variables are provided via the SSH invocation environment
 # Reconstruct arrays
 IFS=' ' read -r -a DOMAINS <<< "$DOMAINS_JOINED"
 
@@ -236,7 +232,5 @@ fi
 
 echo "✅ Deployment complete."
 REMOTE_EOF
-"$APP_DIR" "$REPO_URL" "$DOMAINS_JOINED" "$PRIMARY_DOMAIN"
-
 echo "🎉 Done. Visit: https://$PRIMARY_DOMAIN (or http if SSL skipped)"
 
