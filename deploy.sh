@@ -65,7 +65,7 @@ echo "🔄 Updating system packages..."
 apt update && apt upgrade -y
 
 echo "📦 Installing base packages..."
-apt install -y curl git ca-certificates build-essential python3 make ufw >/dev/null 2>&1 || apt install -y curl git ca-certificates build-essential python3 make ufw
+apt install -y curl git ca-certificates build-essential python3 make ufw jq >/dev/null 2>&1 || apt install -y curl git ca-certificates build-essential python3 make ufw jq
 
 echo "📦 Installing Node.js 20.x and PM2..."
 if ! command -v node >/dev/null 2>&1; then
@@ -205,6 +205,7 @@ NGINXEOF
 ln -sf "$NGINX_CONFIG" /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
+systemctl enable --now nginx || true
 systemctl reload nginx
 
 echo "🚀 Starting app with PM2..."
@@ -224,13 +225,13 @@ pm2 save
 pm2 startup systemd -u root --hp /root
 
 echo "⏳ Waiting for PM2 to report online..."
-attempt=0; max_attempts=30
-until pm2 list | grep -q "online.*soipattaya"; do
+attempt=0; max_attempts=45
+until pm2 jlist | jq -e '.[] | select(.name=="soipattaya" and .pm2_env.status=="online")' >/dev/null 2>&1; do
   attempt=$((attempt+1))
   if [ "$attempt" -ge "$max_attempts" ]; then
     echo "❌ PM2 did not report app online"; pm2 list; pm2 logs soipattaya --lines 50; exit 1
   fi
-  sleep 2
+  sleep 1
 done
 
 echo "🧪 Health checks..."
