@@ -247,7 +247,7 @@ for d in "${DOMAINS[@]}"; do
   if [[ ! $d =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then NON_IP+=("$d"); fi
 done
 
-if [ \${#NON_IP[@]} -gt 0 ]; then
+if [ ${#NON_IP[@]} -gt 0 ]; then
   CERTBOT_ARGS=(--nginx --non-interactive --agree-tos --email admin@"$PRIMARY_DOMAIN")
   for d in "${NON_IP[@]}"; do CERTBOT_ARGS+=( -d "$d" -d "www.$d" ); done
   if ! certbot "${CERTBOT_ARGS[@]}"; then
