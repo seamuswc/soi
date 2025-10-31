@@ -1403,7 +1403,7 @@ app.get('/api/settings/current', { preHandler: authenticateToken }, async (reque
       emailSender: process.env.TENCENT_SES_SENDER || 'data@soipattaya.com',
       googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || '',
       solanaMerchantAddress: process.env.SOLANA_MERCHANT_ADDRESS || '',
-      tencentSesTemplateIdEn: process.env.TENCENT_SES_TEMPLATE_ID_EN || '',
+      tencentSesTemplateIdData: process.env.TENCENT_SES_TEMPLATE_ID_DATA || '',
       tencentSesTemplateIdPromo: process.env.TENCENT_SES_TEMPLATE_ID_PROMO || '',
       adminUsername: process.env.ADMIN_USERNAME || 'admin',
       adminPassword: process.env.ADMIN_PASSWORD || 'password',
@@ -1428,7 +1428,7 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailSender, 
       googleMapsApiKey,
       solanaMerchantAddress,
-      tencentSesTemplateIdEn,
+      tencentSesTemplateIdData,
       tencentSesTemplateIdPromo,
       adminUsername,
       adminPassword,
@@ -1441,7 +1441,7 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       emailSender?: string;
       googleMapsApiKey?: string;
       solanaMerchantAddress?: string;
-      tencentSesTemplateIdEn?: string;
+      tencentSesTemplateIdData?: string;
       tencentSesTemplateIdPromo?: string;
       adminUsername?: string;
       adminPassword?: string;
@@ -1467,7 +1467,7 @@ app.post('/api/settings/update', { preHandler: authenticateToken }, async (reque
       'TENCENT_SES_SENDER': emailSender,
       'VITE_GOOGLE_MAPS_API_KEY': googleMapsApiKey,
       'SOLANA_MERCHANT_ADDRESS': solanaMerchantAddress,
-      'TENCENT_SES_TEMPLATE_ID_EN': tencentSesTemplateIdEn,
+      'TENCENT_SES_TEMPLATE_ID_DATA': tencentSesTemplateIdData,
       'TENCENT_SES_TEMPLATE_ID_PROMO': tencentSesTemplateIdPromo,
       'ADMIN_USERNAME': adminUsername,
       'ADMIN_PASSWORD': adminPassword,

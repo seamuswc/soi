@@ -23,7 +23,7 @@ function DashboardPage() {
     emailSender: 'data@soipattaya.com',
     googleMapsApiKey: '',
     solanaMerchantAddress: '',
-    tencentSesTemplateIdEn: '',
+    tencentSesTemplateIdData: '',
     tencentSesTemplateIdPromo: '',
     adminUsername: 'admin',
     adminPassword: 'password',
@@ -752,8 +752,8 @@ function DashboardPage() {
                 </label>
                 <input
                   type="text"
-                  name="tencentSesTemplateIdEn"
-                  value={settingsForm.tencentSesTemplateIdEn}
+                  name="tencentSesTemplateIdData"
+                  value={settingsForm.tencentSesTemplateIdData}
                   onChange={handleSettingsChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="66908"
