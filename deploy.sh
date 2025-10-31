@@ -15,7 +15,7 @@ fi
 
 SERVER="$1"; shift || true
 if [ "$#" -eq 0 ]; then
-  DOMAINS=("soipattaya.com")
+  DOMAINS=("soipattaya.com" "soibkk.com")
 else
   DOMAINS=("$@")
 fi
