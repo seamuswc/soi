@@ -259,7 +259,7 @@ for d in "${DOMAINS[@]}"; do
 done
 
 if [ ${#NON_IP[@]} -gt 0 ]; then
-  CERTBOT_ARGS=(--nginx --non-interactive --agree-tos --email admin@"$PRIMARY_DOMAIN")
+  CERTBOT_ARGS=(--nginx --non-interactive --agree-tos --expand --email admin@"$PRIMARY_DOMAIN")
   for d in "${NON_IP[@]}"; do CERTBOT_ARGS+=( -d "$d" -d "www.$d" ); done
   if ! certbot "${CERTBOT_ARGS[@]}"; then
     echo "⚠️  SSL issuance failed; site remains on HTTP"
