@@ -250,15 +250,7 @@ function DashboardPage() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading dashboard...</div>
-      </div>
-    );
-  }
-
-  if (!dashboardData) {
+  if (!dashboardData && !loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-xl text-red-600">Error loading dashboard data</div>

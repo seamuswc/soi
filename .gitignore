@@ -11,6 +11,7 @@ build/
 # Environment files
 .env
 .env.*
+!\.env\.example
 server/.env
 client/.env
 setup-env.js
