@@ -53,9 +53,9 @@ function SingleListingPage() {
   const isExpired = new Date(listing.expires_at) < new Date();
 
   // Generate SEO data
-  const seoTitle = `${listing.building_name} - Floor ${listing.floor} | ${listing.cost.toLocaleString()}฿/mo | SoiPattaya Real Estate`;
-  const seoDescription = `${listing.building_name} Floor ${listing.floor} - ${listing.sqm} sqm unit for ${listing.cost.toLocaleString()}฿/month. ${listing.has_pool ? 'Swimming pool available. ' : ''}${listing.has_parking ? 'Parking available. ' : ''}${listing.is_top_floor ? 'Top floor unit. ' : ''}${listing.description.substring(0, 100)}...`;
-  const seoKeywords = `${listing.building_name}, Floor ${listing.floor}, ${listing.cost.toLocaleString()}฿, ${listing.sqm} sqm, Pattaya real estate, ${listing.building_name} apartment, ${listing.building_name} condo, Pattaya rental, ${listing.building_name} unit`;
+  const seoTitle = `${listing.building_name} Floor ${listing.floor} | ${listing.cost.toLocaleString()}฿/month Rental | ${listing.sqm} sqm Apartment for Rent`;
+  const seoDescription = `${listing.building_name} Floor ${listing.floor} - ${listing.sqm} sqm rental unit for ${listing.cost.toLocaleString()}฿/month in Pattaya. ${listing.has_pool ? 'Swimming pool available. ' : ''}${listing.has_parking ? 'Parking available. ' : ''}${listing.is_top_floor ? 'Top floor unit. ' : ''}${listing.description.substring(0, 100)}... View this apartment, condo, or house for rent today.`;
+  const seoKeywords = `${listing.building_name} floor ${listing.floor} rental, ${listing.cost.toLocaleString()}฿ apartment for rent, ${listing.sqm} sqm rental unit, ${listing.building_name} apartment for rent, ${listing.building_name} condo for rent, ${listing.building_name} house for rent, rent in ${listing.building_name}, Pattaya apartments for rent, Pattaya condos for rent, long term rental Pattaya, ${listing.building_name} unit rental, Pattaya property rental`;
 
   return (
     <>

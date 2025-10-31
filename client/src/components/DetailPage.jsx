@@ -58,9 +58,9 @@ function DetailPage() {
   const hasParking = listings.some(l => l.has_parking);
   const hasTopFloor = listings.some(l => l.is_top_floor);
   
-  const seoTitle = `${buildingName} - ${totalListings} Available Units | SoiPattaya Real Estate`;
-  const seoDescription = `Find ${totalListings} available units at ${buildingName}. Prices from ${minPrice.toLocaleString()}฿ to ${maxPrice.toLocaleString()}฿. ${hasPool ? 'Swimming pool available. ' : ''}${hasParking ? 'Parking available. ' : ''}${hasTopFloor ? 'Top floor units available. ' : ''}View all listings and book your viewing today.`;
-  const seoKeywords = `${buildingName}, Pattaya real estate, ${buildingName} apartments, ${buildingName} condos, Pattaya rentals, ${buildingName} units, Pattaya property, ${buildingName} building, Pattaya accommodation, ${buildingName} listings`;
+  const seoTitle = `${buildingName} - ${totalListings} Available Rental Units | Apartments & Condos for Rent`;
+  const seoDescription = `Find ${totalListings} available rental units at ${buildingName}. Prices from ${minPrice.toLocaleString()}฿ to ${maxPrice.toLocaleString()}฿/month. ${hasPool ? 'Swimming pool available. ' : ''}${hasParking ? 'Parking available. ' : ''}${hasTopFloor ? 'Top floor units available. ' : ''}Search apartments, condos, and houses for rent in Pattaya. Book your viewing today.`;
+  const seoKeywords = `${buildingName} rental, ${buildingName} apartments for rent, ${buildingName} condos for rent, ${buildingName} houses for rent, rent in ${buildingName}, ${buildingName} long term rental, Pattaya rentals, Pattaya apartments, Pattaya condos, Pattaya property rental, ${buildingName} building rentals, Pattaya accommodation, ${buildingName} listings, apartments for rent Pattaya, condos for rent Pattaya`;
 
   return (
     <>

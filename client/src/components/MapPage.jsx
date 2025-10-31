@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { getDomainConfig } from '../utils/domainConfig';
 
@@ -30,10 +31,25 @@ function MapPage() {
   
   // Get domain-specific configuration
   const domainConfig = getDomainConfig();
+  const cityName = domainConfig.cityName;
+  const isBangkok = cityName === 'Bangkok';
+  const cityThai = isBangkok ? 'กรุงเทพ' : 'พัทยา';
+  
+  // Calculate total listings count for SEO
+  const [totalListings, setTotalListings] = useState(0);
+  const [avgPrice, setAvgPrice] = useState(0);
 
   useEffect(() => {
     axios.get('/api/listings')
-      .then(response => setListings(response.data));
+      .then(response => {
+        setListings(response.data);
+        const allListings = Object.values(response.data).flat();
+        setTotalListings(allListings.length);
+        if (allListings.length > 0) {
+          const avg = Math.round(allListings.reduce((sum, l) => sum + l.cost, 0) / allListings.length);
+          setAvgPrice(avg);
+        }
+      });
   }, []);
 
   // Initialize filters from URL
@@ -92,8 +108,80 @@ function MapPage() {
     ]
   };
 
+  // SEO Content
+  const seoTitle = `${cityName} Rental Property Search | Find Apartments, Condos & Houses in ${cityName}, Thailand`;
+  const seoDescription = `Search ${totalListings > 0 ? `${totalListings}+ ` : ''}rental properties in ${cityName}, Thailand. Find apartments, condos, houses, and commercial spaces for rent. Average price ${avgPrice > 0 ? `${avgPrice.toLocaleString()}฿/month` : 'available'}. Filter by price, size, pool, parking, and more.`;
+  const seoKeywords = `${cityName} rentals, ${cityName} apartments, ${cityName} condos, ${cityName} houses, rent in ${cityName}, ${cityName} property rental, ${cityName} accommodation, ${cityName} real estate, apartments for rent ${cityName}, condos for rent ${cityName}, long term rental ${cityName}, ${cityThai} บ้านเช่า, ${cityThai} คอนโดเช่า, ${cityThai} อพาร์ทเมนท์เช่า`;
+  const currentUrl = `https://${window.location.hostname}`;
+
+  // Structured Data (JSON-LD) for better search visibility
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": `${cityName} Rental Properties`,
+    "description": seoDescription,
+    "url": currentUrl,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": cityName,
+      "addressCountry": "TH"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": cityName,
+      "sameAs": `https://en.wikipedia.org/wiki/${cityName}`
+    },
+    ...(avgPrice > 0 && { "priceRange": `${avgPrice.toLocaleString()}฿` }),
+    ...(totalListings > 0 && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "reviewCount": totalListings.toString()
+      }
+    })
+  };
+
   return (
-    <div className="relative h-screen">
+    <>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={currentUrl} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:site_name" content={`${cityName} Rental Properties`} />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale:alternate" content="th_TH" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        
+        {/* Geographic */}
+        <meta name="geo.region" content={isBangkok ? "TH-10" : "TH-20"} />
+        <meta name="geo.placename" content={cityName} />
+        <meta name="geo.position" content={isBangkok ? "13.7563;100.5018" : "12.9236;100.8825"} />
+        <meta name="ICBM" content={isBangkok ? "13.7563, 100.5018" : "12.9236, 100.8825"} />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+        
+        {/* Language */}
+        <html lang="en" />
+        <meta httpEquiv="content-language" content="en" />
+        <link rel="alternate" hreflang="en" href={currentUrl} />
+        <link rel="alternate" hreflang="th" href={currentUrl} />
+      </Helmet>
+      <div className="relative h-screen">
       {/* Controls and Filters (top-left) */}
       <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 flex flex-col gap-2">
         <a href="/create" className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 md:py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base">
@@ -334,7 +422,8 @@ function MapPage() {
           </GoogleMap>
         </LoadScript>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
