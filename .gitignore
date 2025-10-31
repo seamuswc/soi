@@ -103,6 +103,10 @@ Thumbs.db
 prisma/migrations/
 *.db
 *.db-journal
+*.sqlite
+*.sqlite-journal
+**/database/*.sqlite
+**/database/*.sqlite-journal
 
 # PHP specific (keeping for compatibility)
 /.phpunit.cache
