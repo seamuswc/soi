@@ -106,7 +106,15 @@ cd "$APP_DIR"
 
 echo "🔐 Ensuring environment file..."
 if [ ! -f .env ]; then
-  cat > .env <<EOF
+  if [ -f .env.example ]; then
+    echo "Creating .env from .env.example..."
+    cp .env.example .env
+    # Update domain-specific variables from placeholder
+    sed -i "s|https://yourdomain.com/api|https://$PRIMARY_DOMAIN/api|g" .env
+    echo "✅ Environment file created from .env.example with preset values"
+  else
+    echo "⚠️  .env.example not found, creating default .env..."
+    cat > .env <<EOF
 # Database
 DATABASE_URL="file:./server/database/database.sqlite"
 
@@ -121,27 +129,30 @@ ADMIN_TOKEN="admin123"
 
 # Solana
 SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
-SOLANA_MERCHANT_ADDRESS="YOUR_ACTUAL_SOLANA_WALLET_ADDRESS_HERE"
+SOLANA_MERCHANT_ADDRESS="8zS5w8MHSDQ4Pc12DZRLYQ78hgEwnBemVJMrfjUN6xXj"
 
 # Email (Tencent SES)
-TENCENT_SES_SECRET_ID=""
-TENCENT_SES_SECRET_KEY=""
+TENCENT_SECRET_ID=""
+TENCENT_SECRET_KEY=""
 TENCENT_SES_REGION="ap-singapore"
-TENCENT_SES_TEMPLATE_ID_PROMO="66912"
 TENCENT_SES_TEMPLATE_ID_DATA="66908"
-SMTP_HOST=""
-SMTP_PORT=""
-SMTP_USER=""
-SMTP_PASS=""
-SMTP_FROM="noreply@$PRIMARY_DOMAIN"
+TENCENT_SES_TEMPLATE_ID_PROMO="66912"
+TENCENT_SES_SENDER="data@soipattaya.com"
+
+# Google Maps API
+VITE_GOOGLE_MAPS_API_KEY="AIzaSyBVdAS-3mrNYARIDmqn2dP1tG1Khqv5GoM"
 
 # Vite Environment Variables
 VITE_API_URL="https://$PRIMARY_DOMAIN/api"
 VITE_APP_NAME="SOI Pattaya"
 EOF
+    echo "✅ Default environment file created"
+  fi
 fi
 
+# Always copy .env to server/.env
 cp .env server/.env
+echo "✅ Environment file synced to server directory"
 
 echo "📦 Installing dependencies..."
 npm install

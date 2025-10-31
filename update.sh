@@ -33,6 +33,51 @@ if ! git pull origin main; then
     exit 1
 fi
 
+echo "🔐 Updating environment variables..."
+# Merge new variables from .env.example into .env
+if [ -f .env.example ]; then
+    if [ -f .env ]; then
+        # Count existing variables in .env
+        existing_count=$(grep -v "^[[:space:]]*#" .env | grep -v "^[[:space:]]*$" | grep "=" | wc -l)
+        
+        # Read .env.example and check each variable
+        added_count=0
+        while IFS= read -r line || [ -n "$line" ]; do
+            # Skip comments and empty lines
+            if [[ "$line" =~ ^[[:space:]]*# ]] || [[ -z "$line" ]] || [[ ! "$line" =~ = ]]; then
+                continue
+            fi
+            
+            # Extract variable name (everything before =)
+            var_name=$(echo "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*=.*$//' | xargs)
+            
+            # Check if variable already exists in .env
+            if [ -n "$var_name" ] && ! grep -q "^[[:space:]]*${var_name}[[:space:]]*=" .env; then
+                # Variable doesn't exist, add it to .env
+                echo "$line" >> .env
+                added_count=$((added_count + 1))
+            fi
+        done < .env.example
+        
+        if [ $added_count -gt 0 ]; then
+            echo "✅ Added $added_count new environment variable(s) from .env.example"
+        else
+            echo "✅ Environment variables up to date"
+        fi
+    else
+        # No .env file exists, copy from .env.example
+        echo "Creating .env from .env.example..."
+        cp .env.example .env
+        echo "✅ Environment file created"
+    fi
+    
+    # Always copy .env to server/.env
+    cp .env server/.env
+    echo "✅ Environment file synced to server directory"
+else
+    echo "⚠️  .env.example not found, skipping environment variable update"
+fi
+
 echo "📦 Updating dependencies..."
 # Update root dependencies
 if ! npm install --silent; then
