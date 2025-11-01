@@ -1002,7 +1002,7 @@ app.post('/api/translate', async (request, reply) => {
   }
 });
 
-app.get('/api/analytics/data', async (request, reply) => {
+app.get('/api/analytics/data', { preHandler: authenticateUser }, async (request, reply) => {
   try {
     const { area = 'all', period = '6months', city = 'pattaya' } = request.query as { area?: string; period?: string; city?: string };
     
