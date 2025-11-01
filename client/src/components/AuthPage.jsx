@@ -336,7 +336,6 @@ function AuthPage() {
               </p>
             </div>
             <div>
-              <p className="text-gray-700 mb-2 text-sm">Contact with any questions</p>
               <a 
                 href="mailto:support@soipattaya.com"
                 className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm"
