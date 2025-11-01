@@ -20,7 +20,7 @@ function CreatePage() {
     description: '',
     youtube_link: '',
     reference: '',
-    payment_network: 'solana',
+    payment_network: 'promo',
     thai_only: false,
     has_pool: false,
     has_parking: false,
@@ -281,15 +281,6 @@ function CreatePage() {
       // Clear all validation errors immediately
       setValidationErrors({});
       // Show modal immediately - no form validation needed for buying promo codes
-      setShowQRModal(true);
-      return;
-    }
-    
-    // SOLANA PAY 1 USDC: Validate form and show QR for 1 USDC
-    if (formData.payment_network === 'solana') {
-      if (!validateForm()) {
-        return;
-      }
       setShowQRModal(true);
       return;
     }
@@ -856,7 +847,7 @@ function CreatePage() {
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">2</span>
-                Promo Code (Optional) / รหัสโปรโมชั่น
+                Enter code to create listing / ใส่รหัสเพื่อสร้างประกาศ
               </h2>
               
               <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 md:p-6 rounded-xl border border-yellow-200">
@@ -880,7 +871,7 @@ function CreatePage() {
                           onClick={handlePayWithPromo}
                           className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-4 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
                         >
-                          Pay / จ่าย
+                          Create / สร้าง
                         </button>
                       )}
                     </div>
@@ -896,7 +887,7 @@ function CreatePage() {
             <div className="mb-6 md:mb-8">
               <h2 className="text-lg md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 flex items-center">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold mr-2 md:mr-3">3</span>
-                Payment Method / วิธีการชำระเงิน
+                Buy code / ซื้อรหัส
               </h2>
               
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 md:p-6 rounded-xl border border-blue-200">
@@ -905,29 +896,7 @@ function CreatePage() {
                     <label className="block text-sm font-medium text-gray-700">
                       Choose Payment Network / เลือกเครือข่ายการชำระเงิน *
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
-                      {/* Solana Option */}
-                      <label className={`relative cursor-pointer ${formData.payment_network === 'solana' ? 'ring-2 ring-purple-500' : ''}`}>
-                        <input
-                          type="radio"
-                          name="payment_network"
-                          value="solana"
-                          checked={formData.payment_network === 'solana'}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className={`p-4 rounded-lg border-2 transition-all ${formData.payment_network === 'solana' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`}>
-                          <div className="text-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">◎</span>
-                            </div>
-                            <div className="font-medium text-gray-800">Solana</div>
-                            <div className="text-xs text-gray-500">1 USDC</div>
-                          </div>
-                        </div>
-                      </label>
-
+                    <div className="grid grid-cols-1 gap-4">
                       {/* Buy Promo Code with Solana Option */}
                       <label className={`relative cursor-pointer ${formData.payment_network === 'promo' ? 'ring-2 ring-green-500' : ''}`}>
                         <input
@@ -954,21 +923,17 @@ function CreatePage() {
                   {/* Payment Button */}
                   <div className="mt-6">
                     <button
-                      type={formData.payment_network === 'promo' ? 'button' : 'submit'}
+                      type="button"
                       onClick={(e) => {
-                        if (formData.payment_network === 'promo') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setValidationErrors({});
-                          setShowQRModal(true);
-                        } else {
-                          handlePayment(e);
-                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setValidationErrors({});
+                        setShowQRModal(true);
                       }}
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? '⏳ Processing...' : (formData.payment_network === 'promo' ? '🎟️ Buy Promo Code with Solana' : '💳 Pay with Solana')}
+                      {isSubmitting ? '⏳ Processing...' : '🎟️ Buy Promo Code with Solana / ซื้อรหัสโปรโมชั่น'}
                     </button>
                   </div>
                 </div>
@@ -980,7 +945,7 @@ function CreatePage() {
       </div>
 
       {/* Payment QR Modal */}
-      {showQRModal && (formData.payment_network === 'solana' || formData.payment_network === 'promo') && (
+      {showQRModal && formData.payment_network === 'promo' && (
         <PaymentQRModal
           network={formData.payment_network}
           amount={1}
