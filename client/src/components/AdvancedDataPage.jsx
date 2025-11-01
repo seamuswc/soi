@@ -525,7 +525,7 @@ function AdvancedDataPage() {
         </div>
 
         {/* Export Data */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">📥 Export Data</h3>
@@ -537,6 +537,29 @@ function AdvancedDataPage() {
             >
               📊 Excel Data
             </button>
+          </div>
+        </div>
+
+        {/* Payment Info and Contact */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-gray-700 mb-2">
+                💳 We also accept scan pay in Thai Baht
+              </p>
+              <p className="text-gray-700 text-sm">
+                และรับสแกนจ่ายด้วยบาทไทย
+              </p>
+            </div>
+            <div className="text-center border-t pt-4">
+              <p className="text-gray-700 mb-2">Contact with any questions</p>
+              <a 
+                href="mailto:support@soipattaya.com"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+              >
+                📧 support@soipattaya.com
+              </a>
+            </div>
           </div>
         </div>
       </div>
