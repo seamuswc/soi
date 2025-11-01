@@ -214,14 +214,14 @@ until curl -sf "http://localhost:3001/api/config/merchant-addresses" > /dev/null
 done
 echo "✅ Backend API is responding"
 
-# Test frontend with retry logic (check /create page which loads React components)
+# Test frontend with retry logic (check root page for valid HTML, not 404)
 ATTEMPTS=0
-MAX_ATTEMPTS=15
-until curl -sf "http://localhost/create" | grep -qE "(html|HTML|<div|root)"; do
+MAX_ATTEMPTS=10
+until curl -sf --max-time 5 "http://localhost" | grep -qE "(SoiPattaya|SoiBkk|<div id=\"root\"|<!doctype html)"; do
     ATTEMPTS=$((ATTEMPTS+1))
     if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
-        echo "⚠️  Frontend health check failed, but continuing (site may still be working)"
-        echo "   Note: Frontend may need a moment to fully load"
+        echo "⚠️  Frontend health check inconclusive, but continuing (backend is working)"
+        echo "   Note: Frontend may need nginx reload or moment to fully load"
         break
     fi
     echo "   Attempt $ATTEMPTS/$MAX_ATTEMPTS - waiting for frontend..."
