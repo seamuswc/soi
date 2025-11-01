@@ -75,6 +75,19 @@ function AuthPage() {
     setSuccess('');
 
     try {
+      // Check if email is already registered
+      try {
+        const checkResponse = await axios.post('/api/auth/check-email', { email });
+        if (checkResponse.data.exists) {
+          setError('This email is already registered. Please use the Login tab instead.');
+          setLoading(false);
+          return;
+        }
+      } catch (checkErr) {
+        // If check fails, continue anyway (might be network issue)
+        console.error('Email check error:', checkErr);
+      }
+
       const ref = generateReference();
       setReference(ref);
 
@@ -333,7 +346,10 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={showQR}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  showQR ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
                 placeholder="your@email.com"
               />
             </div>

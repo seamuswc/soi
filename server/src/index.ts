@@ -528,6 +528,26 @@ app.post('/api/auth/register', async (request, reply) => {
   }
 });
 
+// Check if email exists
+app.post('/api/auth/check-email', async (request, reply) => {
+  try {
+    const { email } = request.body as { email: string };
+    
+    if (!email) {
+      return reply.code(400).send({ error: 'Email is required' });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    return { exists: !!existingUser };
+  } catch (error: any) {
+    app.log.error('Error checking email:', error);
+    return reply.code(500).send({ error: 'Failed to check email' });
+  }
+});
+
 // User login
 app.post('/api/auth/user-login', async (request, reply) => {
   try {
