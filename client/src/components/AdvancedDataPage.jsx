@@ -76,33 +76,16 @@ function AdvancedDataPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const userToken = localStorage.getItem('authToken');
-      const adminToken = localStorage.getItem('admin_token');
-      
-      if (!userToken && !adminToken) {
-        window.location.href = '/auth';
-        return;
-      }
-
-      const token = userToken || adminToken;
       const response = await axios.get('/api/analytics/data', {
         params: {
           area: selectedArea,
           period: selectedPeriod,
           city: currentCity
-        },
-        headers: {
-          'Authorization': `Bearer ${token}`
         }
       });
       setData(response.data);
     } catch (error) {
       console.error('Failed to fetch analytics data:', error);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('admin_token');
-        window.location.href = '/auth';
-      }
     } finally {
       setLoading(false);
     }
