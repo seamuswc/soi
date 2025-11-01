@@ -422,6 +422,22 @@ function MapPage() {
           </GoogleMap>
         </LoadScript>
       )}
+
+      {/* Bottom Right Corner - Contact Email and Data Page Button */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2 items-end">
+        <a
+          href="mailto:support@soipattaya.com"
+          className="bg-white/90 hover:bg-white text-gray-700 px-3 md:px-4 py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base flex items-center gap-2"
+        >
+          📧 support@soipattaya.com
+        </a>
+        <button
+          onClick={() => navigate('/data')}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg shadow-lg transition-colors text-sm md:text-base"
+        >
+          📊 Data / ข้อมูล
+        </button>
+      </div>
       </div>
     </>
   );
