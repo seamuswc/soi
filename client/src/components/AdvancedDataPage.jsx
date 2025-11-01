@@ -321,7 +321,7 @@ function AdvancedDataPage() {
               <h1 className="text-2xl font-bold text-gray-900">📊 Data Analytics</h1>
               <p className="text-sm text-gray-600">Real estate market insights for {getCityData().name}</p>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 items-center">
               {/* City Selector Buttons */}
               <div className="flex space-x-2">
                 <button
@@ -358,6 +358,17 @@ function AdvancedDataPage() {
                 <option value="beginning">Beginning of Year</option>
                 <option value="all">All Time</option>
               </select>
+
+              <button
+                onClick={() => {
+                  localStorage.removeItem('authToken');
+                  localStorage.removeItem('admin_token');
+                  window.location.href = '/auth';
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Logout / ออกจากระบบ
+              </button>
             </div>
           </div>
         </div>
