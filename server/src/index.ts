@@ -708,6 +708,57 @@ app.post('/api/promo/generate', { preHandler: authenticateToken }, async (reques
   }
 });
 
+// Resend subscription email to existing user (admin only)
+app.post('/api/auth/resend-email', { preHandler: authenticateToken }, async (request, reply) => {
+  try {
+    const { email } = request.body as { email: string };
+
+    if (!email) {
+      return reply.code(400).send({ error: 'Email is required' });
+    }
+
+    console.log('📧 API: Resending subscription email for:', email);
+
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    // Send subscription email with actual user data
+    try {
+      const emailSent = await sendSubscriptionEmail({
+        email: user.email,
+        password: user.password,
+        subscriptionDate: user.created_at.toLocaleDateString(),
+        expiryDate: user.expires_at.toLocaleDateString(),
+        paymentReference: user.payment_reference,
+      });
+      
+      if (emailSent) {
+        console.log(`✅ Subscription email resent to ${user.email}`);
+        return { 
+          success: true,
+          message: 'Subscription email sent successfully',
+          email: user.email
+        };
+      } else {
+        console.error(`❌ Failed to send subscription email to ${user.email}`);
+        return reply.code(500).send({ error: 'Failed to send email' });
+      }
+    } catch (emailError) {
+      console.error('Failed to resend subscription email:', emailError);
+      return reply.code(500).send({ error: 'Failed to send email' });
+    }
+  } catch (error: any) {
+    app.log.error('Error resending subscription email:', error);
+    return reply.code(500).send({ error: 'Failed to resend email' });
+  }
+});
+
 // Test data subscription email (for testing purposes)
 app.post('/api/test/data-subscription-email', async (request, reply) => {
   try {
