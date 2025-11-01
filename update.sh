@@ -181,20 +181,34 @@ until pm2 jlist | jq -e '.[] | select(.name=="soipattaya" and .pm2_env.status=="
     sleep 1
 done
 
-# Test application
+# Test application with retry logic
 echo "🧪 Testing application..."
-if ! curl -s "http://localhost:3001/api/config/merchant-addresses" > /dev/null; then
-    echo "❌ Backend API not responding!"
-    echo "📝 Backend logs:"
-    pm2 logs soipattaya --lines 10
-    exit 1
-fi
+ATTEMPTS=0
+MAX_ATTEMPTS=30
+until curl -sf "http://localhost:3001/api/config/merchant-addresses" > /dev/null; do
+    ATTEMPTS=$((ATTEMPTS+1))
+    if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+        echo "❌ Backend API not responding after $MAX_ATTEMPTS attempts!"
+        echo "📝 Backend logs:"
+        pm2 logs soipattaya --lines 10
+        exit 1
+    fi
+    sleep 2
+done
+echo "✅ Backend API is responding"
 
-# Test frontend
-if ! curl -s "http://localhost" | grep -q "SoiPattaya"; then
-    echo "❌ Frontend not responding!"
-    exit 1
-fi
+# Test frontend with retry logic
+ATTEMPTS=0
+MAX_ATTEMPTS=30
+until curl -sf "http://localhost" | grep -q "SoiPattaya"; do
+    ATTEMPTS=$((ATTEMPTS+1))
+    if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+        echo "❌ Frontend not responding after $MAX_ATTEMPTS attempts!"
+        exit 1
+    fi
+    sleep 2
+done
+echo "✅ Frontend is responding"
 
 echo "🔒 Renewing SSL certificate..."
 # Only renew SSL if certificates exist
