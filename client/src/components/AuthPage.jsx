@@ -119,7 +119,7 @@ function AuthPage() {
                 reference: ref
               });
               
-              setSuccess(`✅ Payment confirmed! Your password is: ${response.data.password}. Click "Login" below to access the data page.`);
+              setSuccess(`✅ Payment confirmed! Your password is: ${response.data.password}. Click "Login" below to access the data page.\n\n📧 Email sent with login details. Please check spam folder.\nอีเมลส่งพร้อมรายละเอียดการเข้าสู่ระบบ กรุณาตรวจสอบโฟลเดอร์สแปม\n\nThank you / ขอบคุณ`);
               setPassword(response.data.password);
               setIsLogin(true);
               setLoading(false);
@@ -286,7 +286,7 @@ function AuthPage() {
 
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 whitespace-pre-line">
             {success}
           </div>
         )}
