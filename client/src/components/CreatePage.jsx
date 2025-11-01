@@ -20,7 +20,7 @@ function CreatePage() {
     description: '',
     youtube_link: '',
     reference: '',
-    payment_network: 'promo',
+    payment_network: '',
     thai_only: false,
     has_pool: false,
     has_parking: false,
@@ -931,7 +931,7 @@ function CreatePage() {
                         setShowQRModal(true);
                       }}
                       className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-6 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !formData.payment_network}
                     >
                       {isSubmitting ? '⏳ Processing...' : '🎟️ Buy Promo Code with Solana / ซื้อรหัสโปรโมชั่น'}
                     </button>
