@@ -214,10 +214,10 @@ until curl -sf "http://localhost:3001/api/config/merchant-addresses" > /dev/null
 done
 echo "✅ Backend API is responding"
 
-# Test frontend with retry logic (just check if we get HTML back, not specific content)
+# Test frontend with retry logic (check /create page which loads React components)
 ATTEMPTS=0
-MAX_ATTEMPTS=30
-until curl -sf "http://localhost" | grep -qE "(html|HTML|SoiPattaya|SoiBkk)"; do
+MAX_ATTEMPTS=15
+until curl -sf "http://localhost/create" | grep -qE "(html|HTML|<div|root)"; do
     ATTEMPTS=$((ATTEMPTS+1))
     if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
         echo "⚠️  Frontend health check failed, but continuing (site may still be working)"
