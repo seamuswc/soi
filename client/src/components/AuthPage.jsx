@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
+import { Keypair } from '@solana/web3.js';
 import { getDomainConfig } from '../utils/domainConfig';
 
 function AuthPage() {
@@ -55,7 +56,6 @@ function AuthPage() {
 
   const generateReference = () => {
     // Generate a valid Solana PublicKey as reference
-    const { Keypair } = require('@solana/web3.js');
     return Keypair.generate().publicKey.toBase58();
   };
 
