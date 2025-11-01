@@ -16,13 +16,24 @@ function AuthPage() {
   const [reference, setReference] = useState('');
   const [paid, setPaid] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [merchantAddress, setMerchantAddress] = useState('');
 
   const domainConfig = getDomainConfig();
 
   useEffect(() => {
     fetchCityData();
     checkMaintenanceStatus();
+    fetchMerchantAddress();
   }, []);
+
+  const fetchMerchantAddress = async () => {
+    try {
+      const response = await axios.get('/api/config/merchant-addresses');
+      setMerchantAddress(response.data.solana);
+    } catch (error) {
+      console.error('Failed to fetch merchant address:', error);
+    }
+  };
 
   const checkMaintenanceStatus = async () => {
     try {
@@ -54,6 +65,11 @@ function AuthPage() {
       return;
     }
 
+    if (!merchantAddress) {
+      setError('Payment system not configured. Please contact support.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -70,7 +86,7 @@ function AuthPage() {
         label: `${domainConfig.siteName} Data Access`,
         message: 'Data Access Purchase (365 days)'
       });
-      const url = `solana:${process.env.REACT_APP_SOLANA_MERCHANT_ADDRESS}?${params.toString()}`;
+      const url = `solana:${merchantAddress}?${params.toString()}`;
       setQrUrl(url);
       setShowQR(true);
 
@@ -84,25 +100,38 @@ function AuthPage() {
             setShowQR(false);
             
             // Register user after payment
-            const response = await axios.post('/api/auth/register', {
-              email,
-              reference: ref
-            });
-            
-            setSuccess(`Registration successful! Your password is: ${response.data.password}. Please save this password.`);
-            setPassword(response.data.password);
-            setIsLogin(true);
-            return;
+            try {
+              const response = await axios.post('/api/auth/register', {
+                email,
+                reference: ref
+              });
+              
+              setSuccess(`Registration successful! Your password is: ${response.data.password}. Please save this password.`);
+              setPassword(response.data.password);
+              setIsLogin(true);
+              return;
+            } catch (registerErr: any) {
+              console.error('Registration error:', registerErr);
+              setShowQR(false);
+              const errorMsg = registerErr.response?.data?.error || 'Registration failed. Please try again.';
+              setError(errorMsg);
+              setLoading(false);
+              return;
+            }
           }
-        } catch {}
+        } catch (checkErr) {
+          // Continue polling if payment check fails
+          console.error('Payment check error:', checkErr);
+        }
       }
       
       // Timeout
       setShowQR(false);
       setError('Payment timeout. If payment completed, wait a few minutes. Otherwise, try again.');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      const errorMsg = err.response?.data?.error || err.message || 'Registration failed. Please try again.';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
