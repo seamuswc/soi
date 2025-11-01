@@ -110,7 +110,7 @@ function AuthPage() {
               setPassword(response.data.password);
               setIsLogin(true);
               return;
-            } catch (registerErr: any) {
+            } catch (registerErr) {
               console.error('Registration error:', registerErr);
               setShowQR(false);
               const errorMsg = registerErr.response?.data?.error || 'Registration failed. Please try again.';
@@ -128,7 +128,7 @@ function AuthPage() {
       // Timeout
       setShowQR(false);
       setError('Payment timeout. If payment completed, wait a few minutes. Otherwise, try again.');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Registration error:', err);
       const errorMsg = err.response?.data?.error || err.message || 'Registration failed. Please try again.';
       setError(errorMsg);
