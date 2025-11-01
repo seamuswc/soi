@@ -324,6 +324,29 @@ function AuthPage() {
           </div>
         )}
 
+        {/* Payment Info and Contact */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="space-y-4 text-center">
+            <div>
+              <p className="text-gray-700 mb-1">
+                💳 We also accept scan pay in Thai Baht
+              </p>
+              <p className="text-gray-600 text-sm">
+                และรับสแกนจ่ายด้วยบาทไทย
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-700 mb-2 text-sm">Contact with any questions</p>
+              <a 
+                href="mailto:support@soipattaya.com"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm"
+              >
+                📧 support@soipattaya.com
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Back to Dashboard */}
         <div className="text-center mt-6">
           <a 
