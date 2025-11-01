@@ -380,6 +380,73 @@ app.get('/api/listings', async () => {
   return grouped;
 });
 
+// Generate sitemap.xml dynamically
+app.get('/sitemap.xml', async (request, reply) => {
+  try {
+    const hostname = request.headers.host || 'soipattaya.com';
+    const protocol = request.headers['x-forwarded-proto'] || 'https';
+    const baseUrl = `${protocol}://${hostname}`;
+    
+    // Get all listings
+    const listings = await prisma.listing.findMany({
+      where: {
+        expires_at: { gt: new Date() } // Only active listings
+      }
+    });
+    
+    // Get unique building names
+    const buildingNames = [...new Set(listings.map(l => l.building_name))];
+    
+    // Generate sitemap
+    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/create</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/data</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    
+    // Add building detail pages
+    buildingNames.forEach(buildingName => {
+      const encodedName = encodeURIComponent(buildingName);
+      sitemap += `
+  <url>
+    <loc>${baseUrl}/${encodedName}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+    });
+    
+    // Add individual listing pages
+    listings.forEach(listing => {
+      sitemap += `
+  <url>
+    <loc>${baseUrl}/listing/${listing.id}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>`;
+    });
+    
+    sitemap += `
+</urlset>`;
+    
+    reply.type('application/xml').send(sitemap);
+  } catch (error: any) {
+    app.log.error('Error generating sitemap:', error);
+    return reply.code(500).send({ error: 'Failed to generate sitemap' });
+  }
+});
+
 // Authentication middleware
 const authenticateToken = (request: any, reply: any, done: any) => {
   const authHeader = request.headers.authorization;
@@ -1302,6 +1369,17 @@ cron.schedule('0 0 * * *', async () => {
     where: { expires_at: { lt: new Date() } },
   });
   app.log.info('Expired listings deleted');
+});
+
+// Serve robots.txt
+app.get('/robots.txt', async (request, reply) => {
+  const robotsPath = path.join(__dirname, '../../client/public/robots.txt');
+  try {
+    const robots = require('fs').readFileSync(robotsPath, 'utf8');
+    reply.type('text/plain').send(robots);
+  } catch (error) {
+    reply.type('text/plain').send('User-agent: *\nAllow: /\n');
+  }
 });
 
 // Serve static files in production (after all API routes)
