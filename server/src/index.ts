@@ -857,8 +857,8 @@ app.post('/api/listings', async (request, reply) => {
       isValid = true;
     }
 
-    // Set expiration date - all listings expire in 2 months
-    const expiresAt = new Date(Date.now() + 2 * 30 * 24 * 60 * 60 * 1000); // 2 months from now
+    // Set expiration date - all listings expire in 3 months
+    const expiresAt = new Date(Date.now() + 3 * 30 * 24 * 60 * 60 * 1000); // 3 months from now
 
     const listing = await prisma.listing.create({
       data: {
