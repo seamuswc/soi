@@ -331,7 +331,7 @@ function AuthPage() {
               <p className="text-gray-700 mb-1">
                 💳 We also accept scan pay in Thai Baht
               </p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600">
                 และรับสแกนจ่ายด้วยบาทไทย
               </p>
             </div>
