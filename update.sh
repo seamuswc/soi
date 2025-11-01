@@ -181,7 +181,23 @@ until pm2 jlist | jq -e '.[] | select(.name=="soipattaya" and .pm2_env.status=="
     sleep 1
 done
 
-# Test application with retry logic
+echo "🔒 Renewing SSL certificate..."
+# Only renew SSL if certificates exist
+if [ -d "/etc/letsencrypt/live" ]; then
+    if certbot renew --quiet; then
+        echo "✅ SSL certificate renewed"
+        systemctl reload nginx
+    else
+        echo "⚠️  SSL renewal failed, but continuing..."
+    fi
+else
+    echo "ℹ️  No SSL certificates found, skipping renewal"
+fi
+
+# Wait a moment for everything to settle after SSL renewal
+sleep 3
+
+# Test application with retry logic (run last, after all operations)
 echo "🧪 Testing application..."
 ATTEMPTS=0
 MAX_ATTEMPTS=30
@@ -193,6 +209,7 @@ until curl -sf "http://localhost:3001/api/config/merchant-addresses" > /dev/null
         pm2 logs soipattaya --lines 10
         exit 1
     fi
+    echo "   Attempt $ATTEMPTS/$MAX_ATTEMPTS - waiting for server..."
     sleep 2
 done
 echo "✅ Backend API is responding"
@@ -206,22 +223,10 @@ until curl -sf "http://localhost" | grep -q "SoiPattaya"; do
         echo "❌ Frontend not responding after $MAX_ATTEMPTS attempts!"
         exit 1
     fi
+    echo "   Attempt $ATTEMPTS/$MAX_ATTEMPTS - waiting for frontend..."
     sleep 2
 done
 echo "✅ Frontend is responding"
-
-echo "🔒 Renewing SSL certificate..."
-# Only renew SSL if certificates exist
-if [ -d "/etc/letsencrypt/live" ]; then
-    if certbot renew --quiet; then
-        echo "✅ SSL certificate renewed"
-        systemctl reload nginx
-    else
-        echo "⚠️  SSL renewal failed, but continuing..."
-    fi
-else
-    echo "ℹ️  No SSL certificates found, skipping renewal"
-fi
 
 echo ""
 echo "✅ Update complete!"
