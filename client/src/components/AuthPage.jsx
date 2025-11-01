@@ -106,9 +106,10 @@ function AuthPage() {
                 reference: ref
               });
               
-              setSuccess(`Registration successful! Your password is: ${response.data.password}. Please save this password.`);
+              setSuccess(`✅ Payment confirmed! Your password is: ${response.data.password}. Click "Login" below to access the data page.`);
               setPassword(response.data.password);
               setIsLogin(true);
+              setLoading(false);
               return;
             } catch (registerErr) {
               console.error('Registration error:', registerErr);
